@@ -1,0 +1,92 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { candidates, expenses, invoices, leaveRequests, payrollRuns, type Candidate, type Expense, type ExpenseStatus, type Invoice, type InvoiceStatus, type LeaveRequest, type LeaveStatus, type Stage } from './data/mock'
+import type { RoleId } from './data/roles'
+
+interface AuthState {
+  role: RoleId | null
+  login: (role: RoleId) => void
+  logout: () => void
+}
+
+export const useAuth = create<AuthState>()(
+  persist(
+    (set) => ({
+      role: null,
+      login: (role) => set({ role }),
+      logout: () => set({ role: null }),
+    }),
+    { name: 'worksuite-auth' },
+  ),
+)
+
+export interface Toast { id: number; message: string; tone?: 'success' | 'info' | 'error' }
+
+interface AppState {
+  leaves: LeaveRequest[]
+  expenses: Expense[]
+  invoices: Invoice[]
+  candidates: Candidate[]
+  payrollStatus: 'Draft' | 'Processing' | 'Paid'
+  toasts: Toast[]
+  setLeaveStatus: (id: string, status: LeaveStatus) => void
+  addLeave: (l: LeaveRequest) => void
+  setExpenseStatus: (id: string, status: ExpenseStatus) => void
+  addExpense: (e: Expense) => void
+  setInvoiceStatus: (id: string, status: InvoiceStatus) => void
+  addInvoice: (i: Invoice) => void
+  moveCandidate: (id: string, stage: Stage) => void
+  runPayroll: () => void
+  toast: (message: string, tone?: Toast['tone']) => void
+  dismissToast: (id: number) => void
+}
+
+let toastId = 0
+
+export const useApp = create<AppState>((set, get) => ({
+  leaves: leaveRequests,
+  expenses,
+  invoices,
+  candidates,
+  payrollStatus: payrollRuns[0].status as 'Draft',
+  toasts: [],
+  setLeaveStatus: (id, status) => {
+    set((s) => ({ leaves: s.leaves.map((l) => (l.id === id ? { ...l, status } : l)) }))
+    get().toast(`Leave ${id} ${status.toLowerCase()}`, status === 'Rejected' ? 'error' : 'success')
+  },
+  addLeave: (l) => {
+    set((s) => ({ leaves: [l, ...s.leaves] }))
+    get().toast('Leave request submitted')
+  },
+  setExpenseStatus: (id, status) => {
+    set((s) => ({ expenses: s.expenses.map((e) => (e.id === id ? { ...e, status } : e)) }))
+    get().toast(`Expense ${id} marked ${status.toLowerCase()}`, status === 'Rejected' ? 'error' : 'success')
+  },
+  addExpense: (e) => {
+    set((s) => ({ expenses: [e, ...s.expenses] }))
+    get().toast('Expense claim submitted')
+  },
+  setInvoiceStatus: (id, status) => {
+    set((s) => ({ invoices: s.invoices.map((i) => (i.id === id ? { ...i, status } : i)) }))
+    get().toast(`${id} marked as ${status.toLowerCase()}`)
+  },
+  addInvoice: (i) => {
+    set((s) => ({ invoices: [i, ...s.invoices] }))
+    get().toast(`Invoice ${i.id} created`)
+  },
+  moveCandidate: (id, stage) => set((s) => ({ candidates: s.candidates.map((c) => (c.id === id ? { ...c, stage } : c)) })),
+  runPayroll: () => {
+    set({ payrollStatus: 'Processing' })
+    get().toast('Payroll run started — processing salaries', 'info')
+    setTimeout(() => {
+      set({ payrollStatus: 'Paid' })
+      get().toast('Payroll disbursed to all employees')
+    }, 2200)
+  },
+  toast: (message, tone = 'success') => {
+    const id = ++toastId
+    set((s) => ({ toasts: [...s.toasts, { id, message, tone }] }))
+    setTimeout(() => get().dismissToast(id), 3200)
+  },
+  dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+}))
