@@ -22,7 +22,7 @@ export default function Budgets() {
         <Card className="flex flex-col items-center justify-center text-center lg:col-span-4">
           <p className="text-sm text-ash">Company budget used</p>
           <div className="relative mt-4">
-            <HalfGauge value={(spent / total) * 100} size={220} color="#262825" />
+            <HalfGauge value={(spent / total) * 100} size={220} color="#1a1d29" />
             <p className="absolute inset-x-0 bottom-0 font-display text-3xl"><CountUp value={`${((spent / total) * 100).toFixed(1)}%`} /></p>
           </div>
           <p className="mt-4 text-sm"><b>{fmtCompact(spent)}</b> spent of <b>{fmtCompact(total)}</b></p>
@@ -32,13 +32,13 @@ export default function Budgets() {
           <CardHeader title="Allocated vs Spent" subtitle="By department" />
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={data} margin={{ top: 16, right: 0, left: -4, bottom: 0 }}>
-              <CartesianGrid vertical={false} stroke="#edf0ed" />
+              <CartesianGrid vertical={false} stroke="#e5e8ec" />
               <XAxis dataKey="name" axisLine={false} tickLine={false} interval={0} tick={{ fontSize: 10 }} />
               <YAxis axisLine={false} tickLine={false} tickFormatter={fmtCompact} width={64} />
               <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtINR(v)} />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Allocated" fill="#e3e8e3" radius={[8, 8, 3, 3]} barSize={16} />
-              <Bar dataKey="Spent" fill="#262825" radius={[8, 8, 3, 3]} barSize={16} />
+              <Bar dataKey="Allocated" fill="#e2e5ea" radius={[8, 8, 3, 3]} barSize={16} />
+              <Bar dataKey="Spent" fill="#1a1d29" radius={[8, 8, 3, 3]} barSize={16} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

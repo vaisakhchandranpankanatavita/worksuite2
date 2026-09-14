@@ -11,7 +11,7 @@ function Logo() {
   return (
     <div className="flex items-center gap-2.5">
       <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden>
-        <g className="logo-mark" fill="none" stroke="#262825" strokeWidth="2">
+        <g className="logo-mark" fill="none" stroke="#1a1d29" strokeWidth="2">
           {[0, 60, 120, 180, 240, 300].map((r) => (
             <ellipse key={r} cx="16" cy="9.5" rx="3.6" ry="6" transform={`rotate(${r} 16 16)`} />
           ))}
@@ -71,7 +71,7 @@ export default function Login() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f1f3f1] p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen overflow-hidden bg-[#f4f6f8] p-4 sm:p-6 lg:p-8">
       {/* Ambient page background — drifting colour blobs behind the auth card */}
       <div className="pointer-events-none absolute inset-0 -z-0 overflow-hidden">
         <div className="login-blob-a absolute -left-32 -top-32 size-[420px] rounded-full bg-lime/60 blur-[100px]" />

@@ -85,9 +85,9 @@ function buildSignals() {
 }
 
 const TONE = {
-  positive: { ring: 'bg-sage', dot: 'bg-sage-deep', text: 'text-[#2f6b2b]' },
-  warning: { ring: 'bg-amber', dot: 'bg-amber-deep', text: 'text-[#80591a]' },
-  neutral: { ring: 'bg-sky', dot: 'bg-sky-deep', text: 'text-[#2d5597]' },
+  positive: { ring: 'bg-sage', dot: 'bg-sage-deep', text: 'text-[#115e59]' },
+  warning: { ring: 'bg-amber', dot: 'bg-amber-deep', text: 'text-[#92400e]' },
+  neutral: { ring: 'bg-sky', dot: 'bg-sky-deep', text: 'text-[#1d4ed8]' },
 }
 
 export default function AiInsights() {
@@ -124,13 +124,13 @@ export default function AiInsights() {
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-7 place-items-center rounded-xl bg-ink text-lime shadow-[0_0_0_4px_rgba(221,239,168,0.35)]">
+          <span className="grid size-7 place-items-center rounded-xl bg-ink text-lime shadow-[0_0_0_4px_rgba(167,243,208,0.35)]">
             <Sparkles size={13} className={clsx(analyzing && 'animate-pulse')} />
           </span>
           <div>
             <h3 className="flex items-center gap-2 text-sm font-medium leading-tight tracking-tight">
               AI Analysis
-              <span className="rounded-full bg-lime px-1.5 py-0.5 text-[9px] font-bold text-[#56691d]">BETA</span>
+              <span className="rounded-full bg-lime px-1.5 py-0.5 text-[9px] font-bold text-[#065f46]">BETA</span>
             </h3>
             <p className="mt-0.5 text-[11px] text-ash">{analyzing ? 'Analysing your workspace data…' : `${insights.length} insights · ${signals.length} live signals from HR & finance`}</p>
           </div>

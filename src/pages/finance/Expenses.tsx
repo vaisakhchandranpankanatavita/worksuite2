@@ -44,7 +44,7 @@ export default function Expenses() {
               <XAxis type="number" hide />
               <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} width={84} />
               <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtINR(v)} />
-              <Bar dataKey="value" name="Spend" fill="#ddefa8" radius={[4, 10, 10, 4]} barSize={14} background={{ fill: '#f1f4f1', radius: 10 }} />
+              <Bar dataKey="value" name="Spend" fill="#a7f3d0" radius={[4, 10, 10, 4]} barSize={14} background={{ fill: '#eef1f4', radius: 10 }} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

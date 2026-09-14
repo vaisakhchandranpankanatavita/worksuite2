@@ -49,15 +49,15 @@ export default function Attendance() {
             <AreaChart data={attendanceTrend} margin={{ top: 16, right: 4, left: -16, bottom: 0 }}>
               <defs>
                 <pattern id="hatch2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                  <rect width="7" height="7" fill="#f7faef" />
-                  <line x1="0" y1="0" x2="0" y2="7" stroke="#b9d46a" strokeWidth="1.2" />
+                  <rect width="7" height="7" fill="#eef1f4" />
+                  <line x1="0" y1="0" x2="0" y2="7" stroke="#059669" strokeWidth="1.2" />
                 </pattern>
               </defs>
-              <CartesianGrid vertical={false} stroke="#edf0ed" />
+              <CartesianGrid vertical={false} stroke="#e5e8ec" />
               <XAxis dataKey="label" axisLine={false} tickLine={false} interval={4} />
               <YAxis domain={[80, 100]} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
               <Tooltip {...chartTooltip} formatter={(v: number) => `${v}%`} />
-              <Area type="monotone" dataKey="rate" name="Attendance" stroke="#262825" strokeWidth={1.5} fill="url(#hatch2)" activeDot={{ r: 6, fill: '#ddefa8', stroke: '#262825' }} />
+              <Area type="monotone" dataKey="rate" name="Attendance" stroke="#1a1d29" strokeWidth={1.5} fill="url(#hatch2)" activeDot={{ r: 6, fill: '#a7f3d0', stroke: '#1a1d29' }} />
             </AreaChart>
           </ResponsiveContainer>
         </Card>

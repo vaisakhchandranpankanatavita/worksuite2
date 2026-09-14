@@ -32,7 +32,7 @@ export default function EmployeeProfile() {
 
   return (
     <div className="relative">
-      <div className="pointer-events-none absolute -inset-8 -z-0 rounded-[28px] bg-[radial-gradient(60%_50%_at_90%_100%,rgba(221,239,168,0.55),transparent),radial-gradient(40%_40%_at_100%_0%,rgba(221,239,168,0.35),transparent)]" />
+      <div className="pointer-events-none absolute -inset-8 -z-0 rounded-[28px] bg-[radial-gradient(60%_50%_at_90%_100%,rgba(167,243,208,0.55),transparent),radial-gradient(40%_40%_at_100%_0%,rgba(167,243,208,0.35),transparent)]" />
       <div className="relative">
         <button onClick={() => nav('/hr/employees')} className="mb-4 inline-flex items-center gap-2 text-sm text-ash hover:text-ink">
           <ArrowLeft size={16} /> All employees
@@ -90,7 +90,7 @@ export default function EmployeeProfile() {
                 return (
                   <div key={i} className="flex flex-col items-center gap-1.5">
                     {today && h.hours > 0 && <span className="whitespace-nowrap rounded-full bg-lime-deep/80 px-1.5 py-0.5 text-[9px] font-bold">{Math.floor(h.hours)}h {Math.round((h.hours % 1) * 60)}m</span>}
-                    <div className="relative w-2 rounded-full" style={{ height: h.hours ? `${(h.hours / max) * 76}px` : '34px', background: h.hours === 0 ? 'repeating-linear-gradient(0deg,#d9ddd9 0 2px,transparent 2px 4px)' : today ? '#b9d46a' : '#262825' }} />
+                    <div className="relative w-2 rounded-full" style={{ height: h.hours ? `${(h.hours / max) * 76}px` : '34px', background: h.hours === 0 ? 'repeating-linear-gradient(0deg,#d7dce2 0 2px,transparent 2px 4px)' : today ? '#059669' : '#1a1d29' }} />
                     <span className={clsx('size-1.5 rounded-full', h.hours ? 'bg-ink' : 'bg-line')} />
                     <span className="text-[10px] text-ash">{h.day}</span>
                   </div>
@@ -312,9 +312,9 @@ function TimeTracker({ initial }: { initial: number }) {
         <svg viewBox="0 0 160 160" className="absolute inset-0 -rotate-90">
           {Array.from({ length: 60 }, (_, i) => {
             const a = (i / 60) * Math.PI * 2
-            return <line key={i} x1={80 + Math.cos(a) * 72} y1={80 + Math.sin(a) * 72} x2={80 + Math.cos(a) * 76} y2={80 + Math.sin(a) * 76} stroke="#262825" strokeOpacity={i / 60 < pct ? 0 : 0.35} strokeWidth="1.2" />
+            return <line key={i} x1={80 + Math.cos(a) * 72} y1={80 + Math.sin(a) * 72} x2={80 + Math.cos(a) * 76} y2={80 + Math.sin(a) * 76} stroke="#1a1d29" strokeOpacity={i / 60 < pct ? 0 : 0.35} strokeWidth="1.2" />
           })}
-          <circle cx="80" cy="80" r={r} fill="none" stroke="#b9d46a" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${pct * c} ${c}`} className="transition-all" />
+          <circle cx="80" cy="80" r={r} fill="none" stroke="#059669" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${pct * c} ${c}`} className="transition-all" />
         </svg>
         <div className="text-center">
           <p className="font-display text-3xl">{hh}:{mm}</p>

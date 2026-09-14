@@ -4,9 +4,9 @@ import { useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type Re
 import { initials } from '../lib/format'
 import { useApp } from '../store'
 
-export function Card({ className, children, ...rest }: { className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
+export function Card({ className, children, compact, ...rest }: { className?: string; children: ReactNode; compact?: boolean } & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={clsx('card p-5 animate-in', className)} {...rest}>
+    <div className={clsx('card animate-in', compact ? 'p-4' : 'p-5', className)} {...rest}>
       {children}
     </div>
   )
@@ -89,11 +89,11 @@ export function AvatarStack({ hues, size = 26 }: { hues: number[]; size?: number
 }
 
 const TONES: Record<string, string> = {
-  green: 'bg-sage text-[#2f6b2b]',
-  lime: 'bg-lime text-[#56691d]',
-  blue: 'bg-sky text-[#2d5597]',
-  rose: 'bg-rose text-[#9b3563]',
-  amber: 'bg-amber text-[#80591a]',
+  green: 'bg-sage text-[#115e59]',
+  lime: 'bg-lime text-[#065f46]',
+  blue: 'bg-sky text-[#1d4ed8]',
+  rose: 'bg-rose text-[#9f1239]',
+  amber: 'bg-amber text-[#92400e]',
   gray: 'bg-soft text-ash',
   dark: 'bg-ink text-white',
 }
@@ -238,8 +238,8 @@ export function Table({ head, children, className }: { head: ReactNode[]; childr
 }
 
 export const chartTooltip = {
-  contentStyle: { background: '#262825', border: 'none', borderRadius: 12, color: '#fff', fontSize: 12, padding: '8px 12px' },
+  contentStyle: { background: '#1a1d29', border: 'none', borderRadius: 12, color: '#fff', fontSize: 12, padding: '8px 12px' },
   itemStyle: { color: '#fff' },
-  labelStyle: { color: '#ddefa8', marginBottom: 4 },
-  cursor: { stroke: '#262825', strokeWidth: 1, strokeDasharray: '3 3' },
+  labelStyle: { color: '#a7f3d0', marginBottom: 4 },
+  cursor: { stroke: '#1a1d29', strokeWidth: 1, strokeDasharray: '3 3' },
 }

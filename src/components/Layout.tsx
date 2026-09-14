@@ -32,7 +32,7 @@ function Logo() {
   return (
     <div className="flex items-center gap-2.5">
       <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden>
-        <g className="logo-mark" fill="none" stroke="#262825" strokeWidth="2">
+        <g className="logo-mark" fill="none" stroke="#1a1d29" strokeWidth="2">
           {[0, 60, 120, 180, 240, 300].map((r) => (
             <ellipse key={r} cx="16" cy="9.5" rx="3.6" ry="6" transform={`rotate(${r} 16 16)`} />
           ))}
@@ -129,7 +129,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-full">
-      <div className="min-h-screen bg-[#f1f3f1] px-4 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3 lg:px-8 lg:pb-8 lg:pt-3">
+      <div className="min-h-screen bg-[#f4f6f8] px-4 pb-4 pt-2 sm:px-6 sm:pb-6 sm:pt-3 lg:px-8 lg:pb-8 lg:pt-3">
         <header className="sticky top-0 z-30 -mx-4 mb-6 flex items-center gap-3 border-b border-white/30 bg-gradient-to-r from-white/40 via-white/25 to-sky/15 px-4 py-4 shadow-[0_1px_0_rgba(38,40,37,0.03)] backdrop-blur-xl backdrop-saturate-150 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="flex flex-1 items-center gap-4">
             <Logo />

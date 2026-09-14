@@ -32,13 +32,13 @@ export default function Reports() {
           <CardHeader title="Profit & Loss Trend" subtitle="Revenue and expenses (bars), net profit (line)" />
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={rows} margin={{ top: 16, right: 0, left: -4, bottom: 0 }}>
-              <CartesianGrid vertical={false} stroke="#edf0ed" />
+              <CartesianGrid vertical={false} stroke="#e5e8ec" />
               <XAxis dataKey="month" axisLine={false} tickLine={false} />
               <YAxis axisLine={false} tickLine={false} tickFormatter={fmtCompact} width={64} />
               <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtINR(v)} />
-              <Bar dataKey="revenue" name="Revenue" fill="#ddefa8" radius={[8, 8, 3, 3]} barSize={14} />
-              <Bar dataKey="expenses" name="Expenses" fill="#e3e8e3" radius={[8, 8, 3, 3]} barSize={14} />
-              <Line dataKey="profit" name="Net profit" stroke="#262825" strokeWidth={2} dot={{ r: 3, fill: '#262825' }} />
+              <Bar dataKey="revenue" name="Revenue" fill="#a7f3d0" radius={[8, 8, 3, 3]} barSize={14} />
+              <Bar dataKey="expenses" name="Expenses" fill="#e2e5ea" radius={[8, 8, 3, 3]} barSize={14} />
+              <Line dataKey="profit" name="Net profit" stroke="#1a1d29" strokeWidth={2} dot={{ r: 3, fill: '#1a1d29' }} />
             </ComposedChart>
           </ResponsiveContainer>
         </Card>

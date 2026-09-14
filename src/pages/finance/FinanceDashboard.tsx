@@ -2,16 +2,16 @@ import clsx from 'clsx'
 import { ArrowDownLeft, ArrowUp, ArrowUpRight, Download, FileText, Landmark, Plus, Wallet } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { HalfGauge, HatchedArea, SoftBars } from '../../components/charts'
 import { CountUp } from '../../components/CountUp'
-import { Avatar, Badge, Button, Card, CardHeader, CornerLink, IconBtn, Progress, Segmented, chartTooltip } from '../../components/ui'
+import { Avatar, Badge, Button, Card, CardHeader, CornerLink, IconBtn, Segmented, chartTooltip } from '../../components/ui'
 import { TODAY, bankAccounts, budgets, complianceDeadlines, employeeById, expenseBreakdown, monthlyFinance, transactions } from '../../data/mock'
 import { fmtCompact, fmtINR, fmtShortDate } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
-const PIE_COLORS = ['#262825', '#ddefa8', '#cfddf5', '#f3cfdc']
+const PIE_COLORS = ['#1a1d29', '#a7f3d0', '#bfdbfe', '#fecdd3']
 
 export default function FinanceDashboard() {
   const nav = useNavigate()
@@ -57,21 +57,22 @@ export default function FinanceDashboard() {
         </div>
       </div>
 
-      <div className="stagger grid gap-4 lg:grid-cols-12">
+      <div className="stagger grid gap-3 lg:grid-cols-12">
         {/* Cash hero */}
-        <div className="animate-in relative overflow-hidden rounded-[22px] bg-ink p-6 text-white lg:col-span-4 lg:row-span-2">
-          <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-lime/20 blur-3xl" />
+        <div className="animate-in relative overflow-hidden rounded-[22px] border border-white/10 bg-ink p-5 text-white lg:col-span-4 lg:row-span-2">
+          <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-lime/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-14 size-56 rounded-full bg-sky/15 blur-3xl" />
           <div className="relative flex items-start justify-between">
             <div>
               <p className="text-sm text-white/60">Total cash balance</p>
-              <p className="mt-2 font-display text-4xl font-light">{fmtINR(cash)}</p>
+              <p className="mt-2 bg-gradient-to-br from-white to-white/70 bg-clip-text font-display text-4xl font-light text-transparent">{fmtINR(cash)}</p>
               <p className="mt-1 flex items-center gap-1 text-xs text-lime"><ArrowUp size={12} /> 8.4% vs last month</p>
             </div>
             <span className="grid size-10 place-items-center rounded-full bg-white/10"><Wallet size={18} /></span>
           </div>
-          <div className="relative mt-6 space-y-2">
+          <div className="relative mt-5 space-y-2">
             {bankAccounts.map((b) => (
-              <div key={b.name} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
+              <div key={b.name} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-2.5">
                 <div className="flex items-center gap-3">
                   <span className="grid size-8 place-items-center rounded-full bg-white/10"><Landmark size={14} /></span>
                   <div>
@@ -83,7 +84,7 @@ export default function FinanceDashboard() {
               </div>
             ))}
           </div>
-          <div className="relative mt-5 grid grid-cols-2 gap-3">
+          <div className="relative mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-lime p-3 text-ink">
               <p className="text-[11px]">Runway</p>
               <p className="font-display text-xl">{(cash / burn).toFixed(1)} mo</p>
@@ -95,25 +96,25 @@ export default function FinanceDashboard() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3 lg:col-span-8">
+        <div className="grid gap-3 sm:grid-cols-3 lg:col-span-8">
         {[
-          { title: 'Revenue', value: cm.revenue, delta: pct(cm.revenue, pm.revenue), extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.revenue)} highlight={5} height={54} color="#e6f2c7" hi="#b9d46a" /> },
-          { title: 'Expenses', value: cm.expenses, delta: pct(cm.expenses, pm.expenses), extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.expenses)} highlight={5} height={54} color="#dde6f7" hi="#7c9fdc" /> },
+          { title: 'Revenue', value: cm.revenue, delta: pct(cm.revenue, pm.revenue), extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.revenue)} highlight={5} height={48} color="#d1fae5" hi="#059669" /> },
+          { title: 'Expenses', value: cm.expenses, delta: pct(cm.expenses, pm.expenses), extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.expenses)} highlight={5} height={48} color="#dbeafe" hi="#3b82f6" /> },
           {
             title: 'Net Profit',
             value: cm.profit,
             delta: pct(cm.profit, pm.profit),
             extra: (
               <div className="relative">
-                <HalfGauge value={Math.round((cm.profit / cm.revenue) * 100 * 2.5)} size={100} color="#cde3c8" />
+                <HalfGauge value={Math.round((cm.profit / cm.revenue) * 100 * 2.5)} size={88} color="#99f6e4" />
                 <span className="absolute inset-x-0 bottom-0 text-center text-[11px] font-bold">{((cm.profit / cm.revenue) * 100).toFixed(0)}% margin</span>
               </div>
             ),
           },
         ].map((k) => (
-          <Card key={k.title}>
+          <Card key={k.title} compact>
             <CardHeader title={k.title} subtitle={TODAY.toLocaleDateString('en-IN', { month: 'long' })} />
-            <div className="mt-5 flex items-end justify-between gap-2">
+            <div className="mt-4 flex items-end justify-between gap-2">
               <div>
                 <p className="font-display text-2xl font-medium"><CountUp value={fmtCompact(k.value)} /></p>
                 <p className={clsx('mt-1 flex items-center gap-0.5 text-xs font-bold', k.delta >= 0 === (k.title !== 'Expenses') ? 'text-sage-deep' : 'text-rose-deep')}>
@@ -126,23 +127,23 @@ export default function FinanceDashboard() {
         ))}
         </div>
 
-        <Card className="lg:col-span-8">
+        <Card compact className="lg:col-span-8">
           <CardHeader
             title="Revenue vs Expenses"
             subtitle={
               <span className="flex items-center gap-4">
-                <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#9aa19a]" />Revenue</span>
-                <span className="flex items-center gap-1.5"><i className="size-2 rounded-full border border-dashed border-[#9aa19a]" />Expenses</span>
+                <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#94a0ad]" />Revenue</span>
+                <span className="flex items-center gap-1.5"><i className="size-2 rounded-full border border-dashed border-[#94a0ad]" />Expenses</span>
               </span>
             }
             action={<Segmented value={range} options={['Quarter', 'Year'] as const} onChange={setRange} />}
           />
-          <HatchedArea data={series} dataKey="revenue" compare="expenses" xKey="month" height={210} format={fmtCompact} />
+          <HatchedArea data={series} dataKey="revenue" compare="expenses" xKey="month" height={180} format={fmtCompact} />
         </Card>
 
-        <Card className="lg:col-span-4">
+        <Card compact className="lg:col-span-4">
           <CardHeader title="Spend Breakdown" subtitle="This month" action={<CornerLink onClick={() => nav('/finance/budgets')} />} />
-          <div className="relative mx-auto mt-2 h-[180px] w-full">
+          <div className="relative mx-auto mt-2 h-[160px] w-full">
             <ResponsiveContainer>
               <PieChart>
                 <Pie data={expenseBreakdown} dataKey="value" innerRadius={58} outerRadius={82} paddingAngle={3} cornerRadius={8} stroke="none">
@@ -168,24 +169,19 @@ export default function FinanceDashboard() {
           </div>
         </Card>
 
-        <Card className="lg:col-span-4">
+        <Card compact className="lg:col-span-4">
           <CardHeader title="Receivables" subtitle={`${receivables.length} open · ${overdue.length} overdue`} action={<CornerLink onClick={() => nav('/finance/invoices')} />} />
-          <p className="mt-4 font-display text-3xl"><CountUp value={fmtCompact(receivables.reduce((s, i) => s + i.total, 0))} /></p>
-          <div className="mt-4 flex h-3 overflow-hidden rounded-full">
-            {aging.map((a, i) => {
-              const total = aging.reduce((s, x) => s + x.value, 0) || 1
-              return <div key={a.label} className={['bg-sage-deep', 'bg-lime-deep', 'bg-amber-deep', 'bg-rose-deep'][i]} style={{ width: `${(a.value / total) * 100}%` }} />
-            })}
-          </div>
-          <div className="mt-3 grid grid-cols-4 gap-2 text-[11px]">
-            {aging.map((a) => (
-              <div key={a.label}>
-                <p className="text-ash">{a.label} d</p>
-                <p className="font-bold">{fmtCompact(a.value)}</p>
-              </div>
-            ))}
-          </div>
-          <ul className="mt-4 space-y-2">
+          <p className="mt-3 font-display text-2xl"><CountUp value={fmtCompact(receivables.reduce((s, i) => s + i.total, 0))} /></p>
+          <ResponsiveContainer width="100%" height={90}>
+            <BarChart data={aging} margin={{ top: 12, right: 0, bottom: 0, left: 0 }}>
+              <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#6b7280' }} />
+              <Tooltip {...chartTooltip} formatter={(v: number) => fmtINR(v)} />
+              <Bar dataKey="value" radius={[6, 6, 2, 2]} barSize={28}>
+                {aging.map((_, i) => <Cell key={i} fill={['#0d9488', '#059669', '#d97706', '#e11d48'][i]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <ul className="mt-1 space-y-2">
             {overdue.slice(0, 3).map((i) => (
               <li key={i.id} className="flex items-center justify-between rounded-2xl bg-soft px-3 py-2 text-xs">
                 <span className="flex items-center gap-2"><FileText size={14} className="text-rose-deep" />{i.client.name}</span>
@@ -195,13 +191,13 @@ export default function FinanceDashboard() {
           </ul>
         </Card>
 
-        <Card className="lg:col-span-4">
+        <Card compact className="lg:col-span-4">
           <CardHeader title="Expense Approvals" subtitle={`${pendingExp.length} claims waiting`} action={<CornerLink onClick={() => nav('/finance/expenses')} />} />
-          <ul className="mt-3 divide-y divide-line">
+          <ul className="mt-2 divide-y divide-line">
             {pendingExp.slice(0, 4).map((x) => {
               const e = employeeById(x.employeeId)!
               return (
-                <li key={x.id} className="flex items-center gap-2.5 py-2.5">
+                <li key={x.id} className="flex items-center gap-2.5 py-2">
                   <Avatar name={e.name} hue={e.avatarHue} src={photoFor(e)} size={32} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold">{fmtINR(x.amount)}</p>
@@ -215,27 +211,30 @@ export default function FinanceDashboard() {
           </ul>
         </Card>
 
-        <Card className="lg:col-span-4">
+        <Card compact className="lg:col-span-4">
           <CardHeader title="Budget Utilisation" subtitle="FY to date" />
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-display text-3xl"><CountUp value={`${((totalSpent / totalBudget) * 100).toFixed(0)}%`} /></span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="font-display text-2xl"><CountUp value={`${((totalSpent / totalBudget) * 100).toFixed(0)}%`} /></span>
             <span className="text-xs text-ash">{fmtCompact(totalSpent)} of {fmtCompact(totalBudget)}</span>
           </div>
-          <div className="mt-4 space-y-3">
-            {budgets.slice(0, 5).map((b) => (
-              <div key={b.dept}>
-                <div className="mb-1 flex justify-between text-xs"><span>{b.dept}</span><span className="text-ash">{Math.round((b.spent / b.allocated) * 100)}%</span></div>
-                <Progress value={(b.spent / b.allocated) * 100} tone={b.spent / b.allocated > 0.65 ? 'rose' : 'ink'} />
-              </div>
-            ))}
-          </div>
+          <ResponsiveContainer width="100%" height={170}>
+            <BarChart data={budgets.slice(0, 5)} layout="vertical" margin={{ top: 4, right: 12, bottom: 0, left: 0 }}>
+              <XAxis type="number" hide />
+              <YAxis dataKey="dept" type="category" axisLine={false} tickLine={false} width={78} tick={{ fontSize: 10, fill: '#6b7280' }} />
+              <Tooltip {...chartTooltip} formatter={(v: number) => fmtCompact(v)} />
+              <Bar dataKey="allocated" fill="#e5e8ec" radius={[4, 4, 4, 4]} barSize={10} />
+              <Bar dataKey="spent" radius={[4, 4, 4, 4]} barSize={10}>
+                {budgets.slice(0, 5).map((b, i) => <Cell key={i} fill={b.spent / b.allocated > 0.65 ? '#e11d48' : '#059669'} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </Card>
 
-        <Card className="lg:col-span-8">
+        <Card compact className="lg:col-span-8">
           <CardHeader title="Recent Transactions" action={<IconBtn><ArrowUpRight size={16} /></IconBtn>} />
-          <ul className="mt-3 divide-y divide-line">
+          <ul className="mt-2 divide-y divide-line">
             {transactions.slice(0, 7).map((t) => (
-              <li key={t.id} className="flex items-center gap-3 py-2.5">
+              <li key={t.id} className="flex items-center gap-3 py-2">
                 <span className={clsx('grid size-9 shrink-0 place-items-center rounded-full', t.amount > 0 ? 'bg-lime' : 'bg-soft')}>
                   {t.amount > 0 ? <ArrowDownLeft size={15} /> : <ArrowUpRight size={15} />}
                 </span>
@@ -249,12 +248,13 @@ export default function FinanceDashboard() {
           </ul>
         </Card>
 
-        <div className="card-dark animate-in p-5 lg:col-span-4">
-          <h3 className="text-[17px] font-medium leading-tight tracking-tight text-white">Tax & Compliance</h3>
-          <p className="mt-1 text-xs text-white/50">GST · TDS · PF · ESI</p>
-          <ul className="mt-4 space-y-2.5">
+        <div className="card-dark animate-in relative overflow-hidden border border-white/10 p-4 lg:col-span-4">
+          <div className="pointer-events-none absolute -right-10 -top-14 size-36 rounded-full bg-rose/15 blur-3xl" />
+          <h3 className="relative text-[17px] font-medium leading-tight tracking-tight text-white">Tax & Compliance</h3>
+          <p className="relative mt-1 text-xs text-white/50">GST · TDS · PF · ESI</p>
+          <ul className="relative mt-3 space-y-2">
             {complianceDeadlines.map((c) => (
-              <li key={c.title} className="flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
+              <li key={c.title} className="flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm text-white">{c.title}</p>
                   <p className="text-[11px] text-white/50">Due {fmtShortDate(c.date)}</p>

@@ -74,12 +74,12 @@ export default function Payroll() {
           <CardHeader title="Payroll Cost Trend" subtitle="Gross vs net, last 6 runs" />
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={history} margin={{ top: 16, right: 0, left: -8, bottom: 0 }} barGap={4}>
-              <CartesianGrid vertical={false} stroke="#edf0ed" />
+              <CartesianGrid vertical={false} stroke="#e5e8ec" />
               <XAxis dataKey="month" axisLine={false} tickLine={false} />
               <YAxis axisLine={false} tickLine={false} tickFormatter={fmtCompact} width={60} />
               <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtINR(v)} />
-              <Bar dataKey="gross" name="Gross" fill="#262825" radius={[8, 8, 3, 3]} barSize={18} />
-              <Bar dataKey="net" name="Net" fill="#ddefa8" radius={[8, 8, 3, 3]} barSize={18} />
+              <Bar dataKey="gross" name="Gross" fill="#1a1d29" radius={[8, 8, 3, 3]} barSize={18} />
+              <Bar dataKey="net" name="Net" fill="#a7f3d0" radius={[8, 8, 3, 3]} barSize={18} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
