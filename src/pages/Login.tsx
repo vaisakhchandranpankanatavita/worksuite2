@@ -64,10 +64,8 @@ export default function Login() {
   function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
-      login(roleId)
-      nav(`/${role.modules[0]}`)
-    }, 700)
+    login(roleId)
+    nav(`/${role.modules[0]}`)
   }
 
   return (

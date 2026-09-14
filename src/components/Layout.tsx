@@ -7,6 +7,7 @@ import { roleById, type ModuleKey } from '../data/roles'
 import { useAuth } from '../store'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
+import PageLoader from './PageLoader'
 
 const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end?: boolean }[]> = {
   hr: [
@@ -113,6 +114,48 @@ const NOTIFICATIONS = [
   { title: 'PF & ESI remittance due this week', time: 'Today', tone: 'bg-sky', dot: 'bg-sky-deep' },
 ]
 
+/**
+ * Decorative floating blobs that move at a slower rate than page scroll,
+ * creating a gentle depth parallax behind the card grid.
+ * The blobYRef is updated every rAF frame by the Layout scroll driver.
+ */
+function ParallaxBlobs({ blobYRef }: { blobYRef: React.MutableRefObject<number> }) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (mq.matches) return
+
+    let rafId: number
+    const tick = () => {
+      if (ref.current) {
+        ref.current.style.transform = `translateY(${blobYRef.current.toFixed(2)}px)`
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [blobYRef])
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      style={{ zIndex: 0 }}
+    >
+      {/* Top-left lime blob */}
+      <div className="absolute -left-32 -top-20 size-[520px] rounded-full bg-lime/[0.13] blur-[90px]" />
+      {/* Top-right sky blob */}
+      <div className="absolute -right-24 top-40 size-[420px] rounded-full bg-sky/[0.11] blur-[80px]" />
+      {/* Mid-left sage blob */}
+      <div className="absolute left-1/3 top-[55%] size-[380px] rounded-full bg-sage/[0.09] blur-[70px]" />
+      {/* Bottom-right rose blob */}
+      <div className="absolute -bottom-16 right-1/4 size-[460px] rounded-full bg-rose/[0.10] blur-[85px]" />
+    </div>
+  )
+}
+
 export default function Layout() {
   const { pathname } = useLocation()
   const nav = useNavigate()
@@ -124,6 +167,58 @@ export default function Layout() {
   const [bell, setBell] = useState(false)
   const [mobile, setMobile] = useState(false)
   const [profile, setProfile] = useState(false)
+  const [pageLoading, setPageLoading] = useState(false)
+
+  // Track previous pathname so we don't fire on first mount
+  const prevPath = useRef(pathname)
+
+  // ── Parallax scroll driver ──────────────────────────────────
+  // Drives body::before mesh gradient (--parallax-y) and the
+  // decorative blob layer (--blob-y) at different speeds.
+  const blobYRef = useRef(0)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (mq.matches) return
+
+    let rafId: number
+    let scrollY = 0
+
+    const onScroll = () => { scrollY = window.scrollY }
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    const tick = () => {
+      // mesh background moves at 25% of scroll speed
+      document.documentElement.style.setProperty(
+        '--parallax-y',
+        `${(scrollY * -0.25).toFixed(2)}px`,
+      )
+      // decorative blobs move at 18% (even subtler, different layer)
+      blobYRef.current = scrollY * -0.18
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+
+    const onMotionChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        cancelAnimationFrame(rafId)
+        document.documentElement.style.removeProperty('--parallax-y')
+      }
+    }
+    mq.addEventListener('change', onMotionChange)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener('scroll', onScroll)
+      mq.removeEventListener('change', onMotionChange)
+      document.documentElement.style.removeProperty('--parallax-y')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (prevPath.current === pathname) return
+    prevPath.current = pathname
+    setPageLoading(true)
+  }, [pathname])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -133,7 +228,6 @@ export default function Layout() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
   useEffect(() => { setMobile(false); setBell(false); setProfile(false); window.scrollTo(0, 0) }, [pathname])
-
   function signOut() { setProfile(false); logoutAuth(); nav('/login') }
 
   if (!role) return <Navigate to="/login" replace />
@@ -145,27 +239,35 @@ export default function Layout() {
   return (
     <div className="min-h-full">
 
-      {/* ── Ultra-Premium Borderless Glass Header ── spans full viewport width */}
+      {/* ── Ultra-Premium Glassmorphic Header ── */}
       <header className="sticky top-0 z-30">
-        {/* Frosted glass surface */}
+        {/* Glass surface */}
         <div className="relative flex items-center gap-3 px-4 py-3.5 sm:px-6 lg:px-8"
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(245,248,244,0.58) 100%)',
-            backdropFilter: 'blur(32px) saturate(220%) brightness(1.04)',
-            WebkitBackdropFilter: 'blur(32px) saturate(220%) brightness(1.04)',
-            boxShadow: '0 1px 0 rgba(255,255,255,0.9) inset, 0 -1px 0 rgba(26,29,27,0.04) inset, 0 8px 32px -8px rgba(26,29,27,0.09), 0 2px 8px -2px rgba(26,29,27,0.05)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(240,245,239,0.38) 100%)',
+            backdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
+            WebkitBackdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
+            boxShadow: [
+              '0 1px 0 rgba(255,255,255,0.95) inset',
+              '0 -1px 0 rgba(26,29,27,0.03) inset',
+              '0 0 0 1px rgba(255,255,255,0.55) inset',
+              '0 8px 40px -8px rgba(26,29,27,0.10)',
+              '0 2px 12px -2px rgba(26,29,27,0.06)',
+            ].join(', '),
           }}
         >
-            {/* Iridescent shimmer line at top */}
-            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/90 to-transparent" />
-            {/* Subtle lime tint glow */}
-            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-lime/8 to-transparent" />
+            {/* Iridescent shimmer line at very top */}
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90" />
+            {/* Prismatic colour wash */}
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-lime/[0.07] via-sky/[0.03] to-transparent" />
+            {/* Bottom separator — soft glow line */}
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-lime-deep/20 to-transparent" />
 
             {/* Left: Logo + module switcher */}
             <div className="flex flex-1 items-center gap-4">
               <Logo />
               {visibleModules.length > 1 && (
-                <div className="hidden rounded-full border border-line/80 bg-white/70 p-1 backdrop-blur sm:inline-flex">
+                <div className="hidden rounded-full border border-white/60 bg-white/40 p-1 backdrop-blur-xl sm:inline-flex" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 8px -2px rgba(26,29,27,0.08)' }}>
                   {visibleModules.map((m) => {
                     const Icon = MODULE_ICON[m]
                     return (
@@ -179,7 +281,7 @@ export default function Layout() {
             </div>
 
             {/* Centre: Desktop nav pills */}
-            <nav className="hidden items-center rounded-full border border-line/70 bg-white/70 p-1 backdrop-blur xl:flex">
+            <nav className="hidden items-center rounded-full border border-white/55 bg-white/35 p-1 backdrop-blur-xl xl:flex" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(26,29,27,0.03), 0 2px 12px -4px rgba(26,29,27,0.08)' }}>
               {links.map(({ to, label, icon: Icon, end }) => (
                 <NavLink key={to} to={to} end={end} className={({ isActive }) => clsx('group flex items-center gap-2 rounded-full px-4 py-2 font-display text-[13px] font-medium transition-all duration-200', isActive ? 'bg-ink text-white shadow-sm' : 'text-ink/75 hover:bg-soft hover:text-ink')}>
                   {({ isActive }) => (
@@ -195,7 +297,7 @@ export default function Layout() {
             {/* Right: Actions */}
             <div className="flex flex-1 items-center justify-end gap-1.5">
               {/* Search */}
-              <button onClick={() => setSearch(true)} title="Search (Ctrl+K)" aria-label="Search" className="flex h-9 items-center gap-2 rounded-full border border-line/80 bg-white/70 px-3 text-xs text-ash backdrop-blur transition-all hover:border-ink/20 hover:bg-white hover:text-ink hover:shadow-sm">
+              <button onClick={() => setSearch(true)} title="Search (Ctrl+K)" aria-label="Search" className="flex h-9 items-center gap-2 rounded-full border border-white/55 bg-white/35 px-3 text-xs text-ash backdrop-blur-xl transition-all hover:border-white/80 hover:bg-white/60 hover:text-ink hover:shadow-sm" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }}>
                 <Search size={14} />
                 <span className="hidden sm:inline">Search</span>
                 <kbd className="hidden rounded-md border border-line bg-soft px-1.5 py-0.5 text-[10px] font-bold sm:inline">⌘K</kbd>
@@ -210,10 +312,11 @@ export default function Layout() {
                 {bell && (
                   <div className="animate-in absolute right-0 top-12 z-40 w-80 rounded-2xl p-3"
                     style={{
-                      background: 'rgba(248,252,248,0.82)',
-                      backdropFilter: 'blur(28px) saturate(200%)',
-                      WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-                      boxShadow: '0 0 0 1px rgba(255,255,255,0.85) inset, 0 8px 32px -8px rgba(26,29,27,0.16), 0 24px 56px -16px rgba(26,29,27,0.12)',
+                      background: 'rgba(245,249,244,0.65)',
+                      backdropFilter: 'blur(48px) saturate(280%)',
+                      WebkitBackdropFilter: 'blur(48px) saturate(280%)',
+                      border: '1px solid rgba(255,255,255,0.75)',
+                      boxShadow: '0 0 0 1px rgba(255,255,255,0.9) inset, 0 8px 40px -8px rgba(26,29,27,0.18), 0 24px 64px -16px rgba(26,29,27,0.12)',
                     }}
                   >
                     <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-2xl bg-gradient-to-r from-transparent via-rose-deep/30 to-transparent" />
@@ -242,7 +345,7 @@ export default function Layout() {
 
               {/* Profile */}
               <div className="relative ml-0.5 hidden md:block">
-                <button onClick={() => setProfile((p) => !p)} className="flex items-center gap-2.5 rounded-full border border-line/60 bg-white/70 py-1 pl-1 pr-2.5 backdrop-blur transition-all hover:border-ink/20 hover:bg-white hover:shadow-sm" aria-label="Account menu">
+                <button onClick={() => setProfile((p) => !p)} className="flex items-center gap-2.5 rounded-full border border-white/55 bg-white/35 py-1 pl-1 pr-2.5 backdrop-blur-xl transition-all hover:border-white/80 hover:bg-white/60 hover:shadow-sm" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }} aria-label="Account menu">
                   <Avatar name={role.name} hue={role.hue} size={32} src={role.photo} />
                   <div className="text-left leading-tight">
                     <p className="text-[13px] font-semibold">{role.name}</p>
@@ -253,10 +356,11 @@ export default function Layout() {
                 {profile && (
                   <div className="animate-in absolute right-0 top-[52px] z-40 w-60 rounded-2xl p-2"
                     style={{
-                      background: 'rgba(248,252,248,0.82)',
-                      backdropFilter: 'blur(28px) saturate(200%)',
-                      WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-                      boxShadow: '0 0 0 1px rgba(255,255,255,0.85) inset, 0 8px 32px -8px rgba(26,29,27,0.16), 0 24px 56px -16px rgba(26,29,27,0.12)',
+                      background: 'rgba(245,249,244,0.65)',
+                      backdropFilter: 'blur(48px) saturate(280%)',
+                      WebkitBackdropFilter: 'blur(48px) saturate(280%)',
+                      border: '1px solid rgba(255,255,255,0.75)',
+                      boxShadow: '0 0 0 1px rgba(255,255,255,0.9) inset, 0 8px 40px -8px rgba(26,29,27,0.18), 0 24px 64px -16px rgba(26,29,27,0.12)',
                     }}
                   >
                     <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-2xl bg-gradient-to-r from-transparent via-sky-deep/30 to-transparent" />
@@ -321,7 +425,9 @@ export default function Layout() {
           </div>
         </header>
 
-      <div className="min-h-screen bg-canvas px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-8 lg:pt-6">
+      <div className="relative min-h-screen bg-canvas px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-8 lg:pt-6">
+        {/* Decorative parallax blobs — float behind all content */}
+        <ParallaxBlobs blobYRef={blobYRef} />
         <main><Outlet /></main>
       </div>
 

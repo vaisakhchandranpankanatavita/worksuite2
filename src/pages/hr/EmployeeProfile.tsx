@@ -61,7 +61,7 @@ export default function EmployeeProfile() {
           {/* Profile photo card */}
           <div className="card animate-in relative min-h-[260px] overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-soft to-lime/50" />
-            <img src={photoFor(e)} alt={e.name} className="absolute inset-0 size-full object-cover object-top" onError={(ev) => (ev.currentTarget.style.display = 'none')} />
+            <img src={photoFor(e)} alt={e.name} className="absolute inset-0 size-full object-contain object-top" onError={(ev) => (ev.currentTarget.style.display = 'none')} />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/65 via-transparent" />
             <div className="absolute left-3 top-3"><Badge className="bg-white/85">{e.status}</Badge></div>
             <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-2 text-white">

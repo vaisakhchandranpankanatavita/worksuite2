@@ -37,11 +37,11 @@ export function IconBtn({ children, className, dark, ...rest }: ButtonHTMLAttrib
   return (
     <button
       className={clsx(
-        'grid size-9 shrink-0 place-items-center rounded-full border transition-all duration-150',
-        'hover:scale-105 active:scale-90',
+        'grid size-9 shrink-0 place-items-center rounded-full border transition-all duration-200',
+        'active:scale-90',
         dark
-          ? 'border-ink bg-ink text-white hover:bg-black hover:shadow-lg'
-          : 'border-line bg-white/80 text-ink hover:bg-soft hover:border-ink/20 hover:shadow-sm',
+          ? 'border-ink bg-ink text-white hover:bg-black hover:shadow-md'
+          : 'border-line/70 bg-white/70 text-ink/70 hover:bg-white hover:border-ink/15 hover:text-ink hover:shadow-sm',
         className,
       )}
       {...rest}
@@ -63,14 +63,14 @@ export function Button({ variant = 'dark', size = 'md', className, children, ...
     <button
       className={clsx(
         'relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full font-display font-semibold',
-        'transition-all duration-200 disabled:opacity-50 disabled:active:scale-100 active:scale-95',
+        'transition-all duration-250 disabled:opacity-50 disabled:active:scale-100 active:scale-[0.97]',
         'shimmer-on-hover',
         size === 'sm' ? 'h-8 px-4 text-xs' : 'h-10 px-5 text-[13px]',
-        variant === 'dark' && 'bg-ink text-white hover:-translate-y-0.5 hover:bg-[#0d110e] shadow-[0_1px_3px_rgba(26,29,27,0.20),0_4px_14px_-2px_rgba(26,29,27,0.28)] hover:shadow-[0_2px_8px_rgba(26,29,27,0.28),0_10px_28px_-4px_rgba(26,29,27,0.36)]',
-        variant === 'light' && 'border border-line bg-white text-ink hover:-translate-y-0.5 hover:bg-soft hover:border-ink/20 shadow-[0_1px_3px_rgba(26,29,27,0.06),0_2px_8px_-2px_rgba(26,29,27,0.09)] hover:shadow-[0_2px_8px_rgba(26,29,27,0.09),0_6px_18px_-4px_rgba(26,29,27,0.13)]',
-        variant === 'lime' && 'bg-lime text-ink hover:-translate-y-0.5 hover:bg-lime-deep/70 shadow-[0_1px_3px_rgba(174,206,82,0.28),0_4px_14px_-2px_rgba(174,206,82,0.32)] hover:shadow-[0_2px_8px_rgba(174,206,82,0.32),0_10px_24px_-4px_rgba(174,206,82,0.38)]',
-        variant === 'ghost' && 'text-ash hover:bg-soft hover:text-ink',
-        variant === 'danger' && 'border border-rose bg-white text-rose-deep hover:-translate-y-0.5 hover:bg-rose/40 shadow-[0_1px_3px_rgba(205,106,150,0.12)] hover:shadow-[0_2px_10px_rgba(205,106,150,0.22)]',
+        variant === 'dark'    && 'bg-ink text-white shadow-[0_1px_3px_rgba(26,29,27,0.20),0_4px_14px_-2px_rgba(26,29,27,0.28)] hover:shadow-[0_2px_10px_rgba(26,29,27,0.26),0_8px_24px_-4px_rgba(26,29,27,0.32)] hover:bg-[#0d110e]',
+        variant === 'light'   && 'border border-line bg-white text-ink shadow-[0_1px_3px_rgba(26,29,27,0.06),0_2px_8px_-2px_rgba(26,29,27,0.09)] hover:shadow-[0_2px_8px_rgba(26,29,27,0.09),0_6px_18px_-4px_rgba(26,29,27,0.12)] hover:bg-soft hover:border-ink/15',
+        variant === 'lime'    && 'bg-lime text-ink shadow-[0_1px_3px_rgba(174,206,82,0.28),0_4px_14px_-2px_rgba(174,206,82,0.32)] hover:shadow-[0_2px_8px_rgba(174,206,82,0.32),0_8px_22px_-4px_rgba(174,206,82,0.36)] hover:bg-lime-deep/70',
+        variant === 'ghost'   && 'text-ash hover:bg-soft hover:text-ink',
+        variant === 'danger'  && 'border border-rose bg-white text-rose-deep shadow-[0_1px_3px_rgba(205,106,150,0.12)] hover:shadow-[0_2px_10px_rgba(205,106,150,0.20)] hover:bg-rose/40',
         className,
       )}
       {...rest}
@@ -90,7 +90,7 @@ export function Avatar({ name, hue = 140, size = 36, src, className }: {
       style={{ width: size, height: size, fontSize: size * 0.36, background: `linear-gradient(135deg, hsl(${hue} 58% 86%), hsl(${(hue + 40) % 360} 48% 72%))` }}
     >
       {initials(name)}
-      {src && <img src={src} alt="" className="absolute inset-0 size-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />}
+      {src && <img src={src} alt="" className="absolute inset-0 size-full object-cover object-top" onError={(e) => (e.currentTarget.style.display = 'none')} />}
     </span>
   )
 }
@@ -127,7 +127,7 @@ export function Badge({ children, tone, dot = true, className }: {
 }) {
   const t = tone ?? STATUS_TONE[String(children)] ?? 'gray'
   return (
-    <span className={clsx('inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[3px] text-[11px] font-bold leading-none transition-transform duration-150 hover:scale-105', TONES[t], className)}>
+    <span className={clsx('inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-[3px] text-[11px] font-bold leading-none transition-opacity duration-200 hover:opacity-80', TONES[t], className)}>
       {dot && <span className="size-1.5 rounded-full bg-current opacity-70" />}
       {children}
     </span>
@@ -137,11 +137,10 @@ export function Badge({ children, tone, dot = true, className }: {
 /* ─── PageHeader ────────────────────────────────────────────── */
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="font-display text-[32px] font-semibold leading-[1.1] tracking-tight md:text-[42px]">{title}</h1>
-        {subtitle && <p className="mt-2 text-sm text-ash">{subtitle}</p>}
-      </div>
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <h1 className="text-gradient-heading font-display text-[26px] font-semibold leading-tight tracking-tight md:text-[32px]">
+        {title}
+      </h1>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )

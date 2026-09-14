@@ -3,7 +3,6 @@ import { Download, LayoutGrid, List, Mail, MapPin, Plus, Search } from 'lucide-r
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
-import { CountUp } from '../../components/CountUp'
 import { DEPARTMENTS, LOCATIONS, TODAY, employees, type Department, type Employee } from '../../data/mock'
 import { fmtCompact, fmtDate } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
@@ -61,46 +60,63 @@ export default function Employees() {
         }
       />
 
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {/* Status chips */}
         {(['Active', 'Probation', 'On Leave', 'Notice Period'] as const).map((s, i) => (
-          <button key={s} onClick={() => setStatus(status === s ? 'All' : s)} className={clsx('card p-4 text-left transition', status === s && 'ring-2 ring-ink')}>
-            <p className="text-xs text-ash">{s}</p>
-            <p className="mt-1 flex items-center justify-between font-display text-2xl font-medium">
-              <CountUp value={employees.filter((e) => e.status === s).length} />
-              <span className={clsx('size-3 rounded-full', ['bg-sage-deep', 'bg-sky-deep', 'bg-ash', 'bg-rose-deep'][i])} />
-            </p>
+          <button
+            key={s}
+            onClick={() => setStatus(status === s ? 'All' : s)}
+            className={clsx(
+              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-all duration-200',
+              status === s
+                ? 'border-ink bg-ink text-white'
+                : 'border-line bg-white/70 text-ash hover:border-ink/30 hover:text-ink',
+            )}
+          >
+            <span className={clsx('size-1.5 rounded-full', ['bg-sage-deep', 'bg-sky-deep', 'bg-ash', 'bg-rose-deep'][i])} />
+            {s}
+            <span className={clsx('font-display font-medium tabular-nums', status === s ? 'text-white/70' : 'text-ink/60')}>
+              {employees.filter((e) => e.status === s).length}
+            </span>
           </button>
         ))}
-      </div>
 
-      <Card className="mb-5 flex flex-wrap items-center gap-3 !p-3">
-        <div className="relative min-w-[220px] flex-1">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ash" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, role, email or ID" className="h-10 w-full rounded-full border border-line bg-white pl-10 pr-4 text-sm outline-none focus:border-ink" />
+        <div className="ml-auto flex items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-ash" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search…"
+              className="h-8 w-44 rounded-full border border-line bg-white/80 pl-8 pr-3 text-xs outline-none transition-all duration-200 focus:w-56 focus:border-ink/30 focus:bg-white"
+            />
+          </div>
+
+          {/* Dept filter */}
+          <Select value={dept} onChange={(e) => setDept(e.target.value as Department)} className="h-8 !rounded-full !py-0 !text-xs">
+            <option value="All">All depts</option>
+            {DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}
+          </Select>
+
+          {/* View toggle */}
+          <div className="inline-flex rounded-full border border-line bg-white/80 p-0.5">
+            {(['grid', 'list'] as const).map((v) => (
+              <button key={v} onClick={() => setView(v)} className={clsx('grid size-7 place-items-center rounded-full transition-all duration-200', view === v ? 'bg-ink text-white' : 'text-ash hover:text-ink')} aria-label={v}>
+                {v === 'grid' ? <LayoutGrid size={13} /> : <List size={13} />}
+              </button>
+            ))}
+          </div>
         </div>
-        <Select value={dept} onChange={(e) => setDept(e.target.value as Department)}>
-          <option value="All">All departments</option>
-          {DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}
-        </Select>
-        <Select value={status} onChange={(e) => setStatus(e.target.value as 'All')}>
-          {STATUSES.map((s) => <option key={s} value={s}>{s === 'All' ? 'All statuses' : s}</option>)}
-        </Select>
-        <div className="inline-flex rounded-full border border-line bg-white p-1">
-          {(['grid', 'list'] as const).map((v) => (
-            <button key={v} onClick={() => setView(v)} className={clsx('grid size-8 place-items-center rounded-full', view === v ? 'bg-ink text-white' : 'text-ash')} aria-label={v}>
-              {v === 'grid' ? <LayoutGrid size={15} /> : <List size={15} />}
-            </button>
-          ))}
-        </div>
-      </Card>
+      </div>
 
       {view === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {list.map((e) => (
-            <button key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card group overflow-hidden text-left transition hover:-translate-y-0.5">
-              <div className="relative h-44 overflow-hidden bg-gradient-to-br from-soft to-lime/40">
-                <img src={photoFor(e)} alt="" className="absolute inset-0 size-full object-cover object-top transition group-hover:scale-105" onError={(ev) => (ev.currentTarget.style.display = 'none')} />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/0" />
+            <button key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card group overflow-hidden text-left">
+              <div className="relative h-52 overflow-hidden bg-gradient-to-br from-soft to-lime/40">
+                <img src={photoFor(e)} alt="" className="absolute inset-0 size-full object-contain object-top transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.03]" onError={(ev) => (ev.currentTarget.style.display = 'none')} />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/0 transition-opacity duration-300 group-hover:opacity-80" />
                 <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between text-white">
                   <div className="min-w-0">
                     <p className="truncate font-display text-lg leading-tight">{e.name}</p>

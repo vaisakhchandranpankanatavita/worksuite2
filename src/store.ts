@@ -5,18 +5,26 @@ import type { RoleId } from './data/roles'
 
 interface AuthState {
   role: RoleId | null
+  showSplash: boolean
   login: (role: RoleId) => void
   logout: () => void
+  clearSplash: () => void
 }
 
 export const useAuth = create<AuthState>()(
   persist(
     (set) => ({
       role: null,
-      login: (role) => set({ role }),
-      logout: () => set({ role: null }),
+      showSplash: false,
+      login: (role) => set({ role, showSplash: true }),
+      logout: () => set({ role: null, showSplash: false }),
+      clearSplash: () => set({ showSplash: false }),
     }),
-    { name: 'worksuite-auth' },
+    {
+      name: 'worksuite-auth',
+      // Don't persist splash flag — always start fresh
+      partialize: (s) => ({ role: s.role }),
+    },
   ),
 )
 

@@ -180,8 +180,8 @@ export default function AiInsights() {
                   <div key={i}
                     className={clsx(
                       'group flex flex-col rounded-xl border bg-white/80 p-3 backdrop-blur-sm',
-                      'transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md',
-                      'border-line/60 hover:border-ink/15',
+                      'transition-all duration-400 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-4px_rgba(26,29,27,0.12),0_20px_48px_-12px_rgba(26,29,27,0.13)]',
+                      'border-line/60 hover:border-white/90',
                       shown ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0',
                     )}
                   >
