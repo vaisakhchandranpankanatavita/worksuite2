@@ -14,38 +14,38 @@ import { useEffect, useRef, useState } from 'react'
  */
 export function useParallax(speed = 0.3, axis: 'X' | 'Y' = 'Y') {
   const [offset, setOffset] = useState(0)
-  const rafRef = useRef<number | null>(null)
-  const scrollRef = useRef(0)
+  const tickingRef = useRef(false)
 
   useEffect(() => {
     // Respect reduced-motion preference
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     if (mq.matches) return
 
-    const onScroll = () => {
-      scrollRef.current = window.scrollY
+    // Coalesce scroll events into at most one state update per animation
+    // frame, and only while the page is actually scrolling — avoids a
+    // perpetual 60fps re-render loop that fights other work for frame time.
+    const update = () => {
+      setOffset(window.scrollY * speed)
+      tickingRef.current = false
     }
 
-    const tick = () => {
-      setOffset(scrollRef.current * speed)
-      rafRef.current = requestAnimationFrame(tick)
+    const onScroll = () => {
+      if (!tickingRef.current) {
+        tickingRef.current = true
+        requestAnimationFrame(update)
+      }
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })
-    rafRef.current = requestAnimationFrame(tick)
+    update()
 
     const onChange = (e: MediaQueryListEvent) => {
-      if (e.matches && rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current)
-        rafRef.current = null
-        setOffset(0)
-      }
+      if (e.matches) setOffset(0)
     }
     mq.addEventListener('change', onChange)
 
     return () => {
       window.removeEventListener('scroll', onScroll)
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
       mq.removeEventListener('change', onChange)
     }
   }, [speed])
@@ -62,26 +62,24 @@ export function useParallax(speed = 0.3, axis: 'X' | 'Y' = 'Y') {
  */
 export function useScrollY() {
   const [scrollY, setScrollY] = useState(0)
-  const rafRef = useRef<number | null>(null)
-  const rawRef = useRef(0)
+  const tickingRef = useRef(false)
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mq.matches) return
+    const update = () => {
+      setScrollY(window.scrollY)
+      tickingRef.current = false
+    }
 
-    const onScroll = () => { rawRef.current = window.scrollY }
-    const tick = () => {
-      setScrollY(rawRef.current)
-      rafRef.current = requestAnimationFrame(tick)
+    const onScroll = () => {
+      if (!tickingRef.current) {
+        tickingRef.current = true
+        requestAnimationFrame(update)
+      }
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })
-    rafRef.current = requestAnimationFrame(tick)
 
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
-    }
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return scrollY
