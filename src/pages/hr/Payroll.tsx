@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Download, Loader2, Play, Printer, Search } from 'lucide-react'
+import { Download, IndianRupee, Loader2, Play, Printer, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { exportCsv } from './Employees'
@@ -8,6 +8,15 @@ import { COMPANY, DEPARTMENTS, complianceDeadlines, computePayslip, employees, p
 import { fmtCompact, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
+
+const PAYROLL_COINS = [
+  { left: '10%', dur: 1.6, delay: 0 },
+  { left: '24%', dur: 1.9, delay: 0.3 },
+  { left: '40%', dur: 1.5, delay: 0.6 },
+  { left: '56%', dur: 2, delay: 0.15 },
+  { left: '72%', dur: 1.7, delay: 0.45 },
+  { left: '88%', dur: 1.85, delay: 0.75 },
+]
 
 export default function Payroll() {
   const { payrollStatus, runPayroll } = useApp()
@@ -45,27 +54,50 @@ export default function Payroll() {
       />
 
       <div className="grid gap-4 lg:grid-cols-12">
-        <div className="animate-in rounded-[22px] bg-ink p-6 text-white lg:col-span-4">
-          <div className="flex items-center justify-between">
+        <div className="animate-in relative overflow-hidden rounded-[22px] bg-ink p-6 text-white lg:col-span-4">
+          {payrollStatus === 'Processing' && (
+            <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+              <div className="payroll-glow absolute -right-10 -top-10 size-40 rounded-full bg-lime/25 blur-3xl" />
+              {PAYROLL_COINS.map((c, i) => (
+                <span
+                  key={i}
+                  className="payroll-coin text-lime/70"
+                  style={{ left: c.left, '--coin-dur': `${c.dur}s`, '--coin-delay': `${c.delay}s` } as React.CSSProperties}
+                >
+                  <IndianRupee size={14} />
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="relative z-10 flex items-center justify-between">
             <p className="text-sm text-white/60">Net payable · {current.label}</p>
-            <Badge tone={payrollStatus === 'Paid' ? 'lime' : payrollStatus === 'Processing' ? 'blue' : 'gray'}>{payrollStatus}</Badge>
+            <Badge tone={payrollStatus === 'Paid' ? 'lime' : payrollStatus === 'Processing' ? 'blue' : 'gray'}>
+              {payrollStatus === 'Processing' && <IndianRupee size={11} className="payroll-ring mr-1 inline-block" />}
+              {payrollStatus}
+            </Badge>
           </div>
-          <p className="mt-3 font-display text-4xl font-light">{fmtINR(totals.net)}</p>
-          <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+          <p className="relative z-10 mt-3 font-display text-4xl font-light">{fmtINR(totals.net)}</p>
+          <div className="relative z-10 mt-6 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl bg-white/5 p-3"><p className="text-xs text-white/50">Gross</p><p className="font-display">{fmtCompact(totals.gross)}</p></div>
             <div className="rounded-2xl bg-white/5 p-3"><p className="text-xs text-white/50">TDS</p><p className="font-display">{fmtCompact(totals.tds)}</p></div>
             <div className="rounded-2xl bg-white/5 p-3"><p className="text-xs text-white/50">PF (EE + ER)</p><p className="font-display">{fmtCompact(totals.pf)}</p></div>
             <div className="rounded-2xl bg-white/5 p-3"><p className="text-xs text-white/50">ESI + PT</p><p className="font-display">{fmtCompact(totals.esi + totals.pt)}</p></div>
           </div>
-          <div className="mt-6">
+          <div className="relative z-10 mt-6">
             <div className="mb-2 flex justify-between text-xs text-white/60"><span>Run progress</span><span>{payrollStatus === 'Paid' ? '4/4' : payrollStatus === 'Processing' ? '3/4' : '2/4'} steps</span></div>
             <div className="grid grid-cols-4 gap-1.5">
-              {['Attendance', 'Review', 'Approve', 'Disburse'].map((s, i) => (
-                <div key={s}>
-                  <div className={clsx('h-2 rounded-full', i < (payrollStatus === 'Paid' ? 4 : payrollStatus === 'Processing' ? 3 : 2) ? 'bg-lime' : 'bg-white/15')} />
-                  <p className="mt-1.5 text-[10px] text-white/50">{s}</p>
-                </div>
-              ))}
+              {['Attendance', 'Review', 'Approve', 'Disburse'].map((s, i) => {
+                const activeSteps = payrollStatus === 'Paid' ? 4 : payrollStatus === 'Processing' ? 3 : 2
+                const isCurrent = payrollStatus === 'Processing' && i === activeSteps - 1
+                return (
+                  <div key={s}>
+                    <div className={clsx('h-2 overflow-hidden rounded-full', i < activeSteps ? 'bg-lime' : 'bg-white/15')}>
+                      {isCurrent && <div className="payroll-progress-bar h-full rounded-full bg-white/70" style={{ '--payroll-dur': '2.2s' } as React.CSSProperties} />}
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-white/50">{s}</p>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

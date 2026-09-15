@@ -207,6 +207,14 @@ export function Modal({ open, onClose, title, children, width = 520 }: {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  useEffect(() => {
+    if (!open) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prevOverflow }
+  }, [open])
+
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/25 p-4 backdrop-blur-md" onMouseDown={onClose}>

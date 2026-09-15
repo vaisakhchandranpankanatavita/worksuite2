@@ -86,19 +86,13 @@ html:hover::-webkit-scrollbar-thumb:hover { background: rgba(130,136,129,0.8); }
 h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
 
 /* ─── Canvas mesh background ───────────────────────────────── */
-/* CSS custom property updated by JS parallax driver */
-:root { --parallax-y: 0px; }
-
-/* A very subtle mesh gradient behind everything — moves at 35% scroll speed */
+/* A very subtle static mesh gradient behind everything */
 body::before {
   content: '';
   position: fixed;
-  inset: -10% 0;          /* extra bleed so translate never shows a gap */
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  will-change: transform;
-  transform: translateY(var(--parallax-y));
-  transition: transform 0ms linear; /* updated every rAF frame, no CSS transition needed */
   background:
     radial-gradient(ellipse 80% 50% at 15% 10%, rgba(216,236,160,0.22) 0%, transparent 60%),
     radial-gradient(ellipse 60% 60% at 88% 20%, rgba(200,217,244,0.18) 0%, transparent 55%),
@@ -512,37 +506,6 @@ div.card:hover {
   color: transparent;
 }
 
-/* ─── Parallax utilities ───────────────────────────────────── */
-/*
- * .parallax-wrap — outer clipping container (overflow-hidden so shifted
- *   child content doesn't spill out of the card).
- *
- * .parallax-layer — apply to the inner element you want to shift.
- *   Transform is driven via inline style `--px-y` set from useParallax().
- *
- * .parallax-bg — fixed decorative layer (blobs / gradients) that floats
- *   behind main content at a slow rate.
- */
-.parallax-layer {
-  will-change: transform;
-  transform: translateY(var(--px-y, 0px));
-}
-
-.parallax-bg {
-  will-change: transform;
-  transform: translateY(var(--px-y, 0px));
-  pointer-events: none;
-}
-
-/* Suppress all parallax motion when user requests it */
-@media (prefers-reduced-motion: reduce) {
-  .parallax-layer,
-  .parallax-bg,
-  body::before {
-    transform: none !important;
-  }
-}
-
 /* ─── Celebrations widget — minimal confetti drift ─────────── */
 @keyframes confetti-drift {
   0%   { transform: translateY(6%) translateX(0) rotate(0deg); opacity: 0; }
@@ -560,6 +523,47 @@ div.card:hover {
 }
 @media (prefers-reduced-motion: reduce) {
   .confetti-piece { animation: none !important; opacity: 0 !important; }
+}
+
+/* ─── Payroll run — processing animation ────────────────────── */
+@keyframes payroll-coin-rise {
+  0%   { transform: translateY(0) scale(0.7); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(-140px) scale(1); opacity: 0; }
+}
+.payroll-coin {
+  position: absolute;
+  bottom: 0;
+  animation: payroll-coin-rise ease-in infinite;
+  animation-duration: var(--coin-dur, 1.8s);
+  animation-delay: var(--coin-delay, 0s);
+  will-change: transform, opacity;
+}
+@keyframes payroll-ring-spin {
+  to { transform: rotate(360deg); }
+}
+.payroll-ring {
+  animation: payroll-ring-spin 1.4s linear infinite;
+}
+@keyframes payroll-progress-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+.payroll-progress-bar {
+  animation: payroll-progress-fill linear forwards;
+  animation-duration: var(--payroll-dur, 2.2s);
+}
+@keyframes payroll-pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.9; transform: scale(1.08); }
+}
+.payroll-glow {
+  animation: payroll-pulse-glow 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .payroll-coin, .payroll-ring, .payroll-progress-bar, .payroll-glow { animation: none !important; }
+  .payroll-progress-bar { width: 100%; }
 }
 
 /* ─── Recharts global overrides ────────────────────────────── */

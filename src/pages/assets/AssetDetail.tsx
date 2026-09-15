@@ -34,8 +34,8 @@ export default function AssetDetail() {
         <Badge tone={a.status === 'Assigned' ? 'green' : a.status === 'Maintenance' ? 'amber' : a.status === 'Retired' ? 'rose' : 'blue'}>{a.status}</Badge>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="card animate-in p-5">
+      <div className="grid items-stretch gap-4 md:grid-cols-3">
+        <div className="card animate-in flex h-full flex-col p-5">
           <div className="mb-4 flex items-center gap-3">
             {a.image ? (
               <img src={a.image} alt={a.name} className="size-12 shrink-0 rounded-2xl object-cover" />
@@ -56,7 +56,7 @@ export default function AssetDetail() {
           </div>
         </div>
 
-        <div className="card animate-in p-5">
+        <div className="card animate-in flex h-full flex-col p-5">
           <h3 className="mb-4 text-[17px] font-medium">Assignment</h3>
           {holder ? (
             <div className="flex items-center gap-3">
@@ -70,7 +70,7 @@ export default function AssetDetail() {
           ) : (
             <p className="text-sm text-ash">Not currently assigned to anyone.</p>
           )}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-auto flex flex-wrap gap-2 pt-4">
             {holder ? (
               <Button size="sm" variant="light" onClick={() => unassignAsset(a.id)}>Unassign</Button>
             ) : (
@@ -79,9 +79,9 @@ export default function AssetDetail() {
           </div>
         </div>
 
-        <div className="card animate-in p-5">
+        <div className="card animate-in flex h-full flex-col p-5">
           <h3 className="mb-4 text-[17px] font-medium">Status actions</h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-1 flex-col justify-center gap-2">
             {(['Available', 'Assigned', 'Maintenance'] as AssetStatus[]).map((s) => (
               <Button key={s} size="sm" variant={a.status === s ? 'dark' : 'light'} disabled={a.status === s || (s === 'Assigned' && !holder)} onClick={() => setAssetStatus(a.id, s)}>
                 Mark {s}

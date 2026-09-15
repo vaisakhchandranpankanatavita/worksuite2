@@ -1,5 +1,9 @@
 import type { Employee } from '../data/mock'
 
-/** Placeholder portrait for demo purposes; Avatar falls back to initials if offline. */
+/**
+ * Placeholder portrait for demo purposes; Avatar falls back to initials if
+ * offline. Uses pravatar.cc at 512×512 (vs. randomuser.me's fixed 128×128)
+ * so large profile photos don't look pixelated.
+ */
 export const photoFor = (e: Pick<Employee, 'id' | 'gender'>) =>
-  `https://randomuser.me/api/portraits/${e.gender === 'F' ? 'women' : 'men'}/${Number(e.id.replace(/\D/g, '')) % 90}.jpg`
+  `https://i.pravatar.cc/512?img=${(Number(e.id.replace(/\D/g, '')) % 70) + 1}`

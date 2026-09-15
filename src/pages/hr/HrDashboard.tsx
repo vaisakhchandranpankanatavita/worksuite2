@@ -10,7 +10,6 @@ import { Avatar, AvatarStack, Badge, Button, Card, CardHeader, CornerLink, IconB
 import { DEPARTMENTS, TODAY, activity, attendanceTrend, departmentAttendance, employeeById, employees, headcountTrend, jobs, schedule, todayAttendance } from '../../data/mock'
 import { fmtShortDate } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
-import { useParallax } from '../../lib/useParallax'
 import { useApp } from '../../store'
 
 const ACTIVITY_STYLE: Record<import('../../data/mock').ActivityType, { icon: typeof Wallet; ring: string; text: string }> = {
@@ -69,10 +68,6 @@ export default function HrDashboard() {
   const [range, setRange] = useState<'6M' | '12M'>('12M')
   const [attrRange, setAttrRange] = useState<'6M' | '12M'>('12M')
 
-  // Parallax layers — different depths for visual separation
-  const headerParallax = useParallax(0.12) // page title drifts very slightly upward
-  const heroParallax   = useParallax(0.22) // hero art card drifts a bit more
-
   const counts = useMemo(() => {
     const c = { Present: 0, Remote: 0, Absent: 0, 'On Leave': 0, Late: 0 }
     todayAttendance.forEach((a) => c[a.status]++)
@@ -115,10 +110,7 @@ export default function HrDashboard() {
   return (
     <div>
       {/* Page header */}
-      <div
-        className="mb-6 flex flex-wrap items-center justify-between gap-4"
-        style={{ transform: headerParallax.transform, willChange: 'transform' }}
-      >
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-gradient-heading font-display text-[26px] font-semibold leading-tight tracking-tight md:text-[32px]">Teams Management</h1>
         <div className="flex gap-2">
           <Button variant="light" onClick={() => nav('/hr/leave')}><CalendarDays size={15} /> Leave requests</Button>
@@ -185,10 +177,7 @@ export default function HrDashboard() {
         {/* ── Centre column ──────────────────────────────────────── */}
         <div className="flex flex-col gap-4 lg:col-span-6">
           {/* Hero art card */}
-          <div
-            className="group/hero card animate-in relative min-h-[210px] flex-1 overflow-hidden"
-            style={{ transform: heroParallax.transform, willChange: 'transform' }}
-          >
+          <div className="group/hero card animate-in relative min-h-[210px] flex-1 overflow-hidden">
             <HeroArt className="absolute inset-0 size-full" />
             <div className="relative flex h-full flex-col justify-between p-5">
               <Badge tone="dark" dot={false} className="self-start">

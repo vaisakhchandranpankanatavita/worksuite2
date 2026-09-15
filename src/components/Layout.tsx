@@ -5,6 +5,7 @@ import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-route
 import { assets, employees, invoices } from '../data/mock'
 import { roleById, type ModuleKey } from '../data/roles'
 import { useAuth } from '../store'
+import { useSmoothScroll } from '../lib/useSmoothScroll'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
 import PageLoader from './PageLoader'
@@ -73,6 +74,11 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
   const nav = useNavigate()
   const ref = useRef<HTMLInputElement>(null)
   useEffect(() => ref.current?.focus(), [])
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prevOverflow }
+  }, [])
   const results = useMemo(() => {
     if (!q.trim()) return []
     const s = q.toLowerCase()
@@ -120,31 +126,11 @@ const NOTIFICATIONS = [
 ]
 
 /**
- * Decorative floating blobs that move at a slower rate than page scroll,
- * creating a gentle depth parallax behind the card grid.
- * The blobYRef is updated every rAF frame by the Layout scroll driver.
+ * Decorative static blobs behind the card grid — no scroll-driven motion.
  */
-function ParallaxBlobs({ blobYRef }: { blobYRef: React.MutableRefObject<number> }) {
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mq.matches) return
-
-    let rafId: number
-    const tick = () => {
-      if (ref.current) {
-        ref.current.style.transform = `translateY(${blobYRef.current.toFixed(2)}px)`
-      }
-      rafId = requestAnimationFrame(tick)
-    }
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [blobYRef])
-
+function ParallaxBlobs() {
   return (
     <div
-      ref={ref}
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
       style={{ zIndex: 0 }}
@@ -162,6 +148,7 @@ function ParallaxBlobs({ blobYRef }: { blobYRef: React.MutableRefObject<number> 
 }
 
 export default function Layout() {
+  useSmoothScroll()
   const { pathname } = useLocation()
   const nav = useNavigate()
   const roleId = useAuth((s) => s.role)
@@ -177,48 +164,6 @@ export default function Layout() {
   // Track previous pathname so we don't fire on first mount
   const prevPath = useRef(pathname)
 
-  // ── Parallax scroll driver ──────────────────────────────────
-  // Drives body::before mesh gradient (--parallax-y) and the
-  // decorative blob layer (--blob-y) at different speeds.
-  const blobYRef = useRef(0)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mq.matches) return
-
-    let rafId: number
-    let scrollY = 0
-
-    const onScroll = () => { scrollY = window.scrollY }
-    window.addEventListener('scroll', onScroll, { passive: true })
-
-    const tick = () => {
-      // mesh background moves at 25% of scroll speed
-      document.documentElement.style.setProperty(
-        '--parallax-y',
-        `${(scrollY * -0.25).toFixed(2)}px`,
-      )
-      // decorative blobs move at 18% (even subtler, different layer)
-      blobYRef.current = scrollY * -0.18
-      rafId = requestAnimationFrame(tick)
-    }
-    rafId = requestAnimationFrame(tick)
-
-    const onMotionChange = (e: MediaQueryListEvent) => {
-      if (e.matches) {
-        cancelAnimationFrame(rafId)
-        document.documentElement.style.removeProperty('--parallax-y')
-      }
-    }
-    mq.addEventListener('change', onMotionChange)
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      window.removeEventListener('scroll', onScroll)
-      mq.removeEventListener('change', onMotionChange)
-      document.documentElement.style.removeProperty('--parallax-y')
-    }
-  }, [])
-
   useEffect(() => {
     if (prevPath.current === pathname) return
     prevPath.current = pathname
@@ -227,7 +172,7 @@ export default function Layout() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearch(true) }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearch(true); setBell(false); setProfile(false); setMobile(false) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -302,7 +247,7 @@ export default function Layout() {
             {/* Right: Actions */}
             <div className="flex flex-1 items-center justify-end gap-1.5">
               {/* Search */}
-              <button onClick={() => setSearch(true)} title="Search (Ctrl+K)" aria-label="Search" className="flex h-9 items-center gap-2 rounded-full border border-white/55 bg-white/35 px-3 text-xs text-ash backdrop-blur-xl transition-all hover:border-white/80 hover:bg-white/60 hover:text-ink hover:shadow-sm" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }}>
+              <button onClick={() => { setSearch(true); setBell(false); setProfile(false); setMobile(false) }} title="Search (Ctrl+K)" aria-label="Search" className="flex h-9 items-center gap-2 rounded-full border border-white/55 bg-white/35 px-3 text-xs text-ash backdrop-blur-xl transition-all hover:border-white/80 hover:bg-white/60 hover:text-ink hover:shadow-sm" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }}>
                 <Search size={14} />
                 <span className="hidden sm:inline">Search</span>
                 <kbd className="hidden rounded-md border border-line bg-soft px-1.5 py-0.5 text-[10px] font-bold sm:inline">⌘K</kbd>
@@ -310,7 +255,7 @@ export default function Layout() {
 
               {/* Notifications */}
               <div className="relative">
-                <IconBtn onClick={() => setBell((b) => !b)} aria-label="Notifications">
+                <IconBtn onClick={() => setBell((b) => { const next = !b; if (next) { setProfile(false); setMobile(false) } return next })} aria-label="Notifications">
                   <Bell size={15} />
                   <span className="absolute right-2 top-2 size-2 rounded-full bg-rose-deep ring-2 ring-white" />
                 </IconBtn>
@@ -344,7 +289,7 @@ export default function Layout() {
 
               {/* Profile */}
               <div className="relative ml-0.5 hidden md:block">
-                <button onClick={() => setProfile((p) => !p)} className="flex items-center gap-2.5 rounded-full border border-white/55 bg-white/35 py-1 pl-1 pr-2.5 backdrop-blur-xl transition-all hover:border-white/80 hover:bg-white/60 hover:shadow-sm" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }} aria-label="Account menu">
+                <button onClick={() => setProfile((p) => { const next = !p; if (next) { setBell(false); setMobile(false) } return next })} className="flex items-center gap-2.5 rounded-full border border-white/55 bg-white/35 py-1 pl-1 pr-2.5 backdrop-blur-xl transition-all hover:border-white/80 hover:bg-white/60 hover:shadow-sm" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }} aria-label="Account menu">
                   <Avatar name={role.name} hue={role.hue} size={32} src={role.photo} />
                   <div className="text-left leading-tight">
                     <p className="text-[13px] font-semibold">{role.name}</p>
@@ -386,7 +331,7 @@ export default function Layout() {
               </div>
 
               {/* Mobile menu */}
-              <IconBtn className="xl:hidden" onClick={() => setMobile((m) => !m)} aria-label="Menu">
+              <IconBtn className="xl:hidden" onClick={() => setMobile((m) => { const next = !m; if (next) { setBell(false); setProfile(false) } return next })} aria-label="Menu">
                 {mobile ? <X size={15} /> : <Menu size={15} />}
               </IconBtn>
             </div>
@@ -425,8 +370,8 @@ export default function Layout() {
         </header>
 
       <div className="relative min-h-screen bg-canvas px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-8 lg:pt-6">
-        {/* Decorative parallax blobs — float behind all content */}
-        <ParallaxBlobs blobYRef={blobYRef} />
+        {/* Decorative blobs — static background accents */}
+        <ParallaxBlobs />
         <main><Outlet /></main>
       </div>
 
