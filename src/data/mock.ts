@@ -556,6 +556,91 @@ export const activity: { who: string; what: string; target: string; when: string
   { who: 'Rohit Verma', what: 'completed onboarding for', target: employees[employees.length - 2]?.name ?? 'a new joiner', when: '2d ago', kind: 'hr', type: 'onboarding', photo: 'https://randomuser.me/api/portraits/men/54.jpg' },
 ]
 
+/* ───────────────────────── Assets (IT inventory) ───────────────────────── */
+
+export type AssetCategory = 'Laptop' | 'Phone' | 'Monitor' | 'Headset' | 'Tablet' | 'Accessory'
+export type AssetStatus = 'Available' | 'Assigned' | 'Maintenance' | 'Retired'
+
+export const ASSET_CATEGORIES: AssetCategory[] = ['Laptop', 'Phone', 'Monitor', 'Headset', 'Tablet', 'Accessory']
+
+export interface Asset {
+  id: string
+  name: string
+  category: AssetCategory
+  model: string
+  serial: string
+  status: AssetStatus
+  assignedTo?: string
+  assignedOn?: string
+  purchaseDate: string
+  warrantyUntil?: string
+  cost: number
+  location: (typeof LOCATIONS)[number]
+  notes?: string
+}
+
+const EXTRA_ASSET_SPECS: { category: AssetCategory; name: string; model: string; cost: number }[] = [
+  { category: 'Monitor', name: 'Dell UltraSharp 27"', model: 'U2723QE · 4K', cost: 42000 },
+  { category: 'Monitor', name: 'LG UltraFine 24"', model: 'Full HD', cost: 18000 },
+  { category: 'Headset', name: 'Jabra Evolve2 55', model: 'Wireless · ANC', cost: 22000 },
+  { category: 'Headset', name: 'Sony WH-1000XM5', model: 'Wireless · ANC', cost: 29990 },
+  { category: 'Phone', name: 'iPhone 15', model: '128GB · Company SIM', cost: 79900 },
+  { category: 'Phone', name: 'Samsung Galaxy S24', model: '256GB', cost: 74999 },
+  { category: 'Tablet', name: 'iPad Air', model: '64GB · WiFi', cost: 59900 },
+  { category: 'Accessory', name: 'Logitech MX Master 3S', model: 'Wireless mouse', cost: 8500 },
+  { category: 'Accessory', name: 'Keychron K8', model: 'Mechanical keyboard', cost: 6500 },
+]
+
+const managersAndSeniors = employees.filter((e) => /Manager|Lead|Sales|Account/.test(e.role))
+
+export const assets: Asset[] = []
+
+// One laptop per employee — every hire is issued one on day one.
+employees.forEach((e, i) => {
+  const isDesignEng = e.department === 'Design' || e.department === 'Engineering'
+  const purchase = addDays(new Date(e.joinDate), -between(0, 20))
+  assets.push({
+    id: `AS${String(1001 + i)}`,
+    name: isDesignEng ? 'MacBook Pro 14"' : 'Dell Latitude 5440',
+    category: 'Laptop',
+    model: isDesignEng ? 'Apple M3 Pro · 18GB' : 'Intel i7 · 16GB',
+    serial: `WS-LT-${between(1000, 9999)}`,
+    status: 'Assigned',
+    assignedTo: e.id,
+    assignedOn: e.joinDate,
+    purchaseDate: iso(purchase),
+    warrantyUntil: iso(addDays(purchase, 365 * 3)),
+    cost: isDesignEng ? 220000 : 95000,
+    location: e.location === 'Remote' ? pick(LOCATIONS.filter((l) => l !== 'Remote')) : e.location,
+  })
+})
+
+// Extra pool assets (monitors, headsets, phones, tablets, accessories) — some assigned, some sitting in inventory.
+let nextAssetId = 1001 + employees.length
+for (let i = 0; i < 60; i++) {
+  const spec = pick(EXTRA_ASSET_SPECS)
+  const purchase = addDays(TODAY, -between(30, 1200))
+  const statusRoll = rand()
+  const status: AssetStatus = statusRoll < 0.55 ? 'Assigned' : statusRoll < 0.78 ? 'Available' : statusRoll < 0.92 ? 'Maintenance' : 'Retired'
+  const assignee = status === 'Assigned' ? pick(spec.category === 'Phone' ? managersAndSeniors : employees) : undefined
+  assets.push({
+    id: `AS${String(nextAssetId++)}`,
+    name: spec.name,
+    category: spec.category,
+    model: spec.model,
+    serial: `WS-${spec.category.slice(0, 2).toUpperCase()}-${between(1000, 9999)}`,
+    status,
+    assignedTo: assignee?.id,
+    assignedOn: assignee ? iso(addDays(purchase, between(1, 60))) : undefined,
+    purchaseDate: iso(purchase),
+    warrantyUntil: iso(addDays(purchase, 365 * pick([1, 2, 3]))),
+    cost: round(spec.cost, 500),
+    location: assignee ? assignee.location : pick(LOCATIONS),
+  })
+}
+
+export const assetById = (id: string) => assets.find((a) => a.id === id)
+
 /* ───────────────────────── Employee detail (profile page) ───────────────────────── */
 
 export interface EmployeeDetail {
@@ -584,6 +669,10 @@ const SKILLS: Record<Department, string[]> = {
   Design: ['Figma', 'Design Systems', 'User Research', 'Prototyping', 'Motion'],
 }
 
+const CATEGORY_TO_DEVICE_KIND: Partial<Record<AssetCategory, EmployeeDetail['devices'][number]['kind']>> = {
+  Laptop: 'laptop', Phone: 'phone', Monitor: 'monitor', Headset: 'headset',
+}
+
 const detailCache = new Map<string, EmployeeDetail>()
 
 /** Deterministic per-employee detail, generated lazily from the employee id. */
@@ -609,12 +698,9 @@ export function getEmployeeDetail(e: Employee): EmployeeDetail {
   const onboarding = titles.map(([title, icon], i) => ({ title, icon, done: i < doneCount, date: iso(addDays(join, [-7, 0, 0, 1, 2, 5, 30, 180][i])) }))
   const pct = (from: number, to: number) => Math.round((Math.max(0, Math.min(doneCount, to) - from) / (to - from)) * 100)
 
-  const kinds: EmployeeDetail['devices'] = [
-    { kind: 'laptop', name: e.department === 'Design' || e.department === 'Engineering' ? 'MacBook Pro 14"' : 'Dell Latitude 5440', model: e.department === 'Design' || e.department === 'Engineering' ? 'Apple M3 Pro · 18GB' : 'Intel i7 · 16GB', serial: `WS-LT-${b(1000, 9999)}`, assignedOn: e.joinDate },
-    { kind: 'monitor', name: 'Dell UltraSharp 27"', model: 'U2723QE · 4K', serial: `WS-MN-${b(1000, 9999)}`, assignedOn: e.joinDate },
-    { kind: 'headset', name: 'Jabra Evolve2 55', model: 'Wireless · ANC', serial: `WS-HS-${b(1000, 9999)}`, assignedOn: e.joinDate },
-  ]
-  if (/Manager|Lead|Sales|Account/.test(e.role)) kinds.push({ kind: 'phone', name: 'iPhone 15', model: '128GB · Company SIM', serial: `WS-PH-${b(1000, 9999)}`, assignedOn: e.joinDate })
+  const kinds: EmployeeDetail['devices'] = assets
+    .filter((a) => a.assignedTo === e.id && CATEGORY_TO_DEVICE_KIND[a.category])
+    .map((a) => ({ kind: CATEGORY_TO_DEVICE_KIND[a.category]!, name: a.name, model: a.model, serial: a.serial, assignedOn: a.assignedOn ?? e.joinDate }))
 
   const slip = computePayslip(e)
   const pf = Array.from({ length: 6 }, (_, i) => ({ month: monthLabel(i - 5), employee: slip.pf, employer: slip.employerPf }))
