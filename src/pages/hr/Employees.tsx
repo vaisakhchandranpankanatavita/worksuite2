@@ -3,7 +3,7 @@ import { Download, LayoutGrid, List, Mail, MapPin, Plus, Search } from 'lucide-r
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
-import ProfileCard from '../../components/ProfileCard'
+import TiltedCard from '../../components/TiltedCard'
 import { DEPARTMENTS, LOCATIONS, TODAY, employees, type Department, type Employee } from '../../data/mock'
 import { fmtCompact, fmtDate } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
@@ -114,18 +114,32 @@ export default function Employees() {
       {view === 'grid' ? (
         <div className="animate-in grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {list.map((e) => (
-            <div key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="cursor-pointer">
-              <ProfileCard
-                className="pc-compact"
-                avatarUrl={photoFor(e)}
-                name={e.name}
-                title={e.role}
-                handle={e.id}
-                status={e.status}
-                contactText={fmtCompact(e.ctcAnnual)}
-                onContactClick={() => nav(`/hr/employees/${e.id}`)}
+            <div key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card cursor-pointer overflow-hidden p-3">
+              <TiltedCard
+                imageSrc={photoFor(e)}
+                altText={e.name}
+                captionText={e.role}
+                containerHeight="200px"
+                containerWidth="100%"
+                imageHeight="200px"
+                imageWidth="100%"
+                rotateAmplitude={8}
+                scaleOnHover={1.04}
+                showMobileWarning={false}
+                showTooltip
+                displayOverlayContent
+                overlayContent={
+                  <div className="w-full p-3 text-white">
+                    <p className="truncate font-display text-sm font-semibold">{e.name}</p>
+                    <p className="truncate text-[11px] text-white/75">{e.role}</p>
+                  </div>
+                }
               />
-              <div className="mt-2 space-y-1 px-1 text-xs">
+              <div className="mt-3 space-y-1.5 px-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-ash">{e.id} · {e.department}</span>
+                  <Badge>{e.status}</Badge>
+                </div>
                 <p className="flex items-center gap-2 text-ash"><Mail size={13} /> <span className="truncate">{e.email}</span></p>
                 <p className="flex items-center gap-2 text-ash"><MapPin size={13} /> {e.location} · {e.workMode}</p>
               </div>
