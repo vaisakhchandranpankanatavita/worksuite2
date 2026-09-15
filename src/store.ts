@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { candidates, expenses, invoices, leaveRequests, payrollRuns, type Candidate, type Expense, type ExpenseStatus, type Invoice, type InvoiceStatus, type LeaveRequest, type LeaveStatus, type Stage } from './data/mock'
+import { assets, candidates, expenses, invoices, leaveRequests, payrollRuns, TODAY, type Asset, type AssetStatus, type Candidate, type Expense, type ExpenseStatus, type Invoice, type InvoiceStatus, type LeaveRequest, type LeaveStatus, type Stage } from './data/mock'
 import type { RoleId } from './data/roles'
 
 interface AuthState {
@@ -35,6 +35,7 @@ interface AppState {
   expenses: Expense[]
   invoices: Invoice[]
   candidates: Candidate[]
+  assets: Asset[]
   payrollStatus: 'Draft' | 'Processing' | 'Paid'
   toasts: Toast[]
   setLeaveStatus: (id: string, status: LeaveStatus) => void
@@ -44,6 +45,11 @@ interface AppState {
   setInvoiceStatus: (id: string, status: InvoiceStatus) => void
   addInvoice: (i: Invoice) => void
   moveCandidate: (id: string, stage: Stage) => void
+  addAsset: (a: Asset) => void
+  assignAsset: (id: string, employeeId: string) => void
+  unassignAsset: (id: string) => void
+  setAssetStatus: (id: string, status: AssetStatus) => void
+  retireAsset: (id: string) => void
   runPayroll: () => void
   toast: (message: string, tone?: Toast['tone']) => void
   dismissToast: (id: number) => void
@@ -56,6 +62,7 @@ export const useApp = create<AppState>((set, get) => ({
   expenses,
   invoices,
   candidates,
+  assets,
   payrollStatus: payrollRuns[0].status as 'Draft',
   toasts: [],
   setLeaveStatus: (id, status) => {
@@ -83,6 +90,30 @@ export const useApp = create<AppState>((set, get) => ({
     get().toast(`Invoice ${i.id} created`)
   },
   moveCandidate: (id, stage) => set((s) => ({ candidates: s.candidates.map((c) => (c.id === id ? { ...c, stage } : c)) })),
+  addAsset: (a) => {
+    set((s) => ({ assets: [a, ...s.assets] }))
+    get().toast(`Asset ${a.id} added to inventory`)
+  },
+  assignAsset: (id, employeeId) => {
+    set((s) => ({
+      assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Assigned', assignedTo: employeeId, assignedOn: TODAY.toISOString().slice(0, 10) } : a)),
+    }))
+    get().toast(`Asset ${id} assigned`)
+  },
+  unassignAsset: (id) => {
+    set((s) => ({
+      assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Available', assignedTo: undefined, assignedOn: undefined } : a)),
+    }))
+    get().toast(`Asset ${id} unassigned`)
+  },
+  setAssetStatus: (id, status) => {
+    set((s) => ({ assets: s.assets.map((a) => (a.id === id ? { ...a, status } : a)) }))
+    get().toast(`Asset ${id} marked ${status.toLowerCase()}`)
+  },
+  retireAsset: (id) => {
+    set((s) => ({ assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Retired', assignedTo: undefined, assignedOn: undefined } : a)) }))
+    get().toast(`Asset ${id} retired`, 'info')
+  },
   runPayroll: () => {
     set({ payrollStatus: 'Processing' })
     get().toast('Payroll run started — processing salaries', 'info')

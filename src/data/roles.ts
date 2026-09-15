@@ -1,4 +1,4 @@
-export type ModuleKey = 'hr' | 'finance'
+export type ModuleKey = 'hr' | 'finance' | 'assets'
 export type RoleId = 'hr' | 'finance' | 'admin'
 
 export interface Role {
@@ -17,7 +17,7 @@ export const ROLES: Role[] = [
     id: 'admin',
     label: 'Super Admin',
     description: 'Full access to People & Finance',
-    modules: ['hr', 'finance'],
+    modules: ['hr', 'finance', 'assets'],
     name: 'Meera Iyer',
     email: 'meera.iyer@worksuite.io',
     photo: 'https://randomuser.me/api/portraits/women/33.jpg',
@@ -27,7 +27,7 @@ export const ROLES: Role[] = [
     id: 'hr',
     label: 'HR Admin',
     description: 'People, attendance & payroll',
-    modules: ['hr'],
+    modules: ['hr', 'assets'],
     name: 'Anita Krishnan',
     email: 'anita.krishnan@worksuite.io',
     photo: 'https://randomuser.me/api/portraits/women/68.jpg',

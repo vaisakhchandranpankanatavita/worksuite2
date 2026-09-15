@@ -14,6 +14,9 @@ import Invoices from './pages/finance/Invoices'
 import Expenses from './pages/finance/Expenses'
 import Budgets from './pages/finance/Budgets'
 import Reports from './pages/finance/Reports'
+import AssetsDashboard from './pages/assets/AssetsDashboard'
+import Assets from './pages/assets/Assets'
+import AssetDetail from './pages/assets/AssetDetail'
 import { useAuth } from './store'
 import { roleById } from './data/roles'
 
@@ -45,6 +48,9 @@ export default function App() {
           <Route path="finance/expenses" element={<Expenses />} />
           <Route path="finance/budgets" element={<Budgets />} />
           <Route path="finance/reports" element={<Reports />} />
+          <Route path="assets" element={<AssetsDashboard />} />
+          <Route path="assets/inventory" element={<Assets />} />
+          <Route path="assets/inventory/:id" element={<AssetDetail />} />
           <Route path="*" element={<Navigate to="/hr" replace />} />
         </Route>
       </Routes>
