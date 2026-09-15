@@ -595,15 +595,44 @@ const EXTRA_ASSET_SPECS: { category: AssetCategory; name: string; model: string;
 
 const managersAndSeniors = employees.filter((e) => /Manager|Lead|Sales|Account/.test(e.role))
 
+const IMG = (id: string) => `https://images.unsplash.com/${id}?w=400&q=60&auto=format&fit=crop`
+
+// Mock product photos keyed by exact asset name, falling back to a category default.
+const ASSET_IMAGE_BY_NAME: Record<string, string> = {
+  'MacBook Pro 14"': IMG('photo-1517336714731-489689fd1ca8'),
+  'Dell Latitude 5440': IMG('photo-1588872657578-7efd1f1555ed'),
+  'Dell UltraSharp 27"': IMG('photo-1527443195645-1133f7f28990'),
+  'LG UltraFine 24"': IMG('photo-1547082299-de196ea013d6'),
+  'Jabra Evolve2 55': IMG('photo-1505740420928-5e560c06d30e'),
+  'Sony WH-1000XM5': IMG('photo-1618366712010-f4ae9c647dcb'),
+  'iPhone 15': IMG('photo-1510557880182-3d4d3cba35a5'),
+  'Samsung Galaxy S24': IMG('photo-1580910051074-3eb694886505'),
+  'iPad Air': IMG('photo-1544244015-0df4b3ffc6b0'),
+  'Logitech MX Master 3S': IMG('photo-1527814050087-3793815479db'),
+  'Keychron K8': IMG('photo-1587829741301-dc798b83add3'),
+}
+
+const ASSET_IMAGE_BY_CATEGORY: Record<AssetCategory, string> = {
+  Laptop: IMG('photo-1517336714731-489689fd1ca8'),
+  Phone: IMG('photo-1580910051074-3eb694886505'),
+  Monitor: IMG('photo-1527443195645-1133f7f28990'),
+  Headset: IMG('photo-1505740420928-5e560c06d30e'),
+  Tablet: IMG('photo-1544244015-0df4b3ffc6b0'),
+  Accessory: IMG('photo-1527814050087-3793815479db'),
+}
+
+const imageFor = (name: string, category: AssetCategory) => ASSET_IMAGE_BY_NAME[name] ?? ASSET_IMAGE_BY_CATEGORY[category]
+
 export const assets: Asset[] = []
 
 // One laptop per employee — every hire is issued one on day one.
 employees.forEach((e, i) => {
   const isDesignEng = e.department === 'Design' || e.department === 'Engineering'
   const purchase = addDays(new Date(e.joinDate), -between(0, 20))
+  const name = isDesignEng ? 'MacBook Pro 14"' : 'Dell Latitude 5440'
   assets.push({
     id: `AS${String(1001 + i)}`,
-    name: isDesignEng ? 'MacBook Pro 14"' : 'Dell Latitude 5440',
+    name,
     category: 'Laptop',
     model: isDesignEng ? 'Apple M3 Pro · 18GB' : 'Intel i7 · 16GB',
     serial: `WS-LT-${between(1000, 9999)}`,
@@ -614,6 +643,7 @@ employees.forEach((e, i) => {
     warrantyUntil: iso(addDays(purchase, 365 * 3)),
     cost: isDesignEng ? 220000 : 95000,
     location: e.location === 'Remote' ? pick(LOCATIONS.filter((l) => l !== 'Remote')) : e.location,
+    image: imageFor(name, 'Laptop'),
   })
 })
 
@@ -641,6 +671,7 @@ for (let i = 0; i < 60; i++) {
     warrantyUntil: iso(addDays(purchase, 365 * pick([1, 2, 3]))),
     cost: round(spec.cost, 500),
     location: assignee ? assignee.location : pick(LOCATIONS),
+    image: imageFor(spec.name, spec.category),
   })
 }
 
