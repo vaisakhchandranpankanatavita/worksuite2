@@ -1,5 +1,6 @@
 import { Boxes, ListChecks } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import LoadingOrb3D from './LoadingOrb3D'
 
 interface Props { onDone: () => void }
 
@@ -39,12 +40,10 @@ export default function AssetsEnterOverlay({ onDone }: Props) {
       />
 
       <div className="relative z-10 flex flex-col items-center px-6 text-center">
-        <div
-          className="asset-portal-orb mb-6 flex size-[68px] items-center justify-center rounded-full"
-          style={{ background: 'conic-gradient(from 0deg, #d8ecA0, #c8d9f4, #f0cad8, #aece52, #d8ecA0)' }}
-        >
-          <div className="flex size-[56px] items-center justify-center rounded-full bg-[#0d0f0e] text-[#d8ecA0]">
-            {phase === 'enter' ? <Boxes size={24} /> : <ListChecks size={24} />}
+        <div className="relative mb-6 flex size-[76px] items-center justify-center">
+          <LoadingOrb3D size={76} className="asset-portal-orb absolute inset-0" />
+          <div className="relative z-10 text-[#d8eca0]">
+            {phase === 'enter' ? <Boxes size={22} /> : <ListChecks size={22} />}
           </div>
         </div>
 

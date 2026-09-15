@@ -1,7 +1,6 @@
 import { Boxes, Headphones, ImagePlus, IndianRupee, Laptop, MapPin, Monitor, PackageCheck, Plus, Smartphone, Sparkles, Tablet, UploadCloud, UserCheck, Wrench, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { BubbleField } from '../../components/BubbleField'
 import { CountUp } from '../../components/CountUp'
 import { Badge, Button, Field, Input, Modal, PageHeader, Select } from '../../components/ui'
 import { ASSET_CATEGORIES, LOCATIONS, TODAY, type Asset, type AssetCategory } from '../../data/mock'
@@ -200,7 +199,6 @@ function AddStockModal({ open, onClose, onSave, existingCount }: {
             }`}
           >
             <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lime-deep/60 to-transparent" />
-            <BubbleField active={dragOver} count={6} />
             {form.image ? (
               <>
                 <img src={form.image} alt="" className="relative z-10 h-24 w-24 rounded-xl object-cover shadow-[0_8px_20px_-8px_rgba(26,29,27,0.35)]" />

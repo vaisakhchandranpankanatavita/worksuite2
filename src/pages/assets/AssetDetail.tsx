@@ -28,98 +28,106 @@ export default function AssetDetail() {
         <ArrowLeft size={16} /> All assets
       </button>
 
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-normal tracking-tight md:text-[38px]">{a.name}</h1>
-          <p className="mt-1 text-sm text-ash">{a.category} · {a.model} · {a.id}</p>
+      {/* Hero header */}
+      <div className="card animate-in mb-4 flex flex-wrap items-center gap-4 p-5">
+        {a.image ? (
+          <img src={a.image} alt={a.name} className="size-16 shrink-0 rounded-2xl object-cover shadow-[0_6px_16px_-6px_rgba(26,29,27,0.3)]" />
+        ) : (
+          <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-ink to-ash text-white"><Icon size={26} /></span>
+        )}
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-2xl font-normal tracking-tight md:text-[30px]">{a.name}</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ash">
+            <span>{a.category}</span>
+            <span className="text-ash/40">·</span>
+            <span>{a.model}</span>
+            <span className="text-ash/40">·</span>
+            <span className="font-mono text-xs">{a.id}</span>
+          </p>
         </div>
         <Badge tone={a.status === 'Assigned' ? 'green' : a.status === 'Maintenance' ? 'amber' : a.status === 'Retired' ? 'rose' : 'blue'}>{a.status}</Badge>
       </div>
 
-      <div className="grid items-stretch gap-4 md:grid-cols-3">
-        <div className="card animate-in flex h-full flex-col p-5">
-          <div className="mb-4 flex items-center gap-3">
-            {a.image ? (
-              <img src={a.image} alt={a.name} className="size-12 shrink-0 rounded-2xl object-cover" />
-            ) : (
-              <span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-ink to-ash text-white"><Icon size={22} /></span>
-            )}
-            <div>
-              <p className="font-display text-base font-semibold">{a.name}</p>
-              <p className="text-xs text-ash">{a.model}</p>
+      <div className="grid items-start gap-4 md:grid-cols-3">
+        {/* Left: details + notes + activity */}
+        <div className="flex flex-col gap-4 md:col-span-2">
+          <div className="card animate-in p-5">
+            <h3 className="mb-3 text-[15px] font-medium">Details</h3>
+            <div className="divide-y divide-line/70">
+              <Row k="Serial number" v={a.serial} />
+              <Row k="Location" v={a.location} />
+              <Row k="Purchase date" v={fmtDate(a.purchaseDate)} />
+              {a.warrantyUntil && <Row k="Warranty until" v={fmtDate(a.warrantyUntil)} />}
+              {a.returnDue && <Row k="Return due" v={<span className={new Date(a.returnDue) < new Date() ? 'font-bold text-rose-deep' : undefined}>{fmtDate(a.returnDue)}</span>} />}
+              <Row k="Cost" v={fmtINR(a.cost)} />
+              <Row k="Book value" v={<b>{fmtINR(bookValue(a.cost, a.purchaseDate))}</b>} />
             </div>
           </div>
-          <div className="space-y-2.5 text-sm">
-            <Row k="Serial number" v={a.serial} />
-            <Row k="Location" v={a.location} />
-            <Row k="Purchase date" v={fmtDate(a.purchaseDate)} />
-            {a.warrantyUntil && <Row k="Warranty until" v={fmtDate(a.warrantyUntil)} />}
-            {a.returnDue && <Row k="Return due" v={<span className={new Date(a.returnDue) < new Date() ? 'font-bold text-rose-deep' : undefined}>{fmtDate(a.returnDue)}</span>} />}
-            <Row k="Cost" v={fmtINR(a.cost)} />
-            <Row k="Book value" v={<b>{fmtINR(bookValue(a.cost, a.purchaseDate))}</b>} />
-          </div>
-        </div>
 
-        <div className="card animate-in flex h-full flex-col p-5">
-          <h3 className="mb-4 text-[17px] font-medium">Assignment</h3>
-          {holder ? (
-            <div className="flex items-center gap-3">
-              <Avatar name={holder.name} hue={holder.avatarHue} src={photoFor(holder)} size={44} />
-              <div className="min-w-0 flex-1">
-                <button className="truncate text-left font-bold underline" onClick={() => nav(`/hr/employees/${holder.id}`)}>{holder.name}</button>
-                <p className="truncate text-xs text-ash">{holder.role} · {holder.department}</p>
-                {a.assignedOn && <p className="mt-1 text-[11px] text-ash">Since {fmtDate(a.assignedOn)}</p>}
-              </div>
+          {a.notes && (
+            <div className="card animate-in p-5">
+              <h3 className="mb-2 text-[15px] font-medium">Notes</h3>
+              <p className="text-sm text-ash">{a.notes}</p>
             </div>
-          ) : (
-            <p className="text-sm text-ash">Not currently assigned to anyone.</p>
           )}
-          <div className="mt-auto flex flex-wrap gap-2 pt-4">
-            {holder ? (
-              <Button size="sm" variant="light" onClick={() => unassignAsset(a.id)}>Unassign</Button>
+
+          <div className="card animate-in p-5">
+            <h3 className="mb-4 flex items-center gap-2 text-[15px] font-medium"><Clock size={14} className="text-ash" /> Activity</h3>
+            {history.length > 0 ? (
+              <ul className="relative space-y-4 before:absolute before:bottom-1 before:left-[3px] before:top-1 before:w-px before:bg-line">
+                {history.map((h) => (
+                  <li key={h.id} className="relative flex gap-3 pl-5 text-sm">
+                    <span className="absolute left-0 top-1.5 size-[7px] shrink-0 rounded-full bg-ink/60 ring-4 ring-white" />
+                    <div className="min-w-0 flex-1">
+                      <p><b>{h.action}</b> — {h.detail}</p>
+                      <p className="text-[11px] text-ash">{fmtDate(h.date)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             ) : (
-              <Button size="sm" onClick={() => setAssignOpen(true)}>Assign to employee</Button>
+              <Empty>No activity recorded this session yet.</Empty>
             )}
           </div>
         </div>
 
-        <div className="card animate-in flex h-full flex-col p-5">
-          <h3 className="mb-4 text-[17px] font-medium">Status actions</h3>
-          <div className="flex flex-1 flex-col justify-center gap-2">
-            {(['Available', 'Assigned', 'Maintenance'] as AssetStatus[]).map((s) => (
-              <Button key={s} size="sm" variant={a.status === s ? 'dark' : 'light'} disabled={a.status === s || (s === 'Assigned' && !holder)} onClick={() => setAssetStatus(a.id, s)}>
-                Mark {s}
-              </Button>
-            ))}
-            <Button size="sm" variant="danger" disabled={a.status === 'Retired'} onClick={() => retireAsset(a.id)}>Retire asset</Button>
+        {/* Right: assignment + status */}
+        <div className="flex flex-col gap-4">
+          <div className="card animate-in p-5">
+            <h3 className="mb-4 text-[15px] font-medium">Assignment</h3>
+            {holder ? (
+              <div className="flex items-center gap-3">
+                <Avatar name={holder.name} hue={holder.avatarHue} src={photoFor(holder)} size={44} />
+                <div className="min-w-0 flex-1">
+                  <button className="truncate text-left font-bold underline" onClick={() => nav(`/hr/employees/${holder.id}`)}>{holder.name}</button>
+                  <p className="truncate text-xs text-ash">{holder.role} · {holder.department}</p>
+                  {a.assignedOn && <p className="mt-1 text-[11px] text-ash">Since {fmtDate(a.assignedOn)}</p>}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-ash">Not currently assigned to anyone.</p>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {holder ? (
+                <Button size="sm" variant="light" onClick={() => unassignAsset(a.id)}>Unassign</Button>
+              ) : (
+                <Button size="sm" onClick={() => setAssignOpen(true)}>Assign to employee</Button>
+              )}
+            </div>
+          </div>
+
+          <div className="card animate-in p-5">
+            <h3 className="mb-4 text-[15px] font-medium">Status actions</h3>
+            <div className="flex flex-col gap-2">
+              {(['Available', 'Assigned', 'Maintenance'] as AssetStatus[]).map((s) => (
+                <Button key={s} size="sm" variant={a.status === s ? 'dark' : 'light'} disabled={a.status === s || (s === 'Assigned' && !holder)} onClick={() => setAssetStatus(a.id, s)}>
+                  Mark {s}
+                </Button>
+              ))}
+              <Button size="sm" variant="danger" disabled={a.status === 'Retired'} onClick={() => retireAsset(a.id)}>Retire asset</Button>
+            </div>
           </div>
         </div>
-      </div>
-
-      {a.notes && (
-        <div className="card animate-in mt-4 p-5">
-          <h3 className="mb-2 text-[17px] font-medium">Notes</h3>
-          <p className="text-sm text-ash">{a.notes}</p>
-        </div>
-      )}
-
-      <div className="card animate-in mt-4 p-5">
-        <h3 className="mb-3 flex items-center gap-2 text-[17px] font-medium"><Clock size={15} className="text-ash" /> Activity</h3>
-        {history.length > 0 ? (
-          <ul className="space-y-3">
-            {history.map((h) => (
-              <li key={h.id} className="flex gap-3 text-sm">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-ink/60" />
-                <div className="min-w-0 flex-1">
-                  <p><b>{h.action}</b> — {h.detail}</p>
-                  <p className="text-[11px] text-ash">{fmtDate(h.date)}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Empty>No activity recorded this session yet.</Empty>
-        )}
       </div>
 
       <AssignModal open={assignOpen} onClose={() => setAssignOpen(false)} onAssign={(employeeId) => { assignAsset(a.id, employeeId); setAssignOpen(false) }} />
@@ -151,7 +159,7 @@ function AssignModal({ open, onClose, onAssign }: { open: boolean; onClose: () =
 
 function Row({ k, v }: { k: ReactNode; v: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex items-center justify-between gap-4 py-2 text-sm first:pt-0 last:pb-0">
       <span className="text-ash">{k}</span>
       <span className="truncate text-right">{v}</span>
     </div>

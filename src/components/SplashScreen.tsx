@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import LoadingOrb3D from './LoadingOrb3D'
 
 const STEPS = [
   { label: 'Authenticating credentials', pct: 22 },
@@ -186,31 +187,8 @@ export default function SplashScreen({ name, onDone }: Props) {
       {/* Content */}
       <div className="relative z-10 flex w-full max-w-xs flex-col items-center px-6 text-center">
 
-        {/* Spinning logo orb */}
-        <div
-          className="mb-7 flex size-[72px] items-center justify-center rounded-full"
-          style={{
-            background: 'conic-gradient(from 0deg, #d8eca0, #c8d9f4, #f0cad8, #aece52, #d8eca0)',
-            animation: 'ai-orb-rot 5s linear infinite',
-          }}
-        >
-          <div className="flex size-[60px] items-center justify-center rounded-full bg-[#0d0f0e]">
-            <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden>
-              <defs>
-                <linearGradient id="splash-logo" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#d8eca0" />
-                  <stop offset="100%" stopColor="#aece52" />
-                </linearGradient>
-              </defs>
-              <g className="logo-mark" fill="none" stroke="url(#splash-logo)" strokeWidth="1.8">
-                {[0, 60, 120, 180, 240, 300].map((r) => (
-                  <ellipse key={r} cx="16" cy="9.5" rx="3.5" ry="5.8"
-                    transform={`rotate(${r} 16 16)`} />
-                ))}
-              </g>
-            </svg>
-          </div>
-        </div>
+        {/* Spinning react-three-fiber loading orb */}
+        <LoadingOrb3D size={88} className="mb-7" />
 
         {/* Greeting */}
         <p className="animate-in font-display text-[26px] font-semibold tracking-tight text-white">
