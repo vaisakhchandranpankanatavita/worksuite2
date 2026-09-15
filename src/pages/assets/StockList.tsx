@@ -1,8 +1,9 @@
 import { Boxes, Headphones, Laptop, MapPin, Monitor, Smartphone, Tablet, Wrench } from 'lucide-react'
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Tilt3D from '../../components/Tilt3D'
 import { CountUp } from '../../components/CountUp'
-import { PageHeader } from '../../components/ui'
+import { Badge, PageHeader } from '../../components/ui'
 import { ASSET_CATEGORIES, LOCATIONS, type AssetCategory } from '../../data/mock'
 import { fmtINR } from '../../lib/format'
 import { useApp } from '../../store'
@@ -19,6 +20,7 @@ const CATEGORY_GRADIENT: Record<AssetCategory, string> = {
 }
 
 export default function StockList() {
+  const nav = useNavigate()
   const { assets } = useApp()
 
   const inStock = useMemo(() => assets.filter((a) => a.status !== 'Retired'), [assets])
@@ -41,6 +43,11 @@ export default function StockList() {
 
   const byLocation = useMemo(
     () => LOCATIONS.map((l) => ({ location: l, count: inStock.filter((a) => a.location === l).length })).filter((l) => l.count > 0),
+    [inStock],
+  )
+
+  const shelves = useMemo(
+    () => ASSET_CATEGORIES.map((c) => ({ category: c, items: inStock.filter((a) => a.category === c) })).filter((s) => s.items.length > 0),
     [inStock],
   )
 
@@ -108,6 +115,55 @@ export default function StockList() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Shelves */}
+        <div className="lg:col-span-12 space-y-6">
+          {shelves.map(({ category, items }) => {
+            const Icon = CATEGORY_ICON[category]
+            return (
+              <div key={category} className="card animate-in">
+                <div className="mb-4 flex items-center gap-2">
+                  <span
+                    className="grid size-8 place-items-center rounded-xl text-white"
+                    style={{ background: CATEGORY_GRADIENT[category] }}
+                  >
+                    <Icon size={15} />
+                  </span>
+                  <h3 className="font-display text-[15px] font-semibold">{category}</h3>
+                  <span className="text-xs text-ash">{items.length} on the shelf</span>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {items.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => nav(`/assets/inventory/${a.id}`)}
+                      className="group w-40 shrink-0 rounded-2xl border border-line bg-soft/40 p-3 text-left transition-all duration-200 hover:border-ink/30 hover:bg-white hover:shadow-[0_10px_28px_-14px_rgba(26,29,27,0.35)]"
+                    >
+                      <div className="relative flex h-24 w-full items-center justify-center overflow-hidden rounded-xl bg-white/70">
+                        {a.image ? (
+                          <img src={a.image} alt={a.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <span
+                            className="grid size-11 place-items-center rounded-xl text-white/90"
+                            style={{ background: CATEGORY_GRADIENT[category] }}
+                          >
+                            <Icon size={18} />
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-2.5 truncate text-[13px] font-semibold">{a.name}</p>
+                      <p className="truncate text-[11px] text-ash">{a.model}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <Badge>{a.status}</Badge>
+                        <span className="text-[11px] text-ash">{fmtINR(a.cost)}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
