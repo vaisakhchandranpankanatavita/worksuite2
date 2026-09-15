@@ -1,6 +1,7 @@
 import { Boxes, Headphones, ImagePlus, IndianRupee, Laptop, MapPin, Monitor, PackageCheck, Plus, Smartphone, Sparkles, Tablet, UploadCloud, UserCheck, Wrench, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { BubbleField } from '../../components/BubbleField'
 import { CountUp } from '../../components/CountUp'
 import { Badge, Button, Field, Input, Modal, PageHeader, Select } from '../../components/ui'
 import { ASSET_CATEGORIES, LOCATIONS, TODAY, type Asset, type AssetCategory } from '../../data/mock'
@@ -199,14 +200,15 @@ function AddStockModal({ open, onClose, onSave, existingCount }: {
             }`}
           >
             <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lime-deep/60 to-transparent" />
+            <BubbleField active={dragOver} count={6} />
             {form.image ? (
               <>
-                <img src={form.image} alt="" className="h-24 w-24 rounded-xl object-cover shadow-[0_8px_20px_-8px_rgba(26,29,27,0.35)]" />
-                <span className="flex items-center gap-1 text-xs font-medium text-ink/70"><Sparkles size={12} className="text-lime-deep" /> Image ready — drop another to replace</span>
+                <img src={form.image} alt="" className="relative z-10 h-24 w-24 rounded-xl object-cover shadow-[0_8px_20px_-8px_rgba(26,29,27,0.35)]" />
+                <span className="relative z-10 flex items-center gap-1 text-xs font-medium text-ink/70"><Sparkles size={12} className="text-lime-deep" /> Image ready — drop another to replace</span>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); e.preventDefault(); setForm((f) => ({ ...f, image: '' })) }}
-                  className="absolute right-3 top-3 grid size-6 place-items-center rounded-full bg-white/90 text-ash shadow hover:text-rose-deep"
+                  className="absolute right-3 top-3 z-10 grid size-6 place-items-center rounded-full bg-white/90 text-ash shadow hover:text-rose-deep"
                   aria-label="Remove image"
                 >
                   <X size={12} />
@@ -214,11 +216,14 @@ function AddStockModal({ open, onClose, onSave, existingCount }: {
               </>
             ) : (
               <>
-                <span className="grid size-11 place-items-center rounded-2xl bg-ink text-white">
-                  {dragOver ? <ImagePlus size={18} /> : <UploadCloud size={18} />}
+                <span
+                  className={`sphere-3d relative z-10 grid size-14 place-items-center rounded-full text-white transition-transform duration-300 ${dragOver ? 'scale-110' : ''}`}
+                  style={{ background: dragOver ? 'linear-gradient(150deg, #c7e26a 0%, #6b92d8 100%)' : 'linear-gradient(150deg, #3a3f38 0%, #1a1d1b 100%)' }}
+                >
+                  {dragOver ? <ImagePlus size={20} /> : <UploadCloud size={20} />}
                 </span>
-                <span className="text-sm font-semibold">{dragOver ? 'Drop to add photo' : 'Drag & drop a product photo'}</span>
-                <span className="text-xs text-ash">or click to browse · PNG, JPG</span>
+                <span className="relative z-10 text-sm font-semibold">{dragOver ? 'Drop to add photo' : 'Drag & drop a product photo'}</span>
+                <span className="relative z-10 text-xs text-ash">or click to browse · PNG, JPG</span>
               </>
             )}
             <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={(e) => readImage(e.target.files?.[0])} />
