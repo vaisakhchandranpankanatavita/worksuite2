@@ -31,6 +31,16 @@ const attritionTrend = headcountTrend.map((m) => ({
   exits: m.exits,
 }))
 
+// Celebrations widget — minimal drifting confetti background
+const CONFETTI_PIECES = [
+  { emoji: '🎉', left: '8%', dur: 8, delay: 0, x: 10, r: 25 },
+  { emoji: '✨', left: '22%', dur: 10, delay: 1.5, x: -8, r: -20 },
+  { emoji: '🎈', left: '38%', dur: 9, delay: 3, x: 12, r: 15 },
+  { emoji: '🎊', left: '55%', dur: 11, delay: 0.8, x: -10, r: -25 },
+  { emoji: '✨', left: '70%', dur: 8.5, delay: 2.2, x: 8, r: 20 },
+  { emoji: '🎈', left: '86%', dur: 10.5, delay: 4, x: -12, r: -15 },
+]
+
 // Performance distribution
 const perfDist = [
   { label: 'Exceptional (5)', value: employees.filter((e) => e.performance >= 4.5).length, fill: '#aece52' },
@@ -443,20 +453,35 @@ export default function HrDashboard() {
 
         {/* ── Celebrations ────────────────────────────────────────── */}
         <Card className="lg:col-span-4">
-          <CardHeader title="Celebrations" subtitle="This month" action={<IconBtn><Cake size={15} /></IconBtn>} />
-          <ul className="mt-4 space-y-3">
-            {celebrations.map(({ e, kind, date, years }) => (
-              <li key={e.id + kind} className="flex items-center gap-3">
-                <Avatar name={e.name} hue={e.avatarHue} src={photoFor(e)} size={34} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{e.name}</p>
-                  <p className="text-xs text-ash">{kind === 'Birthday' ? '🎂 Birthday' : `🎉 ${years} yr anniversary`}</p>
-                </div>
-                <span className="text-xs text-ash">{fmtShortDate(date.toISOString())}</span>
-              </li>
-            ))}
-            {celebrations.length === 0 && <li className="text-sm text-ash">No celebrations left this month.</li>}
-          </ul>
+          {celebrations.length > 0 && (
+            <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+              {CONFETTI_PIECES.map((c, i) => (
+                <span
+                  key={i}
+                  className="confetti-piece text-sm"
+                  style={{ left: c.left, '--confetti-dur': `${c.dur}s`, '--confetti-delay': `${c.delay}s`, '--confetti-x': `${c.x}px`, '--confetti-r': `${c.r}deg` } as React.CSSProperties}
+                >
+                  {c.emoji}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="relative z-10">
+            <CardHeader title="Celebrations" subtitle="This month" action={<IconBtn><Cake size={15} /></IconBtn>} />
+            <ul className="mt-4 space-y-3">
+              {celebrations.map(({ e, kind, date, years }) => (
+                <li key={e.id + kind} className="flex items-center gap-3">
+                  <Avatar name={e.name} hue={e.avatarHue} src={photoFor(e)} size={34} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{e.name}</p>
+                    <p className="text-xs text-ash">{kind === 'Birthday' ? '🎂 Birthday' : `🎉 ${years} yr anniversary`}</p>
+                  </div>
+                  <span className="text-xs text-ash">{fmtShortDate(date.toISOString())}</span>
+                </li>
+              ))}
+              {celebrations.length === 0 && <li className="text-sm text-ash">No celebrations left this month.</li>}
+            </ul>
+          </div>
         </Card>
 
         {/* ── NEW: Turnover rate KPI row ───────────────────────────── */}
