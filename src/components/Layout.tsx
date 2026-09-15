@@ -239,13 +239,8 @@ export default function Layout() {
             {/* Centre: Desktop nav pills */}
             <nav className="hidden items-center rounded-full border border-white/55 bg-white/35 p-1 backdrop-blur-xl xl:flex" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(26,29,27,0.03), 0 2px 12px -4px rgba(26,29,27,0.08)' }}>
               {links.map(({ to, label, icon: Icon, end }) => (
-                <NavLink key={to} to={to} end={end} className={({ isActive }) => clsx('group flex items-center gap-2 rounded-full px-4 py-2 font-display text-[13px] font-medium transition-all duration-200', isActive ? 'bg-ink text-white shadow-sm' : 'text-ink/75 hover:bg-soft hover:text-ink')}>
-                  {({ isActive }) => (
-                    <>
-                      {isActive && <Icon size={14} className="transition-transform duration-200 group-hover:rotate-6" />}
-                      {label}
-                    </>
-                  )}
+                <NavLink key={to} to={to} end={end} title={label} aria-label={label} className={({ isActive }) => clsx('group flex items-center gap-2 rounded-full font-display text-[13px] font-medium transition-all duration-200', isActive ? 'size-9 justify-center bg-ink text-white shadow-sm' : 'px-4 py-2 text-ink/75 hover:bg-soft hover:text-ink')}>
+                  {({ isActive }) => (isActive ? <Icon size={15} /> : label)}
                 </NavLink>
               ))}
             </nav>

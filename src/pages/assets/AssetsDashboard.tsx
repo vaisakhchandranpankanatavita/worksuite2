@@ -1,19 +1,20 @@
-import { CheckCircle2, Laptop, Plus, Wrench } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Laptop, MapPin, Plus, ShieldAlert, Wrench } from 'lucide-react'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DonutChart, RadialProgress } from '../../components/charts'
+import { DonutChart, GroupedBar, RadialProgress } from '../../components/charts'
 import { CountUp } from '../../components/CountUp'
-import { Avatar, Badge, Button, Card, CardHeader, CornerLink, PageHeader } from '../../components/ui'
-import { ASSET_CATEGORIES, employeeById } from '../../data/mock'
+import { Avatar, Badge, Button, Card, CardHeader, CornerLink, Empty, PageHeader } from '../../components/ui'
+import { ASSET_CATEGORIES, LOCATIONS, employeeById } from '../../data/mock'
 import { fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
 const CATEGORY_COLORS = ['#1a1d1b', '#d8eca0', '#c8d9f4', '#c6e0c0', '#f0cad8', '#f5ddb2']
+const MS_DAY = 86_400_000
 
 export default function AssetsDashboard() {
   const nav = useNavigate()
-  const { assets } = useApp()
+  const { assets, setAssetStatus } = useApp()
 
   const total = assets.length
   const assigned = assets.filter((a) => a.status === 'Assigned').length
@@ -28,12 +29,32 @@ export default function AssetsDashboard() {
     [assets],
   )
 
+  const locationData = useMemo(
+    () => LOCATIONS.map((l) => ({ name: l, count: assets.filter((a) => a.location === l && a.status !== 'Retired').length })),
+    [assets],
+  )
+
   const recentlyAssigned = useMemo(
     () =>
       [...assets]
         .filter((a) => a.assignedTo && a.assignedOn)
         .sort((a, b) => (b.assignedOn! > a.assignedOn! ? 1 : -1))
-        .slice(0, 6),
+        .slice(0, 5),
+    [assets],
+  )
+
+  const warrantyWatch = useMemo(() => {
+    const now = Date.now()
+    return assets
+      .filter((a) => a.warrantyUntil && a.status !== 'Retired')
+      .map((a) => ({ asset: a, daysLeft: Math.round((new Date(a.warrantyUntil!).getTime() - now) / MS_DAY) }))
+      .filter((x) => x.daysLeft <= 90)
+      .sort((a, b) => a.daysLeft - b.daysLeft)
+      .slice(0, 5)
+  }, [assets])
+
+  const maintenanceQueue = useMemo(
+    () => assets.filter((a) => a.status === 'Maintenance').slice(0, 5),
     [assets],
   )
 
@@ -85,11 +106,11 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Category breakdown */}
-        <Card className="lg:col-span-5">
+        <Card className="lg:col-span-4">
           <CardHeader title="By Category" subtitle="Inventory distribution" />
           <div className="mt-3 flex items-center gap-4">
-            <div className="w-40 shrink-0">
-              <DonutChart data={categoryData} colors={CATEGORY_COLORS} innerLabel={String(total)} height={160} />
+            <div className="w-32 shrink-0">
+              <DonutChart data={categoryData} colors={CATEGORY_COLORS} innerLabel={String(total)} height={150} />
             </div>
             <div className="flex-1 space-y-2">
               {categoryData.map((c, i) => (
@@ -105,9 +126,36 @@ export default function AssetsDashboard() {
           </div>
         </Card>
 
+        {/* Location breakdown */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="By Location" subtitle="Active assets per office" action={<MapPin size={15} className="text-sky-deep" />} />
+          <div className="mt-3">
+            <GroupedBar data={locationData} keys={['count']} colors={['#c8d9f4']} xKey="name" height={150} />
+          </div>
+        </Card>
+
+        {/* Warranty watch */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Warranty Watch" subtitle="Expiring within 90 days" action={<ShieldAlert size={15} className="text-rose-deep" />} />
+          <div className="mt-3 divide-y divide-line/60">
+            {warrantyWatch.map(({ asset, daysLeft }) => (
+              <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2.5 text-left transition-colors hover:bg-soft/60">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{asset.name}</p>
+                  <p className="truncate text-xs text-ash">{asset.location} · {fmtDate(asset.warrantyUntil!)}</p>
+                </div>
+                <Badge tone={daysLeft < 0 ? 'rose' : daysLeft <= 30 ? 'amber' : 'gray'} className="shrink-0">
+                  {daysLeft < 0 ? 'Expired' : `${daysLeft}d left`}
+                </Badge>
+              </button>
+            ))}
+            {warrantyWatch.length === 0 && <p className="py-6 text-center text-sm text-ash">Nothing expiring soon.</p>}
+          </div>
+        </Card>
+
         {/* Recently assigned */}
-        <Card className="lg:col-span-7">
-          <CardHeader title="Recently Assigned" subtitle="Latest asset handovers" action={<CornerLink onClick={() => nav('/assets/inventory')} />} />
+        <Card className="lg:col-span-4">
+          <CardHeader title="Recently Assigned" subtitle="Latest handovers" action={<CornerLink onClick={() => nav('/assets/inventory')} />} />
           <div className="mt-3 divide-y divide-line/60">
             {recentlyAssigned.map((a) => {
               const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
@@ -123,6 +171,25 @@ export default function AssetsDashboard() {
               )
             })}
             {recentlyAssigned.length === 0 && <p className="py-6 text-center text-sm text-ash">No assignments yet.</p>}
+          </div>
+        </Card>
+
+        {/* Maintenance queue */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Maintenance Queue" subtitle="Awaiting service" action={<AlertTriangle size={15} className="text-amber-deep" />} />
+          <div className="mt-3 divide-y divide-line/60">
+            {maintenanceQueue.map((a) => (
+              <div key={a.id} className="flex items-center gap-3 py-2.5">
+                <button onClick={() => nav(`/assets/inventory/${a.id}`)} className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-sm font-semibold">{a.name}</p>
+                  <p className="truncate text-xs text-ash">{a.location} · {a.serial}</p>
+                </button>
+                <button onClick={() => setAssetStatus(a.id, 'Available')} className="shrink-0 rounded-full border border-line px-3 py-1 text-[11px] font-bold text-ash transition-colors hover:border-sage-deep/40 hover:text-sage-deep">
+                  Mark fixed
+                </button>
+              </div>
+            ))}
+            {maintenanceQueue.length === 0 && <Empty>Nothing in maintenance right now.</Empty>}
           </div>
         </Card>
       </div>
