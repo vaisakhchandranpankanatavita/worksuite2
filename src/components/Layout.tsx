@@ -1,10 +1,9 @@
 import clsx from 'clsx'
-import { Bell, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, Trophy, User, UserPlus, Users, Wallet, X, Sparkles } from 'lucide-react'
+import { Bell, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { assets, employees, invoices } from '../data/mock'
 import { roleById, type ModuleKey } from '../data/roles'
-import { photoFor } from '../lib/photo'
 import { useAuth } from '../store'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
@@ -169,7 +168,6 @@ export default function Layout() {
   const logoutAuth = useAuth((s) => s.logout)
   const role = roleById(roleId)
   const module: ModuleKey = pathname.startsWith('/finance') ? 'finance' : pathname.startsWith('/assets') ? 'assets' : 'hr'
-  const employeeOfMonth = useMemo(() => [...employees].sort((a, b) => b.performance - a.performance)[0], [])
   const [search, setSearch] = useState(false)
   const [bell, setBell] = useState(false)
   const [mobile, setMobile] = useState(false)
@@ -349,21 +347,6 @@ export default function Layout() {
                 <Sparkles size={12} className="text-lime-deep" />
                 <span className="text-[11px] font-bold text-[#495d16]">AI Active</span>
               </div>
-
-              {/* Employee of the Month */}
-              <button
-                onClick={() => nav(`/hr/employees/${employeeOfMonth.id}`)}
-                title="Employee of the Month"
-                className="hidden items-center gap-2 rounded-full border border-amber-deep/25 bg-amber/40 py-1 pl-1 pr-3 backdrop-blur-xl transition-all hover:border-amber-deep/40 hover:bg-amber/60 hover:shadow-sm lg:flex"
-              >
-                <Avatar name={employeeOfMonth.name} hue={employeeOfMonth.avatarHue} src={photoFor(employeeOfMonth)} size={26} />
-                <span className="text-left leading-tight">
-                  <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-[#6b4a10]">
-                    <Trophy size={10} /> Employee of the Month
-                  </span>
-                  <span className="block text-[12px] font-semibold text-ink">{employeeOfMonth.name}</span>
-                </span>
-              </button>
 
               {/* Profile */}
               <div className="relative ml-0.5 hidden md:block">

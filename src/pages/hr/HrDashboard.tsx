@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { AlertTriangle, ArrowUp, Briefcase, CalendarDays, Cake, CheckCircle2, Plus, Receipt, TrendingDown, TrendingUp, UserPlus, Users, Wallet } from 'lucide-react'
+import { AlertTriangle, ArrowUp, Briefcase, CalendarDays, Cake, CheckCircle2, Plus, Receipt, TrendingDown, TrendingUp, Trophy, UserPlus, Users, Wallet } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts'
@@ -100,6 +100,7 @@ export default function HrDashboard() {
 
   const avgPerf = (employees.reduce((s, e) => s + e.performance, 0) / employees.length)
   const avgPerfPct = Math.round((avgPerf / 5) * 100)
+  const employeeOfMonth = useMemo(() => [...employees].sort((a, b) => b.performance - a.performance)[0], [])
 
   return (
     <div>
@@ -359,6 +360,19 @@ export default function HrDashboard() {
             <span className="ml-2 text-ash">· Top performers: </span>
             <b>{perfDist[0].value + perfDist[1].value}</b>
           </div>
+          <button
+            onClick={() => nav(`/hr/employees/${employeeOfMonth.id}`)}
+            title="Employee of the Month"
+            className="mt-3 flex w-full items-center gap-2 rounded-xl border border-amber-deep/25 bg-amber/40 py-1.5 pl-1.5 pr-3 text-left transition-all hover:border-amber-deep/40 hover:bg-amber/60 hover:shadow-sm"
+          >
+            <Avatar name={employeeOfMonth.name} hue={employeeOfMonth.avatarHue} src={photoFor(employeeOfMonth)} size={26} />
+            <span className="leading-tight">
+              <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-[#6b4a10]">
+                <Trophy size={10} /> Employee of the Month
+              </span>
+              <span className="block text-[12px] font-semibold text-ink">{employeeOfMonth.name}</span>
+            </span>
+          </button>
         </Card>
 
         {/* ── NEW: Attendance Heatmap ──────────────────────────────── */}

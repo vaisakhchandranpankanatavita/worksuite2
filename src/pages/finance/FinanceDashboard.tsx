@@ -202,6 +202,31 @@ export default function FinanceDashboard() {
           </div>
         </Card>
 
+        {/* ── Budget Utilisation ───────────────────────────────────── */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Budget Utilisation" subtitle="FY to date" />
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="font-display text-3xl font-semibold"><CountUp value={`${((totalSpent / totalBudget) * 100).toFixed(0)}%`} /></span>
+            <span className="text-xs text-ash">{fmtCompact(totalSpent)} of {fmtCompact(totalBudget)}</span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {budgets.slice(0, 5).map((b) => {
+              const pctUsed = (b.spent / b.allocated) * 100
+              return (
+                <div key={b.dept}>
+                  <div className="mb-1 flex justify-between text-xs">
+                    <span className="font-medium">{b.dept}</span>
+                    <span className={clsx('font-bold', pctUsed > 85 ? 'text-rose-deep' : pctUsed > 65 ? 'text-amber-deep' : 'text-ash')}>
+                      {Math.round(pctUsed)}%
+                    </span>
+                  </div>
+                  <Progress value={pctUsed} tone={pctUsed > 85 ? 'rose' : pctUsed > 65 ? 'lime' : 'ink'} />
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+
         {/* ── NEW: Cash Flow Waterfall ─────────────────────────────── */}
         <Card className="lg:col-span-5">
           <CardHeader title="Cash Flow Waterfall" subtitle="Opening → monthly profit → closing" />
@@ -278,31 +303,6 @@ export default function FinanceDashboard() {
             })}
             {pendingExp.length === 0 && <li className="py-8 text-center text-sm text-ash">No pending claims 🎉</li>}
           </ul>
-        </Card>
-
-        {/* ── Budget Utilisation ───────────────────────────────────── */}
-        <Card className="lg:col-span-4">
-          <CardHeader title="Budget Utilisation" subtitle="FY to date" />
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-display text-3xl font-semibold"><CountUp value={`${((totalSpent / totalBudget) * 100).toFixed(0)}%`} /></span>
-            <span className="text-xs text-ash">{fmtCompact(totalSpent)} of {fmtCompact(totalBudget)}</span>
-          </div>
-          <div className="mt-4 space-y-3">
-            {budgets.slice(0, 5).map((b) => {
-              const pctUsed = (b.spent / b.allocated) * 100
-              return (
-                <div key={b.dept}>
-                  <div className="mb-1 flex justify-between text-xs">
-                    <span className="font-medium">{b.dept}</span>
-                    <span className={clsx('font-bold', pctUsed > 85 ? 'text-rose-deep' : pctUsed > 65 ? 'text-amber-deep' : 'text-ash')}>
-                      {Math.round(pctUsed)}%
-                    </span>
-                  </div>
-                  <Progress value={pctUsed} tone={pctUsed > 85 ? 'rose' : pctUsed > 65 ? 'lime' : 'ink'} />
-                </div>
-              )
-            })}
-          </div>
         </Card>
 
         {/* ── Recent Transactions ──────────────────────────────────── */}
