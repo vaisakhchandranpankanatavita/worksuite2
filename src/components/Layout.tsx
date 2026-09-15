@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Bell, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X, Sparkles } from 'lucide-react'
+import { Bell, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { assets, employees, invoices } from '../data/mock'
@@ -247,7 +247,7 @@ export default function Layout() {
       {/* ── Ultra-Premium Glassmorphic Header ── */}
       <header className="sticky top-0 z-30">
         {/* Glass surface */}
-        <div className="relative flex items-center gap-3 px-4 py-3.5 sm:px-6 lg:px-8"
+        <div className="relative flex items-center gap-3 px-4 py-2 sm:px-6 lg:px-8"
           style={{
             background: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(240,245,239,0.38) 100%)',
             backdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
@@ -317,10 +317,10 @@ export default function Layout() {
                 {bell && (
                   <div className="animate-in absolute right-0 top-12 z-40 w-80 rounded-2xl p-3"
                     style={{
-                      background: 'rgba(245,249,244,0.65)',
+                      background: 'rgba(250,252,249,0.98)',
                       backdropFilter: 'blur(48px) saturate(280%)',
                       WebkitBackdropFilter: 'blur(48px) saturate(280%)',
-                      border: '1px solid rgba(255,255,255,0.75)',
+                      border: '1px solid rgba(255,255,255,0.9)',
                       boxShadow: '0 0 0 1px rgba(255,255,255,0.9) inset, 0 8px 40px -8px rgba(26,29,27,0.18), 0 24px 64px -16px rgba(26,29,27,0.12)',
                     }}
                   >
@@ -342,12 +342,6 @@ export default function Layout() {
               {/* Help */}
               <IconBtn className="hidden sm:grid" aria-label="Help"><HelpCircle size={15} /></IconBtn>
 
-              {/* AI badge */}
-              <div className="hidden items-center gap-1.5 rounded-full border border-lime-deep/30 bg-lime/40 px-2.5 py-1.5 sm:flex">
-                <Sparkles size={12} className="text-lime-deep" />
-                <span className="text-[11px] font-bold text-[#495d16]">AI Active</span>
-              </div>
-
               {/* Profile */}
               <div className="relative ml-0.5 hidden md:block">
                 <button onClick={() => setProfile((p) => !p)} className="flex items-center gap-2.5 rounded-full border border-white/55 bg-white/35 py-1 pl-1 pr-2.5 backdrop-blur-xl transition-all hover:border-white/80 hover:bg-white/60 hover:shadow-sm" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }} aria-label="Account menu">
@@ -361,10 +355,10 @@ export default function Layout() {
                 {profile && (
                   <div className="animate-in absolute right-0 top-[52px] z-40 w-60 rounded-2xl p-2"
                     style={{
-                      background: 'rgba(245,249,244,0.65)',
+                      background: 'rgba(250,252,249,0.98)',
                       backdropFilter: 'blur(48px) saturate(280%)',
                       WebkitBackdropFilter: 'blur(48px) saturate(280%)',
-                      border: '1px solid rgba(255,255,255,0.75)',
+                      border: '1px solid rgba(255,255,255,0.9)',
                       boxShadow: '0 0 0 1px rgba(255,255,255,0.9) inset, 0 8px 40px -8px rgba(26,29,27,0.18), 0 24px 64px -16px rgba(26,29,27,0.12)',
                     }}
                   >
@@ -401,7 +395,7 @@ export default function Layout() {
             {mobile && (
               <div className="animate-in absolute left-0 right-0 top-full z-40 p-3 xl:hidden"
                 style={{
-                  background: 'rgba(248,252,248,0.88)',
+                  background: 'rgba(250,252,249,0.98)',
                   backdropFilter: 'blur(28px) saturate(200%)',
                   WebkitBackdropFilter: 'blur(28px) saturate(200%)',
                   boxShadow: '0 8px 32px -8px rgba(26,29,27,0.14), 0 24px 56px -16px rgba(26,29,27,0.10)',
