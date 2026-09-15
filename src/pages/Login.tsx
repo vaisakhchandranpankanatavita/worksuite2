@@ -1,5 +1,6 @@
-import { ArrowRight, ChevronDown, Eye, EyeOff, Lock, Mail } from 'lucide-react'
-import { useState } from 'react'
+import clsx from 'clsx'
+import { ArrowRight, Check, ChevronDown, Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { HeroArt } from '../components/charts'
 import { Avatar, Button } from '../components/ui'
@@ -53,12 +54,22 @@ export default function Login() {
   const [password, setPassword] = useState('demo1234')
   const [show, setShow] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [roleOpen, setRoleOpen] = useState(false)
+  const roleRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!roleOpen) return
+    const onClick = (e: MouseEvent) => { if (roleRef.current && !roleRef.current.contains(e.target as Node)) setRoleOpen(false) }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [roleOpen])
 
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
   function pickRole(id: RoleId) {
     setRoleId(id)
     setEmail(ROLES.find((r) => r.id === id)!.email)
+    setRoleOpen(false)
   }
 
   function submit(e: React.FormEvent) {
@@ -91,28 +102,57 @@ export default function Login() {
               baseDelay={160}
             />
 
-            <label className="mt-7 block">
+            <div className="mt-7">
               <span className="mb-1.5 block text-xs font-bold text-ash">Sign in as</span>
-              <div className="relative flex h-11 items-center gap-2.5 rounded-xl border border-line bg-white pl-2.5 pr-3.5 transition-all focus-within:border-ink focus-within:shadow-sm">
-                <Avatar name={role.name} hue={role.hue} src={role.photo} size={26} />
-                <select
-                  value={roleId}
-                  onChange={(e) => pickRole(e.target.value as RoleId)}
-                  className="h-full flex-1 appearance-none bg-transparent pr-6 text-sm font-medium outline-none"
+              <div ref={roleRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setRoleOpen((o) => !o)}
+                  className="flex h-11 w-full items-center gap-2.5 rounded-lg border border-line bg-white pl-2.5 pr-3.5 text-left transition-all focus:border-ink focus:shadow-sm"
+                  aria-haspopup="listbox"
+                  aria-expanded={roleOpen}
                 >
-                  {ROLES.map((r) => (
-                    <option key={r.id} value={r.id}>{r.label}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="pointer-events-none absolute right-3.5 text-ash" />
+                  <Avatar name={role.name} hue={role.hue} src={role.photo} size={26} />
+                  <span className="flex-1 truncate text-sm font-medium">{role.label}</span>
+                  <ChevronDown size={16} className={clsx('shrink-0 text-ash transition-transform', roleOpen && 'rotate-180')} />
+                </button>
+
+                {roleOpen && (
+                  <div
+                    role="listbox"
+                    className="animate-in absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-64 overflow-y-auto scroll-thin rounded-lg p-1.5"
+                    style={{
+                      background: 'rgba(250,252,249,0.98)',
+                      backdropFilter: 'blur(48px) saturate(280%)',
+                      WebkitBackdropFilter: 'blur(48px) saturate(280%)',
+                      border: '1px solid rgba(255,255,255,0.9)',
+                      boxShadow: '0 0 0 1px rgba(255,255,255,0.9) inset, 0 8px 40px -8px rgba(26,29,27,0.18), 0 24px 64px -16px rgba(26,29,27,0.12)',
+                    }}
+                  >
+                    {ROLES.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        role="option"
+                        aria-selected={r.id === roleId}
+                        onClick={() => pickRole(r.id)}
+                        className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/60"
+                      >
+                        <Avatar name={r.name} hue={r.hue} src={r.photo} size={26} />
+                        <span className="min-w-0 flex-1 truncate font-medium">{r.label}</span>
+                        {r.id === roleId && <Check size={14} className="shrink-0 text-ink" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <p className="mt-1.5 text-[11px] text-ash">{role.description}</p>
-            </label>
+            </div>
 
             <form onSubmit={submit} className="mt-5 space-y-4">
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold text-ash">Work email</span>
-                <div className="flex h-11 items-center gap-2.5 rounded-xl border border-line bg-white px-3.5 transition-all focus-within:border-ink focus-within:shadow-sm">
+                <div className="flex h-11 items-center gap-2.5 rounded-lg border border-line bg-white px-3.5 transition-all focus-within:border-ink focus-within:shadow-sm">
                   <Mail size={16} className="text-ash" />
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-full flex-1 bg-transparent text-sm outline-none" placeholder="you@company.com" />
                 </div>
@@ -120,7 +160,7 @@ export default function Login() {
 
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold text-ash">Password</span>
-                <div className="flex h-11 items-center gap-2.5 rounded-xl border border-line bg-white px-3.5 transition-all focus-within:border-ink focus-within:shadow-sm">
+                <div className="flex h-11 items-center gap-2.5 rounded-lg border border-line bg-white px-3.5 transition-all focus-within:border-ink focus-within:shadow-sm">
                   <Lock size={16} className="text-ash" />
                   <input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-full flex-1 bg-transparent text-sm outline-none" placeholder="••••••••" />
                   <button type="button" onClick={() => setShow((s) => !s)} className="text-ash transition-colors hover:text-ink" aria-label={show ? 'Hide password' : 'Show password'}>

@@ -108,10 +108,11 @@ export default function AssetsDashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <PageHeader title="Asset Management" subtitle={`${total} assets · ${fmtINR(totalValue)} total value`} />
-        <Button onClick={() => nav('/assets/inventory?new=1')}><Plus size={15} /> Add asset</Button>
-      </div>
+      <PageHeader
+        title="Asset Management"
+        subtitle={`${total} assets · ${fmtINR(totalValue)} total value`}
+        actions={<Button onClick={() => nav('/assets/inventory?new=1')}><Plus size={15} /> Add asset</Button>}
+      />
 
       <div className="stagger grid gap-4 lg:grid-cols-12">
         <AiInsights />

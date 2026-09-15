@@ -137,10 +137,13 @@ export function Badge({ children, tone, dot = true, className }: {
 /* ─── PageHeader ────────────────────────────────────────────── */
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-      <h1 className="text-gradient-heading font-display text-[26px] font-semibold leading-tight tracking-tight md:text-[32px]">
-        {title}
-      </h1>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-gradient-heading font-display text-2xl font-semibold leading-tight tracking-tight md:text-[28px]">
+          {title}
+        </h1>
+        {subtitle && <p className="mt-0.5 text-xs text-ash">{subtitle}</p>}
+      </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )

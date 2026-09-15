@@ -14,14 +14,14 @@ function DistortSphere() {
 
   return (
     <mesh ref={mesh}>
-      <icosahedronGeometry args={[1.35, 4]} />
+      <icosahedronGeometry args={[0.85, 4]} />
       <MeshDistortMaterial
         color="#aece52"
         emissive="#4a6b1a"
         emissiveIntensity={0.35}
         roughness={0.15}
         metalness={0.1}
-        distort={0.4}
+        distort={0.3}
         speed={1.8}
       />
     </mesh>
@@ -35,7 +35,7 @@ export default function LoadingOrb3D({ size = 88, className }: Props) {
   return (
     <div className={className} style={{ width: size, height: size }} aria-hidden>
       <Canvas
-        camera={{ position: [0, 0, 4], fov: 40 }}
+        camera={{ position: [0, 0, 4.5], fov: 38 }}
         gl={{ alpha: true, antialias: true }}
         dpr={[1, 2]}
       >

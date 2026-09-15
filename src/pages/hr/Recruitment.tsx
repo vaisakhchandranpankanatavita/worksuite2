@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { Briefcase, MapPin, Star, Users } from 'lucide-react'
 import { useState } from 'react'
-import { Avatar, Badge, Card, CardHeader, PageHeader, Segmented } from '../../components/ui'
+import { Avatar, Card, CardHeader, PageHeader, Segmented } from '../../components/ui'
 import { STAGES, jobs, type Stage } from '../../data/mock'
 import { fmtCompact, fmtShortDate } from '../../lib/format'
 import { useApp } from '../../store'
@@ -31,18 +31,22 @@ export default function Recruitment() {
     <div>
       <PageHeader title="Recruitment" subtitle={`${jobs.length} open roles · ${candidates.length} candidates in pipeline`} />
 
-      <div className="mb-4 flex gap-3 overflow-x-auto pb-1 scroll-thin">
+      <div className="mb-4 flex gap-2.5 overflow-x-auto pb-1 scroll-thin">
         {jobs.map((j) => (
-          <button key={j.id} onClick={() => setJob(job === j.id ? 'All' : j.id)} className={clsx('card min-w-[230px] p-4 text-left transition', job === j.id && 'ring-2 ring-ink')}>
-            <div className="flex items-start justify-between gap-2">
-              <span className="grid size-9 place-items-center rounded-full bg-lime"><Briefcase size={15} /></span>
-              <Badge tone="gray" dot={false}>{j.type}</Badge>
-            </div>
-            <p className="mt-3 truncate font-display text-sm font-medium">{j.title}</p>
-            <p className="mt-1 flex items-center gap-1 text-xs text-ash"><MapPin size={12} /> {j.location}</p>
-            <div className="mt-3 flex justify-between text-xs">
-              <span className="flex items-center gap-1"><Users size={12} /> {j.applicants} applicants</span>
-              <span className="text-ash">{j.openings} opening{j.openings > 1 ? 's' : ''}</span>
+          <button key={j.id} onClick={() => setJob(job === j.id ? 'All' : j.id)} className={clsx('card flex min-w-[196px] items-center gap-2.5 p-3 text-left transition', job === j.id && 'ring-2 ring-ink')}>
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-lime"><Briefcase size={13} /></span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-medium leading-tight">{j.title}</p>
+              <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-ash">
+                <MapPin size={10} className="shrink-0" /> {j.location}
+              </p>
+              <div className="mt-1.5 flex items-center gap-2 text-[11px] text-ash">
+                <span className="flex items-center gap-1"><Users size={10} /> {j.applicants}</span>
+                <span className="text-line">·</span>
+                <span>{j.openings} opening{j.openings > 1 ? 's' : ''}</span>
+                <span className="text-line">·</span>
+                <span className="truncate">{j.type}</span>
+              </div>
             </div>
           </button>
         ))}
