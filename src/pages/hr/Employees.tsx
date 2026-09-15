@@ -112,16 +112,16 @@ export default function Employees() {
       </div>
 
       {view === 'grid' ? (
-        <div className="animate-in grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="animate-in grid gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
           {list.map((e) => (
-            <div key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card cursor-pointer overflow-hidden p-3">
+            <div key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card mx-auto w-full max-w-[160px] cursor-pointer overflow-hidden p-2">
               <TiltedCard
                 imageSrc={photoFor(e)}
                 altText={e.name}
                 captionText={e.role}
-                containerHeight="200px"
+                containerHeight="120px"
                 containerWidth="100%"
-                imageHeight="200px"
+                imageHeight="120px"
                 imageWidth="100%"
                 rotateAmplitude={8}
                 scaleOnHover={1.04}
@@ -129,19 +129,19 @@ export default function Employees() {
                 showTooltip
                 displayOverlayContent
                 overlayContent={
-                  <div className="w-full p-3 text-white">
-                    <p className="truncate font-display text-sm font-semibold">{e.name}</p>
-                    <p className="truncate text-[11px] text-white/75">{e.role}</p>
+                  <div className="w-full p-2 text-white">
+                    <p className="truncate font-display text-xs font-semibold">{e.name}</p>
+                    <p className="truncate text-[10px] text-white/75">{e.role}</p>
                   </div>
                 }
               />
-              <div className="mt-3 space-y-1.5 px-1 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-ash">{e.id} · {e.department}</span>
+              <div className="mt-2 space-y-1 px-0.5 text-[11px]">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="truncate text-ash">{e.id} · {e.department}</span>
                   <Badge>{e.status}</Badge>
                 </div>
-                <p className="flex items-center gap-2 text-ash"><Mail size={13} /> <span className="truncate">{e.email}</span></p>
-                <p className="flex items-center gap-2 text-ash"><MapPin size={13} /> {e.location} · {e.workMode}</p>
+                <p className="flex items-center gap-1.5 text-ash"><Mail size={11} /> <span className="truncate">{e.email}</span></p>
+                <p className="flex items-center gap-1.5 text-ash"><MapPin size={11} /> <span className="truncate">{e.location} · {e.workMode}</span></p>
               </div>
             </div>
           ))}
