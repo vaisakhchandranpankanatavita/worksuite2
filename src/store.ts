@@ -49,6 +49,7 @@ interface AppState {
   addInvoice: (i: Invoice) => void
   moveCandidate: (id: string, stage: Stage) => void
   addAsset: (a: Asset) => void
+  addAssets: (list: Asset[]) => void
   assignAsset: (id: string, employeeId: string) => void
   unassignAsset: (id: string) => void
   setAssetStatus: (id: string, status: AssetStatus) => void
@@ -101,6 +102,14 @@ export const useApp = create<AppState>((set, get) => ({
   addAsset: (a) => {
     set((s) => ({ assets: [a, ...s.assets], assetLog: [logEntry(a.id, 'Added', 'Added to inventory'), ...s.assetLog] }))
     get().toast(`Asset ${a.id} added to inventory`)
+  },
+  addAssets: (list) => {
+    if (list.length === 0) return
+    set((s) => ({
+      assets: [...list, ...s.assets],
+      assetLog: [...list.map((a) => logEntry(a.id, 'Added', 'Imported via bulk upload')), ...s.assetLog],
+    }))
+    get().toast(`${list.length} assets imported`)
   },
   assignAsset: (id, employeeId) => {
     const holder = employeeById(employeeId)

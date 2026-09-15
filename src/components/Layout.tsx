@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Bell, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
+import { Bell, Boxes, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -29,6 +29,7 @@ const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end
   assets: [
     { to: '/assets', label: 'Dashboard', icon: Home, end: true },
     { to: '/assets/inventory', label: 'Inventory', icon: ListChecks },
+    { to: '/assets/stock', label: 'Stock', icon: Boxes },
   ],
 }
 

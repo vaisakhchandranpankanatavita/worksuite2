@@ -1,5 +1,5 @@
 export type ModuleKey = 'hr' | 'finance' | 'assets'
-export type RoleId = 'hr' | 'finance' | 'admin'
+export type RoleId = 'hr' | 'finance' | 'admin' | 'production'
 
 export interface Role {
   id: RoleId
@@ -42,6 +42,16 @@ export const ROLES: Role[] = [
     email: 'vikram.nair@worksuite.io',
     photo: 'https://randomuser.me/api/portraits/men/45.jpg',
     hue: 210,
+  },
+  {
+    id: 'production',
+    label: 'Production Manager',
+    description: 'Stock & asset inventory management',
+    modules: ['assets'],
+    name: 'Rohan Verma',
+    email: 'rohan.verma@worksuite.io',
+    photo: 'https://randomuser.me/api/portraits/men/22.jpg',
+    hue: 95,
   },
 ]
 

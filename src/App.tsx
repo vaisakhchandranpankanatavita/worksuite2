@@ -17,6 +17,7 @@ import Reports from './pages/finance/Reports'
 import AssetsDashboard from './pages/assets/AssetsDashboard'
 import Assets from './pages/assets/Assets'
 import AssetDetail from './pages/assets/AssetDetail'
+import StockList from './pages/assets/StockList'
 import { useAuth } from './store'
 import { roleById } from './data/roles'
 
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="assets" element={<AssetsDashboard />} />
           <Route path="assets/inventory" element={<Assets />} />
           <Route path="assets/inventory/:id" element={<AssetDetail />} />
+          <Route path="assets/stock" element={<StockList />} />
           <Route path="*" element={<Navigate to="/hr" replace />} />
         </Route>
       </Routes>

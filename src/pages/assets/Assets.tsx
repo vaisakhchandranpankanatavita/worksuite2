@@ -1,26 +1,30 @@
 import clsx from 'clsx'
-import { CheckSquare, Download, LayoutGrid, List, Plus, Search, Square, Upload, UserCheck, X, XCircle } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { CheckSquare, Columns3, Download, FileUp, LayoutGrid, List, Plus, Search, Square, Upload, UserCheck, X, XCircle } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { exportCsv } from '../hr/Employees'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
 import { ASSET_CATEGORIES, employeeById, employees, LOCATIONS, TODAY, type Asset, type AssetCategory, type AssetStatus } from '../../data/mock'
+import { csvToObjects } from '../../lib/csv'
 import { fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
 const STATUSES: (AssetStatus | 'All')[] = ['All', 'Available', 'Assigned', 'Maintenance', 'Retired']
+const KANBAN_COLUMNS: AssetStatus[] = ['Available', 'Assigned', 'Maintenance', 'Retired']
 
 export default function Assets() {
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
-  const { assets, addAsset, assignAsset, retireAsset } = useApp()
+  const { assets, addAsset, addAssets, assignAsset, setAssetStatus, retireAsset } = useApp()
   const [q, setQ] = useState('')
   const [category, setCategory] = useState<'All' | AssetCategory>('All')
   const [status, setStatus] = useState<AssetStatus | 'All'>('All')
-  const [view, setView] = useState<'grid' | 'list'>('list')
+  const [view, setView] = useState<'grid' | 'list' | 'kanban'>('list')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false)
+  const [dragAssignId, setDragAssignId] = useState<string | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
 
   const list = useMemo(
     () =>
@@ -59,6 +63,14 @@ export default function Assets() {
     clearSelection()
   }
 
+  const dropOnColumn = (id: string, targetStatus: AssetStatus) => {
+    const asset = assets.find((a) => a.id === id)
+    if (!asset || asset.status === targetStatus) return
+    if (targetStatus === 'Retired') return retireAsset(id)
+    if (targetStatus === 'Assigned' && !asset.assignedTo) return setDragAssignId(id)
+    setAssetStatus(id, targetStatus)
+  }
+
   return (
     <div>
       <PageHeader
@@ -76,6 +88,9 @@ export default function Assets() {
               }
             >
               <Download size={16} /> Export
+            </Button>
+            <Button variant="light" onClick={() => setImportOpen(true)}>
+              <FileUp size={16} /> Import
             </Button>
             <Button onClick={() => setParams({ new: '1' })}>
               <Plus size={16} /> Add asset
@@ -119,9 +134,9 @@ export default function Assets() {
           </Select>
 
           <div className="inline-flex rounded-full border border-line bg-white/80 p-0.5">
-            {(['grid', 'list'] as const).map((v) => (
+            {(['grid', 'list', 'kanban'] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} className={clsx('grid size-7 place-items-center rounded-full transition-all duration-200', view === v ? 'bg-ink text-white' : 'text-ash hover:text-ink')} aria-label={v}>
-                {v === 'grid' ? <LayoutGrid size={13} /> : <List size={13} />}
+                {v === 'grid' ? <LayoutGrid size={13} /> : v === 'list' ? <List size={13} /> : <Columns3 size={13} />}
               </button>
             ))}
           </div>
@@ -140,7 +155,9 @@ export default function Assets() {
         </div>
       )}
 
-      {view === 'grid' ? (
+      {view === 'kanban' ? (
+        <KanbanBoard list={list} onDropAsset={dropOnColumn} onOpen={(id) => nav(`/assets/inventory/${id}`)} />
+      ) : view === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {list.map((a) => {
             const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
@@ -233,6 +250,178 @@ export default function Assets() {
           clearSelection()
         }}
       />
+
+      <BulkAssignModal
+        open={dragAssignId !== null}
+        count={1}
+        onClose={() => setDragAssignId(null)}
+        onAssign={(employeeId) => {
+          if (dragAssignId) assignAsset(dragAssignId, employeeId)
+          setDragAssignId(null)
+        }}
+      />
+
+      <ImportModal
+        open={importOpen}
+        existingCount={assets.length}
+        onClose={() => setImportOpen(false)}
+        onImport={(rows) => {
+          addAssets(rows)
+          setImportOpen(false)
+        }}
+      />
+    </div>
+  )
+}
+
+function ImportModal({ open, existingCount, onClose, onImport }: { open: boolean; existingCount: number; onClose: () => void; onImport: (rows: Asset[]) => void }) {
+  const [dragOver, setDragOver] = useState(false)
+  const [rows, setRows] = useState<Asset[]>([])
+  const [fileName, setFileName] = useState('')
+  const [error, setError] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const reset = () => { setRows([]); setFileName(''); setError('') }
+
+  const handleFile = (file: File | undefined) => {
+    if (!file) return
+    setFileName(file.name)
+    setError('')
+    const reader = new FileReader()
+    reader.onload = () => {
+      const text = typeof reader.result === 'string' ? reader.result : ''
+      const objs = csvToObjects(text)
+      if (objs.length === 0 || !('name' in objs[0])) {
+        setError('Could not read this file — make sure the first row has a "Name" column header.')
+        setRows([])
+        return
+      }
+      const parsed: Asset[] = objs
+        .filter((o) => o.name)
+        .map((o, i) => {
+          const category = (ASSET_CATEGORIES.find((c) => c.toLowerCase() === o.category?.toLowerCase()) ?? 'Accessory') as AssetCategory
+          const location = (LOCATIONS.find((l) => l.toLowerCase() === o.location?.toLowerCase()) ?? 'Bengaluru') as Asset['location']
+          const cost = Number(o.cost) || 0
+          return {
+            id: `AS${1001 + existingCount + i + Math.floor(Math.random() * 1000)}`,
+            name: o.name,
+            category,
+            model: o.model || '—',
+            serial: o.serial || `WS-${category.slice(0, 2).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
+            status: 'Available',
+            purchaseDate: TODAY.toISOString().slice(0, 10),
+            warrantyUntil: new Date(TODAY.getFullYear() + 1, TODAY.getMonth(), TODAY.getDate()).toISOString().slice(0, 10),
+            cost,
+            location,
+          }
+        })
+      setRows(parsed)
+    }
+    reader.readAsText(file)
+  }
+
+  return (
+    <Modal open={open} onClose={() => { reset(); onClose() }} title="Import stock from CSV" width={560}>
+      {rows.length === 0 ? (
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]) }}
+          onClick={() => inputRef.current?.click()}
+          className={clsx(
+            'flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-all duration-200',
+            dragOver ? 'border-ink bg-soft scale-[1.01]' : 'border-line bg-soft/40 hover:border-ink/40 hover:bg-soft',
+          )}
+        >
+          <span className="grid size-12 place-items-center rounded-2xl bg-white shadow-sm"><Upload size={20} className="text-ash" /></span>
+          <div>
+            <p className="text-sm font-semibold">Drag & drop a CSV file here</p>
+            <p className="mt-1 text-xs text-ash">or click to browse · columns: Name, Category, Model, Cost, Location</p>
+          </div>
+          {error && <p className="text-xs font-bold text-rose-deep">{error}</p>}
+          <input ref={inputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
+        </div>
+      ) : (
+        <div>
+          <div className="mb-3 flex items-center justify-between rounded-xl bg-soft px-3 py-2 text-xs">
+            <span className="font-bold">{fileName}</span>
+            <button onClick={reset} className="text-ash hover:text-ink">Choose a different file</button>
+          </div>
+          <p className="mb-2 text-sm">Ready to import <b>{rows.length}</b> item{rows.length === 1 ? '' : 's'}:</p>
+          <div className="max-h-56 space-y-1.5 overflow-y-auto scroll-thin pr-1">
+            {rows.slice(0, 20).map((r, i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg bg-soft/60 px-3 py-1.5 text-xs">
+                <span className="truncate font-medium">{r.name}</span>
+                <span className="shrink-0 text-ash">{r.category} · {fmtINR(r.cost)}</span>
+              </div>
+            ))}
+            {rows.length > 20 && <p className="py-1 text-center text-[11px] text-ash">+{rows.length - 20} more</p>}
+          </div>
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <Button variant="ghost" onClick={reset}>Cancel</Button>
+            <Button onClick={() => onImport(rows)}>Import {rows.length} item{rows.length === 1 ? '' : 's'}</Button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+function KanbanBoard({ list, onDropAsset, onOpen }: { list: Asset[]; onDropAsset: (id: string, status: AssetStatus) => void; onOpen: (id: string) => void }) {
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [overCol, setOverCol] = useState<AssetStatus | null>(null)
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-4">
+      {KANBAN_COLUMNS.map((col) => {
+        const items = list.filter((a) => a.status === col)
+        return (
+          <div
+            key={col}
+            onDragOver={(e) => { e.preventDefault(); setOverCol(col) }}
+            onDragLeave={() => setOverCol((c) => (c === col ? null : c))}
+            onDrop={(e) => {
+              e.preventDefault()
+              const id = e.dataTransfer.getData('text/asset-id')
+              if (id) onDropAsset(id, col)
+              setDragId(null)
+              setOverCol(null)
+            }}
+            className={clsx(
+              'flex min-h-[420px] flex-col rounded-2xl border p-3 transition-colors duration-150',
+              overCol === col ? 'border-ink/30 bg-soft' : 'border-line/70 bg-soft/40',
+            )}
+          >
+            <div className="mb-3 flex items-center justify-between px-1">
+              <span className="text-xs font-bold uppercase tracking-wide text-ash">{col}</span>
+              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-ash">{items.length}</span>
+            </div>
+            <div className="flex flex-1 flex-col gap-2 overflow-y-auto scroll-thin">
+              {items.map((a) => (
+                <div
+                  key={a.id}
+                  draggable
+                  onDragStart={(e) => { e.dataTransfer.setData('text/asset-id', a.id); setDragId(a.id) }}
+                  onDragEnd={() => setDragId(null)}
+                  onClick={() => onOpen(a.id)}
+                  className={clsx(
+                    'cursor-grab select-none rounded-xl border border-line bg-white p-3 text-left shadow-sm transition-all duration-150 active:cursor-grabbing hover:shadow-md',
+                    dragId === a.id && 'opacity-40',
+                  )}
+                >
+                  <p className="truncate text-sm font-semibold">{a.name}</p>
+                  <p className="truncate text-[11px] text-ash">{a.category} · {a.serial}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[11px] text-ash">{a.location}</span>
+                    <span className="text-[11px] font-bold">{fmtINR(a.cost)}</span>
+                  </div>
+                </div>
+              ))}
+              {items.length === 0 && <p className="py-6 text-center text-xs text-ash/70">Drop here</p>}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
