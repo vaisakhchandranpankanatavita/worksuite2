@@ -100,10 +100,6 @@ export default function HrDashboard() {
 
   const avgPerf = (employees.reduce((s, e) => s + e.performance, 0) / employees.length)
   const avgPerfPct = Math.round((avgPerf / 5) * 100)
-  const employeeOfMonth = useMemo(
-    () => [...employees].sort((a, b) => b.performance - a.performance)[0],
-    []
-  )
 
   return (
     <div>
@@ -363,18 +359,6 @@ export default function HrDashboard() {
             <span className="ml-2 text-ash">· Top performers: </span>
             <b>{perfDist[0].value + perfDist[1].value}</b>
           </div>
-          <button
-            onClick={() => nav(`/hr/employees/${employeeOfMonth.id}`)}
-            className="mt-3 flex w-full items-center gap-3 rounded-xl bg-soft/80 px-3 py-2.5 text-left transition-colors hover:bg-soft"
-          >
-            <Avatar name={employeeOfMonth.name} hue={employeeOfMonth.avatarHue} src={photoFor(employeeOfMonth)} size={40} />
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-sage-deep">Employee of the Month</p>
-              <p className="truncate text-sm font-bold">{employeeOfMonth.name}</p>
-              <p className="truncate text-[11px] text-ash">{employeeOfMonth.role}</p>
-            </div>
-            <Badge tone="lime">{employeeOfMonth.performance.toFixed(1)}</Badge>
-          </button>
         </Card>
 
         {/* ── NEW: Attendance Heatmap ──────────────────────────────── */}
