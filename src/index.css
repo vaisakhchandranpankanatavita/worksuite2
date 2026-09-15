@@ -48,7 +48,7 @@
 html, body, #root { height: 100%; }
 html {
   /* Reserve gutter so page never shifts when scrollbar appears */
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
   /* Firefox — thin, only visible when active */
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
