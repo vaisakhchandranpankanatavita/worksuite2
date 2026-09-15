@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUp, ArrowUpRight, Download, FileText, Landmark, Plu
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import AiInsights from '../../components/AiInsights'
 import { DonutChart, GroupedBar, HalfGauge, HatchedArea, MultiLineChart, SoftBars, WaterfallBar } from '../../components/charts'
 import { CountUp } from '../../components/CountUp'
 import { Avatar, Badge, Button, Card, CardHeader, CornerLink, IconBtn, Progress, Segmented, chartTooltip } from '../../components/ui'
@@ -77,6 +78,7 @@ export default function FinanceDashboard() {
       </div>
 
       <div className="stagger grid gap-4 lg:grid-cols-12">
+        <AiInsights />
 
         {/* ── Cash hero dark card ──────────────────────────────────── */}
         <div className="animate-in relative overflow-hidden rounded-[20px] bg-gradient-to-br from-[#1e221e] to-[#131613] p-6 text-white lg:col-span-4 lg:row-span-2">
@@ -182,34 +184,38 @@ export default function FinanceDashboard() {
         </Card>
 
         {/* ── Spend Breakdown donut ────────────────────────────────── */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-6">
           <CardHeader title="Spend Breakdown" subtitle="This month" action={<CornerLink onClick={() => nav('/finance/budgets')} />} />
-          <DonutChart
-            data={expenseBreakdown}
-            colors={PIE_COLORS}
-            innerLabel={fmtCompact(expenseBreakdown.reduce((s, x) => s + x.value, 0))}
-            height={175}
-            format={fmtINR}
-          />
-          <div className="mt-2 grid grid-cols-2 gap-1.5 text-[11px]">
-            {expenseBreakdown.map((x, i) => (
-              <div key={x.name} className="flex items-center gap-2">
-                <i className="size-2.5 shrink-0 rounded-full" style={{ background: PIE_COLORS[i] }} />
-                <span className="truncate text-ash">{x.name}</span>
-                <span className="ml-auto font-bold">{fmtCompact(x.value)}</span>
-              </div>
-            ))}
+          <div className="flex flex-1 items-center gap-4">
+            <div className="w-40 shrink-0">
+              <DonutChart
+                data={expenseBreakdown}
+                colors={PIE_COLORS}
+                innerLabel={fmtCompact(expenseBreakdown.reduce((s, x) => s + x.value, 0))}
+                height="100%"
+                format={fmtINR}
+              />
+            </div>
+            <div className="grid flex-1 grid-cols-2 gap-2 text-[11px]">
+              {expenseBreakdown.map((x, i) => (
+                <div key={x.name} className="flex items-center gap-2">
+                  <i className="size-2.5 shrink-0 rounded-full" style={{ background: PIE_COLORS[i] }} />
+                  <span className="truncate text-ash">{x.name}</span>
+                  <span className="ml-auto font-bold">{fmtCompact(x.value)}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </Card>
 
         {/* ── Budget Utilisation ───────────────────────────────────── */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-6">
           <CardHeader title="Budget Utilisation" subtitle="FY to date" />
           <div className="mt-3 flex items-baseline gap-2">
             <span className="font-display text-3xl font-semibold"><CountUp value={`${((totalSpent / totalBudget) * 100).toFixed(0)}%`} /></span>
             <span className="text-xs text-ash">{fmtCompact(totalSpent)} of {fmtCompact(totalBudget)}</span>
           </div>
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 flex flex-1 flex-col justify-center gap-3">
             {budgets.slice(0, 5).map((b) => {
               const pctUsed = (b.spent / b.allocated) * 100
               return (
@@ -230,7 +236,7 @@ export default function FinanceDashboard() {
         {/* ── NEW: Cash Flow Waterfall ─────────────────────────────── */}
         <Card className="lg:col-span-5">
           <CardHeader title="Cash Flow Waterfall" subtitle="Opening → monthly profit → closing" />
-          <WaterfallBar data={cashFlowData} height={190} format={fmtCompact} />
+          <div className="mt-2 min-h-[150px] flex-1"><WaterfallBar data={cashFlowData} height="100%" format={fmtCompact} /></div>
           <div className="mt-2 flex items-center gap-4 text-[11px]">
             <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-sage-deep" />Positive</span>
             <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-rose-deep" />Negative</span>
@@ -240,13 +246,15 @@ export default function FinanceDashboard() {
         {/* ── NEW: Revenue vs Budget bars ──────────────────────────── */}
         <Card className="lg:col-span-4">
           <CardHeader title="Revenue vs Budget" subtitle="Last 6 months" />
-          <GroupedBar
-            data={revVsBudget}
-            keys={['revenue', 'budget']}
-            colors={['#aece52', '#dfe4de']}
-            xKey="month" height={185}
-            format={fmtCompact}
-          />
+          <div className="mt-2 min-h-[150px] flex-1">
+            <GroupedBar
+              data={revVsBudget}
+              keys={['revenue', 'budget']}
+              colors={['#aece52', '#dfe4de']}
+              xKey="month" height="100%"
+              format={fmtCompact}
+            />
+          </div>
           <div className="mt-2 flex items-center gap-4 text-[11px]">
             <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#aece52]" />Actual</span>
             <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#dfe4de]" />Budget</span>
@@ -256,30 +264,32 @@ export default function FinanceDashboard() {
         {/* ── Receivables ──────────────────────────────────────────── */}
         <Card className="lg:col-span-3">
           <CardHeader title="Receivables" subtitle={`${receivables.length} open · ${overdue.length} overdue`} action={<CornerLink onClick={() => nav('/finance/invoices')} />} />
-          <p className="mt-4 font-display text-3xl font-semibold"><CountUp value={fmtCompact(receivables.reduce((s, i) => s + i.total, 0))} /></p>
-          {/* Aging bar */}
-          <div className="mt-4 flex h-2.5 overflow-hidden rounded-full">
-            {aging.map((a, i) => {
-              const total = aging.reduce((s, x) => s + x.value, 0) || 1
-              return <div key={a.label} className={['bg-sage-deep', 'bg-lime-deep', 'bg-amber-deep', 'bg-rose-deep'][i]} style={{ width: `${(a.value / total) * 100}%` }} />
-            })}
+          <div className="flex flex-1 flex-col">
+            <p className="mt-4 font-display text-3xl font-semibold"><CountUp value={fmtCompact(receivables.reduce((s, i) => s + i.total, 0))} /></p>
+            {/* Aging bar */}
+            <div className="mt-4 flex h-2.5 overflow-hidden rounded-full">
+              {aging.map((a, i) => {
+                const total = aging.reduce((s, x) => s + x.value, 0) || 1
+                return <div key={a.label} className={['bg-sage-deep', 'bg-lime-deep', 'bg-amber-deep', 'bg-rose-deep'][i]} style={{ width: `${(a.value / total) * 100}%` }} />
+              })}
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+              {aging.map((a, i) => (
+                <div key={a.label} className={clsx('rounded-lg px-2.5 py-1.5', ['bg-sage/30', 'bg-lime/30', 'bg-amber/30', 'bg-rose/30'][i])}>
+                  <p className="text-ash text-[10px]">{a.label}</p>
+                  <p className="font-bold">{fmtCompact(a.value)}</p>
+                </div>
+              ))}
+            </div>
+            <ul className="mt-3 flex-1 space-y-1.5">
+              {overdue.slice(0, 3).map((i) => (
+                <li key={i.id} className="flex items-center justify-between rounded-xl bg-soft/80 px-3 py-2 text-xs">
+                  <span className="flex items-center gap-2"><FileText size={13} className="text-rose-deep" />{i.client.name}</span>
+                  <b>{fmtCompact(i.total)}</b>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
-            {aging.map((a, i) => (
-              <div key={a.label} className={clsx('rounded-lg px-2.5 py-1.5', ['bg-sage/30', 'bg-lime/30', 'bg-amber/30', 'bg-rose/30'][i])}>
-                <p className="text-ash text-[10px]">{a.label}</p>
-                <p className="font-bold">{fmtCompact(a.value)}</p>
-              </div>
-            ))}
-          </div>
-          <ul className="mt-3 space-y-1.5">
-            {overdue.slice(0, 3).map((i) => (
-              <li key={i.id} className="flex items-center justify-between rounded-xl bg-soft/80 px-3 py-2 text-xs">
-                <span className="flex items-center gap-2"><FileText size={13} className="text-rose-deep" />{i.client.name}</span>
-                <b>{fmtCompact(i.total)}</b>
-              </li>
-            ))}
-          </ul>
         </Card>
 
         {/* ── Expense Approvals ────────────────────────────────────── */}

@@ -114,7 +114,7 @@ export function Sparkline({ values, color = '#cd6a96', height = 60 }: {
 /* ─── TrendLine — thin clean line chart ────────────────────── */
 export function TrendLine({ data, dataKey, xKey, color = '#aece52', height = 120, format = (v: number) => String(v) }: {
   data: Record<string, number | string>[]; dataKey: string; xKey: string
-  color?: string; height?: number; format?: (v: number) => string
+  color?: string; height?: number | string; format?: (v: number) => string
 }) {
   const id = `trend-fill-${color.replace('#', '')}`
   return (
@@ -141,7 +141,7 @@ export function TrendLine({ data, dataKey, xKey, color = '#aece52', height = 120
 export function GroupedBar({ data, keys, colors, xKey, height = 180, format = (v: number) => String(v) }: {
   data: Record<string, number | string>[]
   keys: string[]; colors: string[]; xKey: string
-  height?: number; format?: (v: number) => string
+  height?: number | string; format?: (v: number) => string
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -161,7 +161,7 @@ export function GroupedBar({ data, keys, colors, xKey, height = 180, format = (v
 /* ─── WaterfallBar — cash flow waterfall ───────────────────── */
 export function WaterfallBar({ data, height = 200, format = (v: number) => String(v) }: {
   data: { name: string; value: number; total?: number }[]
-  height?: number; format?: (v: number) => string
+  height?: number | string; format?: (v: number) => string
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -183,7 +183,7 @@ export function WaterfallBar({ data, height = 200, format = (v: number) => Strin
 /* ─── DonutChart ────────────────────────────────────────────── */
 export function DonutChart({ data, colors, innerLabel, height = 200, format = (v: number) => String(v) }: {
   data: { name: string; value: number }[]
-  colors: string[]; innerLabel?: string; height?: number
+  colors: string[]; innerLabel?: string; height?: number | string
   format?: (v: number) => string
 }) {
   return (

@@ -1,11 +1,13 @@
-import { AlertTriangle, CheckCircle2, Laptop, MapPin, Plus, ShieldAlert, Wrench } from 'lucide-react'
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Laptop, MapPin, PackageX, Plus, ShieldAlert, TrendingDown, Wrench } from 'lucide-react'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DonutChart, GroupedBar, RadialProgress } from '../../components/charts'
+import AiInsights from '../../components/AiInsights'
+import { DonutChart, GroupedBar, RadialProgress, TrendLine } from '../../components/charts'
 import { CountUp } from '../../components/CountUp'
 import { Avatar, Badge, Button, Card, CardHeader, CornerLink, Empty, PageHeader } from '../../components/ui'
-import { ASSET_CATEGORIES, LOCATIONS, employeeById } from '../../data/mock'
-import { fmtDate, fmtINR } from '../../lib/format'
+import { ASSET_CATEGORIES, LOCATIONS, TODAY, employeeById } from '../../data/mock'
+import { bookValue } from '../../lib/depreciation'
+import { fmtCompact, fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
@@ -58,6 +60,52 @@ export default function AssetsDashboard() {
     [assets],
   )
 
+  const overdueReturns = useMemo(() => {
+    const now = Date.now()
+    return assets
+      .filter((a) => a.returnDue && a.status === 'Assigned')
+      .map((a) => ({ asset: a, daysOver: Math.round((now - new Date(a.returnDue!).getTime()) / MS_DAY) }))
+      .filter((x) => x.daysOver >= -14)
+      .sort((a, b) => b.daysOver - a.daysOver)
+      .slice(0, 5)
+  }, [assets])
+
+  const ageBuckets = useMemo(() => {
+    const buckets = [
+      { name: '0–1yr', count: 0 },
+      { name: '1–2yr', count: 0 },
+      { name: '2–3yr', count: 0 },
+      { name: '3yr+', count: 0 },
+    ]
+    const now = Date.now()
+    assets.filter((a) => a.status !== 'Retired').forEach((a) => {
+      const yrs = (now - new Date(a.purchaseDate).getTime()) / (365 * MS_DAY)
+      buckets[yrs < 1 ? 0 : yrs < 2 ? 1 : yrs < 3 ? 2 : 3].count++
+    })
+    return buckets
+  }, [assets])
+
+  const deptSpend = useMemo(() => {
+    const map = new Map<string, number>()
+    assets.filter((a) => a.assignedTo && a.status !== 'Retired').forEach((a) => {
+      const emp = employeeById(a.assignedTo!)
+      if (!emp) return
+      map.set(emp.department, (map.get(emp.department) ?? 0) + a.cost)
+    })
+    return [...map.entries()].map(([name, spend]) => ({ name, spend })).sort((a, b) => b.spend - a.spend).slice(0, 6)
+  }, [assets])
+
+  const valueTrend = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(TODAY.getFullYear(), TODAY.getMonth() - (11 - i), 1)
+      const asOf = new Date(d.getFullYear(), d.getMonth() + 1, 0)
+      const value = assets
+        .filter((a) => a.status !== 'Retired' && new Date(a.purchaseDate) <= asOf)
+        .reduce((s, a) => s + bookValue(a.cost, a.purchaseDate, asOf), 0)
+      return { month: d.toLocaleDateString('en-IN', { month: 'short' }), value }
+    })
+  }, [assets])
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -66,33 +114,35 @@ export default function AssetsDashboard() {
       </div>
 
       <div className="stagger grid gap-4 lg:grid-cols-12">
+        <AiInsights />
+
         {/* Stat tiles */}
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
-          <div className="card-dark animate-in relative overflow-hidden p-5">
+          <div className="card-dark animate-in relative overflow-hidden p-4">
             <div className="pointer-events-none absolute -right-14 -top-14 size-48 rounded-full bg-lime/15 blur-3xl" />
             <div className="relative flex items-start justify-between">
-              <h3 className="font-display text-[16px] font-semibold leading-tight">Total Assets</h3>
-              <span className="grid size-9 place-items-center rounded-full bg-white/10"><Laptop size={16} /></span>
+              <h3 className="font-display text-[13px] font-semibold leading-tight">Total Assets</h3>
+              <span className="grid size-7 place-items-center rounded-full bg-white/10"><Laptop size={13} /></span>
             </div>
-            <p className="relative mt-5 font-display text-3xl font-semibold tabular-nums"><CountUp value={total} /></p>
-            <p className="mt-1.5 text-[11px] text-white/55">{fmtINR(totalValue)} in inventory</p>
+            <p className="relative mt-3 font-display text-2xl font-semibold tabular-nums"><CountUp value={total} /></p>
+            <p className="mt-1 text-[11px] text-white/55">{fmtINR(totalValue)} in inventory</p>
           </div>
 
-          <Card>
-            <CardHeader title="Assigned" action={<CheckCircle2 size={15} className="text-sage-deep" />} />
-            <p className="mt-4 font-display text-3xl font-semibold"><CountUp value={assigned} /></p>
+          <Card className="p-4">
+            <CardHeader title="Assigned" className="[&_h3]:text-[13px]" action={<CheckCircle2 size={14} className="text-sage-deep" />} />
+            <p className="mt-3 font-display text-2xl font-semibold"><CountUp value={assigned} /></p>
             <p className="mt-1 text-[11px] text-ash">{utilizationPct}% utilization</p>
           </Card>
 
-          <Card>
-            <CardHeader title="Available" />
-            <p className="mt-4 font-display text-3xl font-semibold"><CountUp value={available} /></p>
+          <Card className="p-4">
+            <CardHeader title="Available" className="[&_h3]:text-[13px]" />
+            <p className="mt-3 font-display text-2xl font-semibold"><CountUp value={available} /></p>
             <p className="mt-1 text-[11px] text-ash">Ready to assign</p>
           </Card>
 
-          <Card>
-            <CardHeader title="Needs Attention" action={<Wrench size={15} className="text-amber-deep" />} />
-            <p className="mt-4 font-display text-3xl font-semibold"><CountUp value={maintenance + retired} /></p>
+          <Card className="p-4">
+            <CardHeader title="Needs Attention" className="[&_h3]:text-[13px]" action={<Wrench size={14} className="text-amber-deep" />} />
+            <p className="mt-3 font-display text-2xl font-semibold"><CountUp value={maintenance + retired} /></p>
             <p className="mt-1 text-[11px] text-ash">{maintenance} maintenance · {retired} retired</p>
           </Card>
         </div>
@@ -100,7 +150,7 @@ export default function AssetsDashboard() {
         {/* Utilization radial */}
         <Card className="lg:col-span-4">
           <CardHeader title="Utilization" subtitle="Assigned vs. total inventory" />
-          <div className="mt-3 flex items-center justify-center">
+          <div className="mt-3 flex flex-1 items-center justify-center">
             <RadialProgress value={utilizationPct} color="#aece52" size={130} label="Assigned" />
           </div>
         </Card>
@@ -108,11 +158,11 @@ export default function AssetsDashboard() {
         {/* Category breakdown */}
         <Card className="lg:col-span-4">
           <CardHeader title="By Category" subtitle="Inventory distribution" />
-          <div className="mt-3 flex items-center gap-4">
-            <div className="w-32 shrink-0">
-              <DonutChart data={categoryData} colors={CATEGORY_COLORS} innerLabel={String(total)} height={150} />
+          <div className="mt-3 flex flex-1 items-center gap-4">
+            <div className="w-36 shrink-0">
+              <DonutChart data={categoryData} colors={CATEGORY_COLORS} innerLabel={String(total)} height="100%" />
             </div>
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-2.5">
               {categoryData.map((c, i) => (
                 <div key={c.name} className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-2 text-ash">
@@ -129,8 +179,8 @@ export default function AssetsDashboard() {
         {/* Location breakdown */}
         <Card className="lg:col-span-4">
           <CardHeader title="By Location" subtitle="Active assets per office" action={<MapPin size={15} className="text-sky-deep" />} />
-          <div className="mt-3">
-            <GroupedBar data={locationData} keys={['count']} colors={['#c8d9f4']} xKey="name" height={150} />
+          <div className="mt-3 min-h-[140px] flex-1">
+            <GroupedBar data={locationData} keys={['count']} colors={['#c8d9f4']} xKey="name" height="100%" />
           </div>
         </Card>
 
@@ -190,6 +240,52 @@ export default function AssetsDashboard() {
               </div>
             ))}
             {maintenanceQueue.length === 0 && <Empty>Nothing in maintenance right now.</Empty>}
+          </div>
+        </Card>
+
+        {/* Overdue returns */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Overdue Returns" subtitle="Loaner check-in due" action={<PackageX size={15} className="text-rose-deep" />} />
+          <div className="mt-3 divide-y divide-line/60">
+            {overdueReturns.map(({ asset, daysOver }) => {
+              const holder = asset.assignedTo ? employeeById(asset.assignedTo) : undefined
+              return (
+                <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2.5 text-left transition-colors hover:bg-soft/60">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{asset.name}</p>
+                    <p className="truncate text-xs text-ash">{holder?.name ?? asset.location} · Due {fmtDate(asset.returnDue!)}</p>
+                  </div>
+                  <Badge tone={daysOver > 0 ? 'rose' : 'amber'} className="shrink-0">
+                    {daysOver > 0 ? `${daysOver}d overdue` : `Due in ${-daysOver}d`}
+                  </Badge>
+                </button>
+              )
+            })}
+            {overdueReturns.length === 0 && <p className="py-6 text-center text-sm text-ash">No loaner returns due.</p>}
+          </div>
+        </Card>
+
+        {/* Age distribution */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Age Distribution" subtitle="Active inventory by age" action={<CalendarClock size={15} className="text-ash" />} />
+          <div className="mt-3 min-h-[140px] flex-1">
+            <GroupedBar data={ageBuckets} keys={['count']} colors={['#f5ddb2']} xKey="name" height="100%" />
+          </div>
+        </Card>
+
+        {/* Department spend */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Spend by Department" subtitle="Assigned asset value" action={<Building2 size={15} className="text-sky-deep" />} />
+          <div className="mt-3 min-h-[140px] flex-1">
+            <GroupedBar data={deptSpend} keys={['spend']} colors={['#c6e0c0']} xKey="name" height="100%" format={fmtCompact} />
+          </div>
+        </Card>
+
+        {/* Portfolio value trend */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Portfolio Book Value" subtitle="Depreciated value, 12mo" action={<TrendingDown size={15} className="text-ash" />} />
+          <div className="mt-3 min-h-[140px] flex-1">
+            <TrendLine data={valueTrend} dataKey="value" xKey="month" height="100%" format={fmtCompact} />
           </div>
         </Card>
       </div>

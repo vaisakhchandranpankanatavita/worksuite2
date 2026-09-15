@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Download, LayoutGrid, List, Plus, Search, Upload } from 'lucide-react'
+import { CheckSquare, Download, LayoutGrid, List, Plus, Search, Square, Upload, UserCheck, X, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { exportCsv } from '../hr/Employees'
@@ -14,11 +14,13 @@ const STATUSES: (AssetStatus | 'All')[] = ['All', 'Available', 'Assigned', 'Main
 export default function Assets() {
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
-  const { assets, addAsset } = useApp()
+  const { assets, addAsset, assignAsset, retireAsset } = useApp()
   const [q, setQ] = useState('')
   const [category, setCategory] = useState<'All' | AssetCategory>('All')
   const [status, setStatus] = useState<AssetStatus | 'All'>('All')
   const [view, setView] = useState<'grid' | 'list'>('list')
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false)
 
   const list = useMemo(
     () =>
@@ -33,6 +35,29 @@ export default function Assets() {
 
   const addOpen = params.get('new') === '1'
   const closeAdd = () => setParams({})
+
+  const toggleSelect = (id: string) =>
+    setSelected((s) => {
+      const next = new Set(s)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  const allVisibleSelected = list.length > 0 && list.every((a) => selected.has(a.id))
+  const toggleSelectAll = () => setSelected(allVisibleSelected ? new Set() : new Set(list.map((a) => a.id)))
+  const clearSelection = () => setSelected(new Set())
+
+  const exportSelected = () => {
+    const rows = list.filter((a) => selected.has(a.id))
+    exportCsv('assets-selected.csv', [
+      ['ID', 'Name', 'Category', 'Serial', 'Status', 'Assigned To', 'Purchase Date', 'Cost'],
+      ...rows.map((a) => [a.id, a.name, a.category, a.serial, a.status, a.assignedTo ? employeeById(a.assignedTo)?.name ?? a.assignedTo : '—', a.purchaseDate, a.cost]),
+    ])
+  }
+
+  const bulkRetire = () => {
+    selected.forEach((id) => retireAsset(id))
+    clearSelection()
+  }
 
   return (
     <div>
@@ -103,6 +128,18 @@ export default function Assets() {
         </div>
       </div>
 
+      {selected.size > 0 && (
+        <div className="animate-in mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white/90 px-4 py-2.5">
+          <span className="text-sm font-bold">{selected.size} selected</span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="light" onClick={() => setBulkAssignOpen(true)}><UserCheck size={14} /> Bulk assign</Button>
+            <Button size="sm" variant="light" onClick={exportSelected}><Download size={14} /> Export selected</Button>
+            <Button size="sm" variant="danger" onClick={bulkRetire}><XCircle size={14} /> Bulk retire</Button>
+            <Button size="sm" variant="ghost" onClick={clearSelection}><X size={14} /> Clear</Button>
+          </div>
+        </div>
+      )}
+
       {view === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {list.map((a) => {
@@ -135,11 +172,21 @@ export default function Assets() {
         </div>
       ) : (
         <Card>
-          <Table head={['Asset', 'Category', 'Serial', 'Assigned To', 'Purchased', 'Cost', 'Status']}>
+          <Table head={[
+            <button key="all" onClick={toggleSelectAll} className="grid place-items-center text-ash hover:text-ink" aria-label="Select all">
+              {allVisibleSelected ? <CheckSquare size={15} /> : <Square size={15} />}
+            </button>,
+            'Asset', 'Category', 'Serial', 'Assigned To', 'Purchased', 'Cost', 'Status',
+          ]}>
             {list.map((a) => {
               const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
               return (
                 <tr key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="cursor-pointer hover:bg-soft/60">
+                  <td onClick={(e) => { e.stopPropagation(); toggleSelect(a.id) }}>
+                    <button className="grid place-items-center text-ash hover:text-ink" aria-label={`Select ${a.name}`}>
+                      {selected.has(a.id) ? <CheckSquare size={15} className="text-ink" /> : <Square size={15} />}
+                    </button>
+                  </td>
                   <td>
                     <p className="font-bold">{a.name}</p>
                     <p className="text-xs text-ash">{a.model}</p>
@@ -175,7 +222,40 @@ export default function Assets() {
           closeAdd()
         }}
       />
+
+      <BulkAssignModal
+        open={bulkAssignOpen}
+        count={selected.size}
+        onClose={() => setBulkAssignOpen(false)}
+        onAssign={(employeeId) => {
+          selected.forEach((id) => assignAsset(id, employeeId))
+          setBulkAssignOpen(false)
+          clearSelection()
+        }}
+      />
     </div>
+  )
+}
+
+function BulkAssignModal({ open, count, onClose, onAssign }: { open: boolean; count: number; onClose: () => void; onAssign: (employeeId: string) => void }) {
+  const [employeeId, setEmployeeId] = useState(employees[0]?.id ?? '')
+  return (
+    <Modal open={open} onClose={onClose} title={`Assign ${count} asset${count === 1 ? '' : 's'}`} width={440}>
+      <form
+        className="grid gap-4"
+        onSubmit={(ev) => { ev.preventDefault(); if (employeeId) onAssign(employeeId) }}
+      >
+        <Field label="Employee">
+          <Select className="w-full !rounded-xl" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
+            {employees.map((e) => <option key={e.id} value={e.id}>{e.name} — {e.role}</option>)}
+          </Select>
+        </Field>
+        <div className="flex items-center justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button type="submit">Assign</Button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 

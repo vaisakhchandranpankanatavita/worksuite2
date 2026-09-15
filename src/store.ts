@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { assets, candidates, expenses, invoices, leaveRequests, payrollRuns, TODAY, type Asset, type AssetStatus, type Candidate, type Expense, type ExpenseStatus, type Invoice, type InvoiceStatus, type LeaveRequest, type LeaveStatus, type Stage } from './data/mock'
+import { assets, candidates, employeeById, expenses, invoices, leaveRequests, payrollRuns, TODAY, type Asset, type AssetStatus, type Candidate, type Expense, type ExpenseStatus, type Invoice, type InvoiceStatus, type LeaveRequest, type LeaveStatus, type Stage } from './data/mock'
 import type { RoleId } from './data/roles'
 
 interface AuthState {
@@ -30,12 +30,15 @@ export const useAuth = create<AuthState>()(
 
 export interface Toast { id: number; message: string; tone?: 'success' | 'info' | 'error' }
 
+export interface AssetLogEntry { id: number; assetId: string; date: string; action: string; detail: string }
+
 interface AppState {
   leaves: LeaveRequest[]
   expenses: Expense[]
   invoices: Invoice[]
   candidates: Candidate[]
   assets: Asset[]
+  assetLog: AssetLogEntry[]
   payrollStatus: 'Draft' | 'Processing' | 'Paid'
   toasts: Toast[]
   setLeaveStatus: (id: string, status: LeaveStatus) => void
@@ -56,6 +59,10 @@ interface AppState {
 }
 
 let toastId = 0
+let assetLogId = 0
+function logEntry(assetId: string, action: string, detail: string): AssetLogEntry {
+  return { id: ++assetLogId, assetId, date: new Date().toISOString(), action, detail }
+}
 
 export const useApp = create<AppState>((set, get) => ({
   leaves: leaveRequests,
@@ -63,6 +70,7 @@ export const useApp = create<AppState>((set, get) => ({
   invoices,
   candidates,
   assets,
+  assetLog: [],
   payrollStatus: payrollRuns[0].status as 'Draft',
   toasts: [],
   setLeaveStatus: (id, status) => {
@@ -91,27 +99,38 @@ export const useApp = create<AppState>((set, get) => ({
   },
   moveCandidate: (id, stage) => set((s) => ({ candidates: s.candidates.map((c) => (c.id === id ? { ...c, stage } : c)) })),
   addAsset: (a) => {
-    set((s) => ({ assets: [a, ...s.assets] }))
+    set((s) => ({ assets: [a, ...s.assets], assetLog: [logEntry(a.id, 'Added', 'Added to inventory'), ...s.assetLog] }))
     get().toast(`Asset ${a.id} added to inventory`)
   },
   assignAsset: (id, employeeId) => {
+    const holder = employeeById(employeeId)
     set((s) => ({
       assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Assigned', assignedTo: employeeId, assignedOn: TODAY.toISOString().slice(0, 10) } : a)),
+      assetLog: [logEntry(id, 'Assigned', holder ? `Assigned to ${holder.name}` : 'Assigned'), ...s.assetLog],
     }))
     get().toast(`Asset ${id} assigned`)
   },
   unassignAsset: (id) => {
+    const prevHolder = get().assets.find((a) => a.id === id)?.assignedTo
+    const holder = prevHolder ? employeeById(prevHolder) : undefined
     set((s) => ({
-      assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Available', assignedTo: undefined, assignedOn: undefined } : a)),
+      assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Available', assignedTo: undefined, assignedOn: undefined, returnDue: undefined } : a)),
+      assetLog: [logEntry(id, 'Returned', holder ? `Returned by ${holder.name}` : 'Unassigned'), ...s.assetLog],
     }))
     get().toast(`Asset ${id} unassigned`)
   },
   setAssetStatus: (id, status) => {
-    set((s) => ({ assets: s.assets.map((a) => (a.id === id ? { ...a, status } : a)) }))
+    set((s) => ({
+      assets: s.assets.map((a) => (a.id === id ? { ...a, status } : a)),
+      assetLog: [logEntry(id, 'Status change', `Marked ${status}`), ...s.assetLog],
+    }))
     get().toast(`Asset ${id} marked ${status.toLowerCase()}`)
   },
   retireAsset: (id) => {
-    set((s) => ({ assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Retired', assignedTo: undefined, assignedOn: undefined } : a)) }))
+    set((s) => ({
+      assets: s.assets.map((a) => (a.id === id ? { ...a, status: 'Retired', assignedTo: undefined, assignedOn: undefined, returnDue: undefined } : a)),
+      assetLog: [logEntry(id, 'Retired', 'Asset retired'), ...s.assetLog],
+    }))
     get().toast(`Asset ${id} retired`, 'info')
   },
   runPayroll: () => {

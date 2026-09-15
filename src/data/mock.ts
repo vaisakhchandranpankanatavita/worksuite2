@@ -572,6 +572,7 @@ export interface Asset {
   status: AssetStatus
   assignedTo?: string
   assignedOn?: string
+  returnDue?: string
   purchaseDate: string
   warrantyUntil?: string
   cost: number
@@ -624,6 +625,8 @@ for (let i = 0; i < 60; i++) {
   const statusRoll = rand()
   const status: AssetStatus = statusRoll < 0.55 ? 'Assigned' : statusRoll < 0.78 ? 'Available' : statusRoll < 0.92 ? 'Maintenance' : 'Retired'
   const assignee = status === 'Assigned' ? pick(spec.category === 'Phone' ? managersAndSeniors : employees) : undefined
+  const assignedOnDate = assignee ? addDays(purchase, between(1, 60)) : undefined
+  const isLoaner = ['Phone', 'Tablet', 'Headset', 'Accessory'].includes(spec.category)
   assets.push({
     id: `AS${String(nextAssetId++)}`,
     name: spec.name,
@@ -632,7 +635,8 @@ for (let i = 0; i < 60; i++) {
     serial: `WS-${spec.category.slice(0, 2).toUpperCase()}-${between(1000, 9999)}`,
     status,
     assignedTo: assignee?.id,
-    assignedOn: assignee ? iso(addDays(purchase, between(1, 60))) : undefined,
+    assignedOn: assignedOnDate ? iso(assignedOnDate) : undefined,
+    returnDue: assignedOnDate && isLoaner && rand() < 0.45 ? iso(addDays(assignedOnDate, between(20, 150))) : undefined,
     purchaseDate: iso(purchase),
     warrantyUntil: iso(addDays(purchase, 365 * pick([1, 2, 3]))),
     cost: round(spec.cost, 500),

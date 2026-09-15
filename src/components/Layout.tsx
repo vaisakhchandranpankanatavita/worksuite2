@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import { Bell, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { assets, employees, invoices } from '../data/mock'
@@ -8,7 +9,6 @@ import { useAuth } from '../store'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
 import AssetsEnterOverlay from './AssetsEnterOverlay'
-import PageLoader from './PageLoader'
 
 const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end?: boolean }[]> = {
   hr: [
@@ -158,22 +158,12 @@ export default function Layout() {
   const [bell, setBell] = useState(false)
   const [mobile, setMobile] = useState(false)
   const [profile, setProfile] = useState(false)
-  const [pageLoading, setPageLoading] = useState(false)
   const [enteringAssets, setEnteringAssets] = useState(false)
 
   function goModule(m: ModuleKey) {
     if (m === 'assets' && module !== 'assets') setEnteringAssets(true)
     nav(`/${m}`)
   }
-
-  // Track previous pathname so we don't fire on first mount
-  const prevPath = useRef(pathname)
-
-  useEffect(() => {
-    if (prevPath.current === pathname) return
-    prevPath.current = pathname
-    setPageLoading(true)
-  }, [pathname])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -206,7 +196,6 @@ export default function Layout() {
             boxShadow: [
               '0 1px 0 rgba(255,255,255,0.95) inset',
               '0 -1px 0 rgba(26,29,27,0.03) inset',
-              '0 0 0 1px rgba(255,255,255,0.55) inset',
               '0 8px 40px -8px rgba(26,29,27,0.10)',
               '0 2px 12px -2px rgba(26,29,27,0.06)',
             ].join(', '),
@@ -373,7 +362,19 @@ export default function Layout() {
       <div className="relative min-h-screen bg-canvas px-4 pb-4 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-8 lg:pt-6">
         {/* Decorative blobs — static background accents */}
         <ParallaxBlobs />
-        <main><Outlet /></main>
+        <main>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
+        </main>
       </div>
 
       {search && <GlobalSearch onClose={() => setSearch(false)} />}

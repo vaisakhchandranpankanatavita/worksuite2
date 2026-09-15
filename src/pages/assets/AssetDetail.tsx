@@ -1,8 +1,9 @@
-import { ArrowLeft, Headphones, Laptop, Monitor, Smartphone, Tablet, Wrench } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { ArrowLeft, Clock, Headphones, Laptop, Monitor, Smartphone, Tablet, Wrench } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Avatar, Badge, Button, Field, Modal, Select } from '../../components/ui'
+import { Avatar, Badge, Button, Empty, Field, Modal, Select } from '../../components/ui'
 import { employeeById, employees, type AssetStatus } from '../../data/mock'
+import { bookValue } from '../../lib/depreciation'
 import { fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
@@ -12,9 +13,10 @@ const CATEGORY_ICON = { Laptop, Phone: Smartphone, Monitor, Headset: Headphones,
 export default function AssetDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { assets, assignAsset, unassignAsset, setAssetStatus, retireAsset } = useApp()
+  const { assets, assetLog, assignAsset, unassignAsset, setAssetStatus, retireAsset } = useApp()
   const [assignOpen, setAssignOpen] = useState(false)
   const a = assets.find((x) => x.id === id)
+  const history = useMemo(() => assetLog.filter((l) => l.assetId === id), [assetLog, id])
   if (!a) return <p className="py-20 text-center text-ash">Asset not found.</p>
 
   const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
@@ -52,7 +54,9 @@ export default function AssetDetail() {
             <Row k="Location" v={a.location} />
             <Row k="Purchase date" v={fmtDate(a.purchaseDate)} />
             {a.warrantyUntil && <Row k="Warranty until" v={fmtDate(a.warrantyUntil)} />}
-            <Row k="Cost" v={<b>{fmtINR(a.cost)}</b>} />
+            {a.returnDue && <Row k="Return due" v={<span className={new Date(a.returnDue) < new Date() ? 'font-bold text-rose-deep' : undefined}>{fmtDate(a.returnDue)}</span>} />}
+            <Row k="Cost" v={fmtINR(a.cost)} />
+            <Row k="Book value" v={<b>{fmtINR(bookValue(a.cost, a.purchaseDate))}</b>} />
           </div>
         </div>
 
@@ -98,6 +102,25 @@ export default function AssetDetail() {
           <p className="text-sm text-ash">{a.notes}</p>
         </div>
       )}
+
+      <div className="card animate-in mt-4 p-5">
+        <h3 className="mb-3 flex items-center gap-2 text-[17px] font-medium"><Clock size={15} className="text-ash" /> Activity</h3>
+        {history.length > 0 ? (
+          <ul className="space-y-3">
+            {history.map((h) => (
+              <li key={h.id} className="flex gap-3 text-sm">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-ink/60" />
+                <div className="min-w-0 flex-1">
+                  <p><b>{h.action}</b> — {h.detail}</p>
+                  <p className="text-[11px] text-ash">{fmtDate(h.date)}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Empty>No activity recorded this session yet.</Empty>
+        )}
+      </div>
 
       <AssignModal open={assignOpen} onClose={() => setAssignOpen(false)} onAssign={(employeeId) => { assignAsset(a.id, employeeId); setAssignOpen(false) }} />
     </div>
