@@ -5,7 +5,6 @@ import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-route
 import { assets, employees, invoices } from '../data/mock'
 import { roleById, type ModuleKey } from '../data/roles'
 import { useAuth } from '../store'
-import { useSmoothScroll } from '../lib/useSmoothScroll'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
 import AssetsEnterOverlay from './AssetsEnterOverlay'
@@ -149,7 +148,6 @@ function ParallaxBlobs() {
 }
 
 export default function Layout() {
-  useSmoothScroll()
   const { pathname } = useLocation()
   const nav = useNavigate()
   const roleId = useAuth((s) => s.role)
