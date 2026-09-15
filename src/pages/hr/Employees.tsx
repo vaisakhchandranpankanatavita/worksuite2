@@ -3,6 +3,7 @@ import { Download, LayoutGrid, List, Mail, MapPin, Plus, Search } from 'lucide-r
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
+import ProfileCard from '../../components/ProfileCard'
 import { DEPARTMENTS, LOCATIONS, TODAY, employees, type Department, type Employee } from '../../data/mock'
 import { fmtCompact, fmtDate } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
@@ -111,29 +112,24 @@ export default function Employees() {
       </div>
 
       {view === 'grid' ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="animate-in grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {list.map((e) => (
-            <button key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card group overflow-hidden text-left">
-              <div className="relative h-52 overflow-hidden bg-gradient-to-br from-soft to-lime/40">
-                <img src={photoFor(e)} alt="" className="absolute inset-0 size-full object-contain object-top transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.03]" onError={(ev) => (ev.currentTarget.style.display = 'none')} />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/0 transition-opacity duration-300 group-hover:opacity-80" />
-                <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between text-white">
-                  <div className="min-w-0">
-                    <p className="truncate font-display text-lg leading-tight">{e.name}</p>
-                    <p className="truncate text-xs text-white/75">{e.role}</p>
-                  </div>
-                  <span className="rounded-full border border-white/60 bg-white/10 px-3 py-1 text-xs backdrop-blur">{fmtCompact(e.ctcAnnual)}</span>
-                </div>
-              </div>
-              <div className="space-y-2 p-4 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-ash">{e.id} · {e.department}</span>
-                  <Badge>{e.status}</Badge>
-                </div>
+            <div key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="cursor-pointer">
+              <ProfileCard
+                className="pc-compact"
+                avatarUrl={photoFor(e)}
+                name={e.name}
+                title={e.role}
+                handle={e.id}
+                status={e.status}
+                contactText={fmtCompact(e.ctcAnnual)}
+                onContactClick={() => nav(`/hr/employees/${e.id}`)}
+              />
+              <div className="mt-2 space-y-1 px-1 text-xs">
                 <p className="flex items-center gap-2 text-ash"><Mail size={13} /> <span className="truncate">{e.email}</span></p>
                 <p className="flex items-center gap-2 text-ash"><MapPin size={13} /> {e.location} · {e.workMode}</p>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       ) : (
