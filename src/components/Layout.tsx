@@ -189,7 +189,7 @@ export default function Layout() {
       {/* ── Ultra-Premium Glassmorphic Header ── */}
       <header className="sticky top-0 z-30">
         {/* Glass surface */}
-        <div className="relative flex items-center gap-3 px-3 py-2"
+        <div className="relative flex items-center gap-3 px-0 py-2"
           style={{
             background: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(240,245,239,0.38) 100%)',
             backdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
@@ -360,7 +360,7 @@ export default function Layout() {
           </div>
         </header>
 
-      <div className="relative min-h-screen bg-canvas px-3 pb-4 pt-4 sm:pb-6 sm:pt-5 lg:pb-8 lg:pt-6">
+      <div className="relative min-h-screen bg-canvas pb-4 pt-4 sm:pb-6 sm:pt-5 lg:pb-8 lg:pt-6">
         {/* Decorative blobs — static background accents */}
         <ParallaxBlobs />
         <main>
