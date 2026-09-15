@@ -37,7 +37,11 @@ export default function AssetDetail() {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="card animate-in p-5">
           <div className="mb-4 flex items-center gap-3">
-            <span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-ink to-ash text-white"><Icon size={22} /></span>
+            {a.image ? (
+              <img src={a.image} alt={a.name} className="size-12 shrink-0 rounded-2xl object-cover" />
+            ) : (
+              <span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-ink to-ash text-white"><Icon size={22} /></span>
+            )}
             <div>
               <p className="font-display text-base font-semibold">{a.name}</p>
               <p className="text-xs text-ash">{a.model}</p>

@@ -577,6 +577,7 @@ export interface Asset {
   cost: number
   location: (typeof LOCATIONS)[number]
   notes?: string
+  image?: string
 }
 
 const EXTRA_ASSET_SPECS: { category: AssetCategory; name: string; model: string; cost: number }[] = [

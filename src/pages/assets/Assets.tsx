@@ -1,10 +1,10 @@
 import clsx from 'clsx'
-import { Download, LayoutGrid, List, Plus, Search } from 'lucide-react'
+import { Download, LayoutGrid, List, Plus, Search, Upload } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { exportCsv } from '../hr/Employees'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
-import { ASSET_CATEGORIES, employeeById, LOCATIONS, TODAY, type Asset, type AssetCategory, type AssetStatus } from '../../data/mock'
+import { ASSET_CATEGORIES, employeeById, employees, LOCATIONS, TODAY, type Asset, type AssetCategory, type AssetStatus } from '../../data/mock'
 import { fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
@@ -113,6 +113,9 @@ export default function Assets() {
                   <span className="text-xs text-ash">{a.id} · {a.category}</span>
                   <Badge>{a.status}</Badge>
                 </div>
+                {a.image && (
+                  <img src={a.image} alt={a.name} className="mt-3 h-28 w-full rounded-xl object-cover" />
+                )}
                 <p className="mt-2 truncate font-display text-base font-semibold">{a.name}</p>
                 <p className="truncate text-xs text-ash">{a.model}</p>
                 <div className="mt-3 flex items-center justify-between text-xs">
@@ -178,27 +181,39 @@ export default function Assets() {
 
 function AddAssetModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (a: Asset) => void }) {
   const { assets } = useApp()
-  const [form, setForm] = useState({ name: '', category: 'Laptop' as AssetCategory, model: '', location: 'Bengaluru', cost: '50000' })
+  const [form, setForm] = useState({ name: '', category: 'Laptop' as AssetCategory, model: '', location: 'Bengaluru', cost: '50000', image: '', assignedTo: '' })
   const set = (k: keyof typeof form) => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [k]: ev.target.value })
+
+  const onImagePick = (file: File | undefined) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setForm((f) => ({ ...f, image: typeof reader.result === 'string' ? reader.result : '' }))
+    reader.readAsDataURL(file)
+  }
+
   return (
     <Modal open={open} onClose={onClose} title="Add asset" width={600}>
       <form
         className="grid gap-4 sm:grid-cols-2"
         onSubmit={(ev) => {
           ev.preventDefault()
+          const assigned = !!form.assignedTo
           onSave({
             id: `AS${1001 + assets.length + Math.floor(Math.random() * 1000)}`,
             name: form.name,
             category: form.category,
             model: form.model || '—',
             serial: `WS-${form.category.slice(0, 2).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
-            status: 'Available',
+            status: assigned ? 'Assigned' : 'Available',
+            assignedTo: assigned ? form.assignedTo : undefined,
+            assignedOn: assigned ? TODAY.toISOString().slice(0, 10) : undefined,
             purchaseDate: TODAY.toISOString().slice(0, 10),
             warrantyUntil: new Date(TODAY.getFullYear() + 1, TODAY.getMonth(), TODAY.getDate()).toISOString().slice(0, 10),
             cost: Number(form.cost),
             location: form.location as Asset['location'],
+            image: form.image || undefined,
           })
-          setForm({ ...form, name: '', model: '' })
+          setForm({ ...form, name: '', model: '', image: '', assignedTo: '' })
         }}
       >
         <Field label="Asset name"><Input required value={form.name} onChange={set('name')} placeholder="e.g. MacBook Pro 14&quot;" /></Field>
@@ -214,6 +229,23 @@ function AddAssetModal({ open, onClose, onSave }: { open: boolean; onClose: () =
           </Select>
         </Field>
         <Field label="Cost (₹)"><Input type="number" min={0} step={500} value={form.cost} onChange={set('cost')} /></Field>
+        <Field label="Assign to employee (optional)">
+          <Select className="w-full !rounded-xl" value={form.assignedTo} onChange={set('assignedTo')}>
+            <option value="">Unassigned</option>
+            {employees.map((e) => <option key={e.id} value={e.id}>{e.name} — {e.role}</option>)}
+          </Select>
+        </Field>
+        <div className="sm:col-span-2">
+          <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-line bg-soft px-4 py-3 text-sm text-ash hover:border-ink">
+            {form.image ? (
+              <img src={form.image} alt="" className="size-12 shrink-0 rounded-lg object-cover" />
+            ) : (
+              <Upload size={18} className="shrink-0" />
+            )}
+            <span>{form.image ? 'Image selected — click to change' : 'Upload asset image (optional)'}</span>
+            <input type="file" className="hidden" accept="image/*" onChange={(e) => onImagePick(e.target.files?.[0])} />
+          </label>
+        </div>
         <div className="flex items-end justify-end gap-2 sm:col-span-2">
           <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
           <Button type="submit">Save asset</Button>
