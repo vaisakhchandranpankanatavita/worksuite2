@@ -454,7 +454,7 @@ export default function HrDashboard() {
         {/* ── Celebrations ────────────────────────────────────────── */}
         <Card className="lg:col-span-4">
           {celebrations.length > 0 && (
-            <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+            <div aria-hidden className="pointer-events-none absolute -inset-5 z-0 overflow-hidden">
               {CONFETTI_PIECES.map((c, i) => (
                 <span
                   key={i}
