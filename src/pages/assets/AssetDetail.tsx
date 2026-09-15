@@ -1,7 +1,6 @@
 import { ArrowLeft, Headphones, Laptop, Monitor, Smartphone, Tablet, Wrench } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import AssetOpenTransition from '../../components/AssetOpenTransition'
 import { Avatar, Badge, Button, Field, Modal, Select } from '../../components/ui'
 import { employeeById, employees, type AssetStatus } from '../../data/mock'
 import { fmtDate, fmtINR } from '../../lib/format'
@@ -15,11 +14,7 @@ export default function AssetDetail() {
   const nav = useNavigate()
   const { assets, assignAsset, unassignAsset, setAssetStatus, retireAsset } = useApp()
   const [assignOpen, setAssignOpen] = useState(false)
-  const [entering, setEntering] = useState(true)
   const a = assets.find((x) => x.id === id)
-
-  useEffect(() => { setEntering(true) }, [id])
-
   if (!a) return <p className="py-20 text-center text-ash">Asset not found.</p>
 
   const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
@@ -27,8 +22,6 @@ export default function AssetDetail() {
 
   return (
     <div>
-      {entering && <AssetOpenTransition key={id} assetName={a.name} icon={Icon} onDone={() => setEntering(false)} />}
-
       <button onClick={() => nav('/assets/inventory')} className="mb-4 inline-flex items-center gap-2 text-sm text-ash hover:text-ink">
         <ArrowLeft size={16} /> All assets
       </button>

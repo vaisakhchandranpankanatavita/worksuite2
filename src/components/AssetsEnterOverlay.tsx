@@ -1,29 +1,30 @@
-import { Package, type LucideIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Boxes, ListChecks } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
-interface Props {
-  assetName: string
-  icon: LucideIcon
-  onDone: () => void
-}
+interface Props { onDone: () => void }
 
 const PHASE_ONE_MS = 550
 const EXIT_MS = 420
 
-/** Brief auto-closing overlay shown when opening an asset: "Entering Asset Management" → the specific asset → fades out. */
-export default function AssetOpenTransition({ assetName, icon: Icon, onDone }: Props) {
+/** Brief auto-closing title-card animation shown when switching into the Assets module. */
+export default function AssetsEnterOverlay({ onDone }: Props) {
   const [phase, setPhase] = useState<'enter' | 'reveal' | 'exit'>('enter')
+  // Keep the latest onDone without making it a timer dependency — the parent
+  // re-renders while this is showing, and a fresh callback each render must
+  // not restart the phase timers (that previously left the overlay stuck).
+  const onDoneRef = useRef(onDone)
+  onDoneRef.current = onDone
 
   useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      onDone()
+      onDoneRef.current()
       return
     }
     const t1 = setTimeout(() => setPhase('reveal'), PHASE_ONE_MS)
     const t2 = setTimeout(() => setPhase('exit'), PHASE_ONE_MS + PHASE_ONE_MS)
-    const t3 = setTimeout(onDone, PHASE_ONE_MS + PHASE_ONE_MS + EXIT_MS)
+    const t3 = setTimeout(() => onDoneRef.current(), PHASE_ONE_MS + PHASE_ONE_MS + EXIT_MS)
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [onDone])
+  }, [])
 
   return (
     <div
@@ -43,15 +44,15 @@ export default function AssetOpenTransition({ assetName, icon: Icon, onDone }: P
           style={{ background: 'conic-gradient(from 0deg, #d8ecA0, #c8d9f4, #f0cad8, #aece52, #d8ecA0)' }}
         >
           <div className="flex size-[56px] items-center justify-center rounded-full bg-[#0d0f0e] text-[#d8ecA0]">
-            {phase === 'enter' ? <Package size={24} /> : <Icon size={24} />}
+            {phase === 'enter' ? <Boxes size={24} /> : <ListChecks size={24} />}
           </div>
         </div>
 
         <p key={phase === 'enter' ? 'a' : 'b'} className="asset-portal-text font-display text-[19px] font-semibold tracking-tight text-white">
-          {phase === 'enter' ? 'Entering Asset Management' : assetName}
+          {phase === 'enter' ? 'Entering Asset Management' : 'Asset Inventory'}
         </p>
         <p className="mt-1 text-[12px] text-white/40">
-          {phase === 'enter' ? 'Loading inventory workspace' : 'Opening asset record'}
+          {phase === 'enter' ? 'Loading inventory workspace' : 'Ready'}
         </p>
 
         <div className="mt-6 flex items-center gap-1.5">

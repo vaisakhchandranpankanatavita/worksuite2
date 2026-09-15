@@ -8,6 +8,7 @@ import { useAuth } from '../store'
 import { useSmoothScroll } from '../lib/useSmoothScroll'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
+import AssetsEnterOverlay from './AssetsEnterOverlay'
 import PageLoader from './PageLoader'
 
 const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end?: boolean }[]> = {
@@ -160,6 +161,12 @@ export default function Layout() {
   const [mobile, setMobile] = useState(false)
   const [profile, setProfile] = useState(false)
   const [pageLoading, setPageLoading] = useState(false)
+  const [enteringAssets, setEnteringAssets] = useState(false)
+
+  function goModule(m: ModuleKey) {
+    if (m === 'assets' && module !== 'assets') setEnteringAssets(true)
+    nav(`/${m}`)
+  }
 
   // Track previous pathname so we don't fire on first mount
   const prevPath = useRef(pathname)
@@ -188,6 +195,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-full">
+      {enteringAssets && <AssetsEnterOverlay onDone={() => setEnteringAssets(false)} />}
 
       {/* ── Ultra-Premium Glassmorphic Header ── */}
       <header className="sticky top-0 z-30">
@@ -221,7 +229,7 @@ export default function Layout() {
                   {visibleModules.map((m) => {
                     const Icon = MODULE_ICON[m]
                     return (
-                      <button key={m} onClick={() => nav(`/${m}`)} className={clsx('flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-[11px] font-semibold uppercase tracking-wider transition-all duration-200', module === m ? 'bg-ink text-white shadow-sm' : 'text-ash hover:scale-105 hover:text-ink')}>
+                      <button key={m} onClick={() => goModule(m)} className={clsx('flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-[11px] font-semibold uppercase tracking-wider transition-all duration-200', module === m ? 'bg-ink text-white shadow-sm' : 'text-ash hover:scale-105 hover:text-ink')}>
                         <Icon size={12} />{MODULE_LABEL[m]}
                       </button>
                     )
@@ -349,7 +357,7 @@ export default function Layout() {
                 {visibleModules.length > 1 && (
                   <div className="mb-2 flex gap-1 rounded-full bg-soft p-1 sm:hidden">
                     {visibleModules.map((m) => (
-                      <button key={m} onClick={() => nav(`/${m}`)} className={clsx('flex-1 rounded-full py-1.5 text-xs font-bold uppercase tracking-wide', module === m ? 'bg-ink text-white' : 'text-ash')}>
+                      <button key={m} onClick={() => goModule(m)} className={clsx('flex-1 rounded-full py-1.5 text-xs font-bold uppercase tracking-wide', module === m ? 'bg-ink text-white' : 'text-ash')}>
                         {MODULE_LABEL[m]}
                       </button>
                     ))}
