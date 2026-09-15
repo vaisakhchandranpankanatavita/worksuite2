@@ -3,7 +3,6 @@ import { Download, LayoutGrid, List, Mail, MapPin, Plus, Search } from 'lucide-r
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
-import TiltedCard from '../../components/TiltedCard'
 import { DEPARTMENTS, LOCATIONS, TODAY, employees, type Department, type Employee } from '../../data/mock'
 import { fmtCompact, fmtDate } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
@@ -114,27 +113,22 @@ export default function Employees() {
       {view === 'grid' ? (
         <div className="animate-in grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {list.map((e) => (
-            <div key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card cursor-pointer overflow-hidden p-3">
-              <TiltedCard
-                imageSrc={photoFor(e)}
-                altText={e.name}
-                captionText={e.role}
-                containerHeight="200px"
-                containerWidth="100%"
-                imageHeight="200px"
-                imageWidth="100%"
-                rotateAmplitude={8}
-                scaleOnHover={1.04}
-                showMobileWarning={false}
-                showTooltip
-                displayOverlayContent
-                overlayContent={
+            <div key={e.id} onClick={() => nav(`/hr/employees/${e.id}`)} className="card group cursor-pointer overflow-hidden p-3">
+              <div className="relative h-[200px] w-full overflow-hidden rounded-2xl">
+                <img
+                  src={photoFor(e)}
+                  alt={e.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-ink/75 via-ink/0 to-transparent">
                   <div className="w-full p-3 text-white">
                     <p className="truncate font-display text-sm font-semibold">{e.name}</p>
                     <p className="truncate text-[11px] text-white/75">{e.role}</p>
                   </div>
-                }
-              />
+                </div>
+              </div>
               <div className="mt-3 space-y-1.5 px-1 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-ash">{e.id} · {e.department}</span>
