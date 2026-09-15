@@ -259,6 +259,21 @@ div.card:hover {
 }
 .animate-in { animation: fade-up .4s cubic-bezier(.22,1,.36,1) both; }
 
+/* ─── Asset open portal (auto-closing entry animation) ────────── */
+@keyframes asset-portal-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes asset-portal-out  { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.06); } }
+@keyframes asset-orb-pop     { 0% { transform: scale(.55); opacity: 0; } 65% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes asset-text-in     { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.asset-portal { animation: asset-portal-in .3s ease both; }
+.asset-portal[data-phase="exit"] { animation: asset-portal-out .42s cubic-bezier(.4,0,.2,1) both; }
+.asset-portal-orb { animation: asset-orb-pop .5s cubic-bezier(.22,1,.36,1) both, ai-orb-rot 6s linear infinite; }
+.asset-portal-text { animation: asset-text-in .35s cubic-bezier(.22,1,.36,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .asset-portal, .asset-portal-orb, .asset-portal-text { animation: none !important; }
+}
+
 /* Shimmer sweep on interactive elements */
 @keyframes shimmer {
   from { transform: translateX(-100%) skewX(-12deg); }
