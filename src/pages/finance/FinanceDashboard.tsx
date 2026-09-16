@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { ArrowDownLeft, ArrowUp, ArrowUpRight, Download, FileText, Landmark, Plus, TrendingUp, Wallet } from 'lucide-react'
+import { ArrowDownLeft, ArrowUp, ArrowUpRight, Check, Download, FileText, Landmark, Plus, TrendingUp, Wallet } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
@@ -343,8 +343,8 @@ export default function FinanceDashboard() {
                     <p className="truncate text-sm font-semibold">{fmtINR(x.amount)}</p>
                     <p className="truncate text-[11px] text-ash">{e.name} · {x.category}</p>
                   </div>
-                  <button onClick={() => setExpenseStatus(x.id, 'Approved')} className="rounded-full bg-ink px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-black active:scale-90">
-                    Approve
+                  <button onClick={() => setExpenseStatus(x.id, 'Approved')} className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-white transition-all duration-200 hover:bg-black active:scale-90" aria-label="Approve">
+                    <Check size={14} />
                   </button>
                 </li>
               )
