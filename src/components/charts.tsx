@@ -215,18 +215,18 @@ export function DonutChart({ data, colors, innerLabel, height = 200, format = (v
 export function RadialProgress({ value, color = '#aece52', size = 120, label }: {
   value: number; color?: string; size?: number; label?: string
 }) {
-  const data = [{ value, fill: color }, { value: 100 - value, fill: 'transparent' }]
+  const data = [{ value, fill: color }]
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <ResponsiveContainer>
-        <RadialBarChart innerRadius="68%" outerRadius="100%" data={data} startAngle={225} endAngle={-45} barSize={10}>
-          <RadialBar dataKey="value" background={{ fill: '#edf0ec' }} cornerRadius={10} />
+        <RadialBarChart innerRadius="72%" outerRadius="100%" data={data} startAngle={90} endAngle={-270} barSize={12}>
+          <RadialBar dataKey="value" background={{ fill: '#edf0ec' }} cornerRadius={999} maxBarSize={12} />
         </RadialBarChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
         <div>
-          <p className="font-display text-lg font-semibold leading-none">{value}%</p>
-          {label && <p className="mt-0.5 text-[10px] text-ash leading-tight">{label}</p>}
+          <p className="font-display text-xl font-bold leading-none tabular-nums">{value}%</p>
+          {label && <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-ash leading-tight">{label}</p>}
         </div>
       </div>
     </div>

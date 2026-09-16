@@ -186,7 +186,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Warranty watch */}
-        <Card className="lg:col-span-4 p-3">
+        <Card className="lg:col-span-5 p-3">
           <CardHeader title="Warranty Watch" subtitle="Expiring within 90 days" action={<ShieldAlert size={14} className="text-rose-deep" />} />
           <div className="mt-2 divide-y divide-line/60">
             {warrantyWatch.map(({ asset, daysLeft }) => (
@@ -226,7 +226,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Maintenance queue */}
-        <Card className="lg:col-span-4 p-3">
+        <Card className="lg:col-span-3 p-3">
           <CardHeader title="Maintenance Queue" subtitle="Awaiting service" action={<AlertTriangle size={14} className="text-amber-deep" />} />
           <div className="mt-2 divide-y divide-line/60">
             {maintenanceQueue.map((a) => (
@@ -245,7 +245,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Overdue returns */}
-        <Card className="lg:col-span-4 p-3">
+        <Card className="lg:col-span-3 p-3">
           <CardHeader title="Overdue Returns" subtitle="Loaner check-in due" action={<PackageX size={14} className="text-rose-deep" />} />
           <div className="mt-2 divide-y divide-line/60">
             {overdueReturns.map(({ asset, daysOver }) => {
@@ -267,7 +267,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Age distribution */}
-        <Card className="lg:col-span-4 p-3">
+        <Card className="lg:col-span-5 p-3">
           <CardHeader title="Age Distribution" subtitle="Active inventory by age" action={<CalendarClock size={14} className="text-ash" />} />
           <div className="mt-2 min-h-[96px] flex-1">
             <GroupedBar data={ageBuckets} keys={['count']} colors={['#f5ddb2']} xKey="name" height="100%" />
@@ -283,9 +283,9 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Portfolio value trend */}
-        <Card className="lg:col-span-4 p-3">
+        <Card className="lg:col-span-12 p-3">
           <CardHeader title="Portfolio Book Value" subtitle="Depreciated value, 12mo" action={<TrendingDown size={14} className="text-ash" />} />
-          <div className="mt-2 min-h-[96px] flex-1">
+          <div className="mt-2 min-h-[120px] flex-1">
             <TrendLine data={valueTrend} dataKey="value" xKey="month" height="100%" format={fmtCompact} />
           </div>
         </Card>
