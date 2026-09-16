@@ -114,56 +114,56 @@ export default function AssetsDashboard() {
         actions={<Button onClick={() => nav('/assets/inventory?new=1')}><Plus size={15} /> Add asset</Button>}
       />
 
-      <div className="stagger grid gap-3 lg:grid-cols-12">
+      <div className="stagger grid gap-2.5 lg:grid-cols-12">
         <AiInsights />
 
         {/* Stat tiles */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
-          <div className="card-dark animate-in relative overflow-hidden p-3.5">
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
+          <div className="card-dark animate-in relative overflow-hidden p-3">
             <div className="pointer-events-none absolute -right-14 -top-14 size-48 rounded-full bg-lime/15 blur-3xl" />
             <div className="relative flex items-start justify-between">
-              <h3 className="font-display text-[13px] font-semibold leading-tight">Total Assets</h3>
-              <span className="grid size-6 place-items-center rounded-full bg-white/10"><Laptop size={12} /></span>
+              <h3 className="font-display text-[12px] font-semibold leading-tight">Total Assets</h3>
+              <span className="grid size-5 place-items-center rounded-full bg-white/10"><Laptop size={11} /></span>
             </div>
-            <p className="relative mt-2 font-display text-xl font-semibold tabular-nums"><CountUp value={total} /></p>
-            <p className="mt-0.5 text-[11px] text-white/55">{fmtINR(totalValue)} in inventory</p>
+            <p className="relative mt-1.5 font-display text-lg font-semibold tabular-nums"><CountUp value={total} /></p>
+            <p className="mt-0.5 text-[10.5px] text-white/55">{fmtINR(totalValue)} in inventory</p>
           </div>
 
-          <Card className="p-3.5">
-            <CardHeader title="Assigned" className="[&_h3]:text-[13px]" action={<CheckCircle2 size={14} className="text-sage-deep" />} />
-            <p className="mt-2 font-display text-xl font-semibold"><CountUp value={assigned} /></p>
-            <p className="mt-0.5 text-[11px] text-ash">{utilizationPct}% utilization</p>
+          <Card className="p-3">
+            <CardHeader title="Assigned" className="[&_h3]:text-[12px]" action={<CheckCircle2 size={13} className="text-sage-deep" />} />
+            <p className="mt-1.5 font-display text-lg font-semibold"><CountUp value={assigned} /></p>
+            <p className="mt-0.5 text-[10.5px] text-ash">{utilizationPct}% utilization</p>
           </Card>
 
-          <Card className="p-3.5">
-            <CardHeader title="Available" className="[&_h3]:text-[13px]" />
-            <p className="mt-2 font-display text-xl font-semibold"><CountUp value={available} /></p>
-            <p className="mt-0.5 text-[11px] text-ash">Ready to assign</p>
+          <Card className="p-3">
+            <CardHeader title="Available" className="[&_h3]:text-[12px]" />
+            <p className="mt-1.5 font-display text-lg font-semibold"><CountUp value={available} /></p>
+            <p className="mt-0.5 text-[10.5px] text-ash">Ready to assign</p>
           </Card>
 
-          <Card className="p-3.5">
-            <CardHeader title="Needs Attention" className="[&_h3]:text-[13px]" action={<Wrench size={14} className="text-amber-deep" />} />
-            <p className="mt-2 font-display text-xl font-semibold"><CountUp value={maintenance + retired} /></p>
-            <p className="mt-0.5 text-[11px] text-ash">{maintenance} maintenance · {retired} retired</p>
+          <Card className="p-3">
+            <CardHeader title="Needs Attention" className="[&_h3]:text-[12px]" action={<Wrench size={13} className="text-amber-deep" />} />
+            <p className="mt-1.5 font-display text-lg font-semibold"><CountUp value={maintenance + retired} /></p>
+            <p className="mt-0.5 text-[10.5px] text-ash">{maintenance} maintenance · {retired} retired</p>
           </Card>
         </div>
 
         {/* Utilization radial */}
-        <Card className="lg:col-span-4 p-4">
+        <Card className="lg:col-span-4 p-3">
           <CardHeader title="Utilization" subtitle="Assigned vs. total inventory" />
-          <div className="mt-2.5 flex flex-1 items-center justify-center">
-            <RadialProgress value={utilizationPct} color="#aece52" size={110} label="Assigned" />
+          <div className="mt-2 flex flex-1 items-center justify-center">
+            <RadialProgress value={utilizationPct} color="#aece52" size={96} label="Assigned" />
           </div>
         </Card>
 
         {/* Category breakdown */}
-        <Card className="lg:col-span-4 p-4">
+        <Card className="lg:col-span-4 p-3">
           <CardHeader title="By Category" subtitle="Inventory distribution" />
-          <div className="mt-2.5 flex flex-1 items-center gap-4">
-            <div className="w-36 shrink-0">
+          <div className="mt-2 flex flex-1 items-center gap-3">
+            <div className="w-32 shrink-0">
               <DonutChart data={categoryData} colors={CATEGORY_COLORS} innerLabel={String(total)} height="100%" />
             </div>
-            <div className="flex-1 space-y-2.5">
+            <div className="flex-1 space-y-2">
               {categoryData.map((c, i) => (
                 <div key={c.name} className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-2 text-ash">
@@ -178,19 +178,19 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Location breakdown */}
-        <Card className="lg:col-span-4 p-4">
-          <CardHeader title="By Location" subtitle="Active assets per office" action={<MapPin size={15} className="text-sky-deep" />} />
-          <div className="mt-2.5 min-h-[110px] flex-1">
+        <Card className="lg:col-span-4 p-3">
+          <CardHeader title="By Location" subtitle="Active assets per office" action={<MapPin size={14} className="text-sky-deep" />} />
+          <div className="mt-2 min-h-[96px] flex-1">
             <GroupedBar data={locationData} keys={['count']} colors={['#c8d9f4']} xKey="name" height="100%" />
           </div>
         </Card>
 
         {/* Warranty watch */}
-        <Card className="lg:col-span-4 p-4">
-          <CardHeader title="Warranty Watch" subtitle="Expiring within 90 days" action={<ShieldAlert size={15} className="text-rose-deep" />} />
-          <div className="mt-2.5 divide-y divide-line/60">
+        <Card className="lg:col-span-4 p-3">
+          <CardHeader title="Warranty Watch" subtitle="Expiring within 90 days" action={<ShieldAlert size={14} className="text-rose-deep" />} />
+          <div className="mt-2 divide-y divide-line/60">
             {warrantyWatch.map(({ asset, daysLeft }) => (
-              <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-1.5 text-left transition-colors hover:bg-soft/60">
+              <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-1 text-left transition-colors hover:bg-soft/60">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{asset.name}</p>
                   <p className="truncate text-xs text-ash">{asset.location} · {fmtDate(asset.warrantyUntil!)}</p>
@@ -200,19 +200,19 @@ export default function AssetsDashboard() {
                 </Badge>
               </button>
             ))}
-            {warrantyWatch.length === 0 && <p className="py-6 text-center text-sm text-ash">Nothing expiring soon.</p>}
+            {warrantyWatch.length === 0 && <p className="py-5 text-center text-sm text-ash">Nothing expiring soon.</p>}
           </div>
         </Card>
 
         {/* Recently assigned */}
-        <Card className="lg:col-span-4 p-4">
+        <Card className="lg:col-span-4 p-3">
           <CardHeader title="Recently Assigned" subtitle="Latest handovers" action={<CornerLink onClick={() => nav('/assets/inventory')} />} />
-          <div className="mt-2.5 divide-y divide-line/60">
+          <div className="mt-2 divide-y divide-line/60">
             {recentlyAssigned.map((a) => {
               const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
               return (
-                <button key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="flex w-full items-center gap-3 py-1.5 text-left transition-colors hover:bg-soft/60">
-                  {holder && <Avatar name={holder.name} hue={holder.avatarHue} src={photoFor(holder)} size={32} />}
+                <button key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="flex w-full items-center gap-3 py-1 text-left transition-colors hover:bg-soft/60">
+                  {holder && <Avatar name={holder.name} hue={holder.avatarHue} src={photoFor(holder)} size={28} />}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{a.name}</p>
                     <p className="truncate text-xs text-ash">{holder ? `${holder.name} · ${fmtDate(a.assignedOn!)}` : fmtDate(a.assignedOn!)}</p>
@@ -221,16 +221,16 @@ export default function AssetsDashboard() {
                 </button>
               )
             })}
-            {recentlyAssigned.length === 0 && <p className="py-6 text-center text-sm text-ash">No assignments yet.</p>}
+            {recentlyAssigned.length === 0 && <p className="py-5 text-center text-sm text-ash">No assignments yet.</p>}
           </div>
         </Card>
 
         {/* Maintenance queue */}
-        <Card className="lg:col-span-4 p-4">
-          <CardHeader title="Maintenance Queue" subtitle="Awaiting service" action={<AlertTriangle size={15} className="text-amber-deep" />} />
-          <div className="mt-2.5 divide-y divide-line/60">
+        <Card className="lg:col-span-4 p-3">
+          <CardHeader title="Maintenance Queue" subtitle="Awaiting service" action={<AlertTriangle size={14} className="text-amber-deep" />} />
+          <div className="mt-2 divide-y divide-line/60">
             {maintenanceQueue.map((a) => (
-              <div key={a.id} className="flex items-center gap-3 py-1.5">
+              <div key={a.id} className="flex items-center gap-3 py-1">
                 <button onClick={() => nav(`/assets/inventory/${a.id}`)} className="min-w-0 flex-1 text-left">
                   <p className="truncate text-sm font-semibold">{a.name}</p>
                   <p className="truncate text-xs text-ash">{a.location} · {a.serial}</p>
@@ -245,13 +245,13 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Overdue returns */}
-        <Card className="lg:col-span-4 p-4">
-          <CardHeader title="Overdue Returns" subtitle="Loaner check-in due" action={<PackageX size={15} className="text-rose-deep" />} />
-          <div className="mt-2.5 divide-y divide-line/60">
+        <Card className="lg:col-span-4 p-3">
+          <CardHeader title="Overdue Returns" subtitle="Loaner check-in due" action={<PackageX size={14} className="text-rose-deep" />} />
+          <div className="mt-2 divide-y divide-line/60">
             {overdueReturns.map(({ asset, daysOver }) => {
               const holder = asset.assignedTo ? employeeById(asset.assignedTo) : undefined
               return (
-                <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-1.5 text-left transition-colors hover:bg-soft/60">
+                <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-1 text-left transition-colors hover:bg-soft/60">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{asset.name}</p>
                     <p className="truncate text-xs text-ash">{holder?.name ?? asset.location} · Due {fmtDate(asset.returnDue!)}</p>
@@ -262,30 +262,30 @@ export default function AssetsDashboard() {
                 </button>
               )
             })}
-            {overdueReturns.length === 0 && <p className="py-6 text-center text-sm text-ash">No loaner returns due.</p>}
+            {overdueReturns.length === 0 && <p className="py-5 text-center text-sm text-ash">No loaner returns due.</p>}
           </div>
         </Card>
 
         {/* Age distribution */}
-        <Card className="lg:col-span-4 p-4">
-          <CardHeader title="Age Distribution" subtitle="Active inventory by age" action={<CalendarClock size={15} className="text-ash" />} />
-          <div className="mt-2.5 min-h-[110px] flex-1">
+        <Card className="lg:col-span-4 p-3">
+          <CardHeader title="Age Distribution" subtitle="Active inventory by age" action={<CalendarClock size={14} className="text-ash" />} />
+          <div className="mt-2 min-h-[96px] flex-1">
             <GroupedBar data={ageBuckets} keys={['count']} colors={['#f5ddb2']} xKey="name" height="100%" />
           </div>
         </Card>
 
         {/* Department spend */}
-        <Card className="lg:col-span-4 p-4">
-          <CardHeader title="Spend by Department" subtitle="Assigned asset value" action={<Building2 size={15} className="text-sky-deep" />} />
-          <div className="mt-2.5 min-h-[110px] flex-1">
+        <Card className="lg:col-span-4 p-3">
+          <CardHeader title="Spend by Department" subtitle="Assigned asset value" action={<Building2 size={14} className="text-sky-deep" />} />
+          <div className="mt-2 min-h-[96px] flex-1">
             <GroupedBar data={deptSpend} keys={['spend']} colors={['#c6e0c0']} xKey="name" height="100%" format={fmtCompact} />
           </div>
         </Card>
 
         {/* Portfolio value trend */}
-        <Card className="lg:col-span-4 p-4">
-          <CardHeader title="Portfolio Book Value" subtitle="Depreciated value, 12mo" action={<TrendingDown size={15} className="text-ash" />} />
-          <div className="mt-2.5 min-h-[110px] flex-1">
+        <Card className="lg:col-span-4 p-3">
+          <CardHeader title="Portfolio Book Value" subtitle="Depreciated value, 12mo" action={<TrendingDown size={14} className="text-ash" />} />
+          <div className="mt-2 min-h-[96px] flex-1">
             <TrendLine data={valueTrend} dataKey="value" xKey="month" height="100%" format={fmtCompact} />
           </div>
         </Card>
