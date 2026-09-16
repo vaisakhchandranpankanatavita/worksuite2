@@ -1,7 +1,10 @@
+import clsx from 'clsx'
 import {
   ArrowRight, Boxes, CalendarCheck, FileText, Home, IndianRupee, Laptop,
   LineChart, ListChecks, PiggyBank, Receipt, UserPlus, Users, Wallet, Search, Sparkles,
 } from 'lucide-react'
+import { motion } from 'motion/react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardHeader, PageHeader } from '../components/ui'
 import { roleById, type ModuleKey } from '../data/roles'
@@ -42,10 +45,43 @@ const MODULE_DESC: Record<ModuleKey, string> = {
   assets: 'Track equipment — what the company owns, who holds it, and stock on hand.',
 }
 
+const ALL_PAGES: Record<string, PageInfo> = Object.fromEntries(
+  (Object.values(MODULE_PAGES) as PageInfo[][]).flat().map((p) => [p.to, p]),
+)
+
+// Places money or data crosses from one module's page into another's.
+const FLOWS: { from: string; to: string; label: string }[] = [
+  { from: '/hr/payroll', to: '/finance/reports', label: 'feeds cash-out' },
+  { from: '/finance/expenses', to: '/finance/budgets', label: 'rolls up into' },
+  { from: '/finance/track-expenses', to: '/finance/budgets', label: 'rolls up into' },
+  { from: '/assets/inventory', to: '/finance/reports', label: 'shows as spend' },
+]
+
+function relatedSet(key: string): Set<string> {
+  const set = new Set([key])
+  FLOWS.forEach((f) => { if (f.from === key) set.add(f.to); if (f.to === key) set.add(f.from) })
+  return set
+}
+
+/** Whether `key` (a page path, or `mod:<id>`) should stay highlighted while `active` is selected. */
+function isRelated(key: string, active: string): boolean {
+  if (key === active) return true
+  if (active.startsWith('mod:')) {
+    if (key.startsWith('mod:')) return false
+    return MODULE_PAGES[active.slice(4) as ModuleKey].some((p) => p.to === key)
+  }
+  if (key.startsWith('mod:')) {
+    const rel = relatedSet(active)
+    return MODULE_PAGES[key.slice(4) as ModuleKey].some((p) => rel.has(p.to))
+  }
+  return relatedSet(active).has(key)
+}
+
 export default function Help() {
   const roleId = useAuth((s) => s.role)
   const role = roleById(roleId)
   const modules = role?.modules ?? (['hr', 'finance', 'assets'] as ModuleKey[])
+  const [active, setActive] = useState<string | null>(null)
 
   return (
     <div>
@@ -62,7 +98,7 @@ export default function Help() {
 
       {/* ── Flow diagram ─────────────────────────────────────────── */}
       <Card className="mb-4">
-        <CardHeader title="How it flows" subtitle="The shape of the app, end to end" />
+        <CardHeader title="How it flows" subtitle="Every page, grouped by module — click one to trace how it connects" />
         <div className="mt-5 flex flex-col items-center gap-3">
           <div className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-white">
             <Sparkles size={13} /> Worksuite
@@ -72,16 +108,59 @@ export default function Help() {
           <div className="grid w-full gap-3 md:grid-cols-3">
             {(['hr', 'finance', 'assets'] as ModuleKey[]).map((m) => {
               const Icon = MODULE_ICON[m]
+              const modKey = `mod:${m}`
+              const modDim = active !== null && !isRelated(modKey, active)
               return (
-                <div key={m} className="rounded-2xl border border-line bg-soft/60 p-3.5">
-                  <div className={`mb-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${MODULE_TONE[m]}`}>
+                <div key={m} className={clsx('rounded-2xl border p-3.5 transition-opacity duration-200', active === modKey ? 'border-ink' : 'border-line', modDim && 'opacity-40')}>
+                  <button
+                    type="button"
+                    onClick={() => setActive(active === modKey ? null : modKey)}
+                    className={clsx('mb-2.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors', MODULE_TONE[m])}
+                  >
                     <Icon size={12} /> {MODULE_LABEL[m]}
-                  </div>
-                  <p className="text-xs text-ash">{MODULE_DESC[m]}</p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {MODULE_PAGES[m].map((p) => (
-                      <span key={p.to} className="rounded-full border border-line bg-white px-2 py-0.5 text-[10px] text-ink/70">{p.label}</span>
-                    ))}
+                  </button>
+                  <p className="mb-3 text-xs text-ash">{MODULE_DESC[m]}</p>
+                  <div className="flex flex-col gap-1.5">
+                    {MODULE_PAGES[m].map((p, i) => {
+                      const isActive = active === p.to
+                      const dim = active !== null && !isRelated(p.to, active)
+                      const rel = isActive ? FLOWS.filter((f) => f.from === p.to || f.to === p.to) : []
+                      return (
+                        <motion.button
+                          key={p.to}
+                          type="button"
+                          initial={{ opacity: 0, y: 6 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.03, duration: 0.3 }}
+                          onClick={() => setActive(isActive ? null : p.to)}
+                          className={clsx(
+                            'flex items-start gap-2.5 rounded-xl border p-2.5 text-left transition-all duration-200',
+                            isActive ? 'border-ink bg-soft' : 'border-line/70 bg-white hover:border-ink/25',
+                            dim && 'opacity-40',
+                          )}
+                        >
+                          <span className={clsx('mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg', MODULE_TONE[m])}>
+                            <p.icon size={13} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-xs font-semibold">{p.label}</span>
+                            <span className="block text-[11px] leading-snug text-ash">{p.desc}</span>
+                            {rel.length > 0 && (
+                              <span className="mt-1 flex flex-col gap-0.5 text-[10px] font-semibold text-lime-deep">
+                                {rel.map((f) => {
+                                  const outgoing = f.from === p.to
+                                  const target = ALL_PAGES[outgoing ? f.to : f.from]
+                                  return (
+                                    <span key={f.from + f.to}>{outgoing ? '→' : '←'} {target?.label} · {f.label}</span>
+                                  )
+                                })}
+                              </span>
+                            )}
+                          </span>
+                        </motion.button>
+                      )
+                    })}
                   </div>
                 </div>
               )
