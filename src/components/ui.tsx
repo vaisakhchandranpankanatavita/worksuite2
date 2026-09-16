@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { ArrowUpRight, CheckCircle2, Info, X, XCircle } from 'lucide-react'
 import { useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { createPortal } from 'react-dom'
 import { initials } from '../lib/format'
 import { useApp } from '../store'
 
@@ -219,7 +220,7 @@ export function Modal({ open, onClose, title, children, width = 520 }: {
   }, [open])
 
   if (!open) return null
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/25 p-4 backdrop-blur-md" onMouseDown={onClose}>
       <div className="card card-static animate-in max-h-[90vh] w-full overflow-y-auto p-7 scroll-thin relative" style={{ maxWidth: width }} onMouseDown={(e) => e.stopPropagation()}>
         {/* Top gradient accent line */}
@@ -230,7 +231,8 @@ export function Modal({ open, onClose, title, children, width = 520 }: {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

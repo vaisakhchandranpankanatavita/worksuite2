@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import { Bell, Boxes, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { assets, employees, invoices } from '../data/mock'
 import { roleById, type ModuleKey } from '../data/roles'
@@ -89,7 +90,7 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
     const asts = assets.filter((a) => `${a.name} ${a.serial} ${a.id}`.toLowerCase().includes(s)).slice(0, 4).map((a) => ({ key: a.id, title: a.name, sub: `${a.category} · ${a.status}`, to: `/assets/inventory/${a.id}`, hue: undefined }))
     return [...emps, ...invs, ...asts]
   }, [q])
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-ink/25 p-4 pt-[11vh] backdrop-blur-md" onMouseDown={onClose}>
       <div className="card card-static animate-in mx-auto max-w-xl p-3" onMouseDown={(e) => e.stopPropagation()}>
         {/* Top accent line */}
@@ -116,7 +117,8 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
         )}
         {q && results.length === 0 && <p className="px-3 py-7 text-center text-sm text-ash">No matches for "{q}"</p>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
