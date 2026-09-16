@@ -292,29 +292,6 @@ export default function FinanceDashboard() {
           </div>
         </Card>
 
-        {/* ── Expense Approvals ────────────────────────────────────── */}
-        <Card className="lg:col-span-4">
-          <CardHeader title="Expense Approvals" subtitle={`${pendingExp.length} claims waiting`} action={<CornerLink onClick={() => nav('/finance/expenses')} />} />
-          <ul className="mt-3 divide-y divide-line/60">
-            {pendingExp.slice(0, 4).map((x) => {
-              const e = employeeById(x.employeeId)!
-              return (
-                <li key={x.id} className="flex items-center gap-2.5 py-2.5">
-                  <Avatar name={e.name} hue={e.avatarHue} src={photoFor(e)} size={32} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{fmtINR(x.amount)}</p>
-                    <p className="truncate text-[11px] text-ash">{e.name} · {x.category}</p>
-                  </div>
-                  <button onClick={() => setExpenseStatus(x.id, 'Approved')} className="rounded-full bg-ink px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-black active:scale-90">
-                    Approve
-                  </button>
-                </li>
-              )
-            })}
-            {pendingExp.length === 0 && <li className="py-8 text-center text-sm text-ash">No pending claims 🎉</li>}
-          </ul>
-        </Card>
-
         {/* ── Recent Transactions ──────────────────────────────────── */}
         <Card className="lg:col-span-8">
           <CardHeader title="Recent Transactions" action={<IconBtn><ArrowUpRight size={15} /></IconBtn>} />
@@ -352,6 +329,29 @@ export default function FinanceDashboard() {
             ))}
           </ul>
         </div>
+
+        {/* ── Expense Approvals ────────────────────────────────────── */}
+        <Card className="lg:col-span-4">
+          <CardHeader title="Expense Approvals" subtitle={`${pendingExp.length} claims waiting`} action={<CornerLink onClick={() => nav('/finance/expenses')} />} />
+          <ul className="mt-3 divide-y divide-line/60">
+            {pendingExp.slice(0, 4).map((x) => {
+              const e = employeeById(x.employeeId)!
+              return (
+                <li key={x.id} className="flex items-center gap-2.5 py-2.5">
+                  <Avatar name={e.name} hue={e.avatarHue} src={photoFor(e)} size={32} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{fmtINR(x.amount)}</p>
+                    <p className="truncate text-[11px] text-ash">{e.name} · {x.category}</p>
+                  </div>
+                  <button onClick={() => setExpenseStatus(x.id, 'Approved')} className="rounded-full bg-ink px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-black active:scale-90">
+                    Approve
+                  </button>
+                </li>
+              )
+            })}
+            {pendingExp.length === 0 && <li className="py-8 text-center text-sm text-ash">No pending claims 🎉</li>}
+          </ul>
+        </Card>
 
       </div>
     </div>

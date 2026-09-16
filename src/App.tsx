@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import SplashScreen from './components/SplashScreen'
 import Login from './pages/Login'
+import Help from './pages/Help'
 import HrDashboard from './pages/hr/HrDashboard'
 import Employees from './pages/hr/Employees'
 import EmployeeProfile from './pages/hr/EmployeeProfile'
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route element={<Layout />}>
           <Route index element={<Navigate to="/hr" replace />} />
+          <Route path="help" element={<Help />} />
           <Route path="hr" element={<HrDashboard />} />
           <Route path="hr/employees" element={<Employees />} />
           <Route path="hr/employees/:id" element={<EmployeeProfile />} />

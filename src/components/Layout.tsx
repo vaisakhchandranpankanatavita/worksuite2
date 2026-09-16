@@ -155,7 +155,8 @@ export default function Layout() {
   const roleId = useAuth((s) => s.role)
   const logoutAuth = useAuth((s) => s.logout)
   const role = roleById(roleId)
-  const module: ModuleKey = pathname.startsWith('/finance') ? 'finance' : pathname.startsWith('/assets') ? 'assets' : 'hr'
+  const isHelp = pathname.startsWith('/help')
+  const module: ModuleKey = pathname.startsWith('/finance') ? 'finance' : pathname.startsWith('/assets') ? 'assets' : pathname.startsWith('/hr') ? 'hr' : (role?.modules[0] ?? 'hr')
   const [search, setSearch] = useState(false)
   const [bell, setBell] = useState(false)
   const [mobile, setMobile] = useState(false)
@@ -178,7 +179,7 @@ export default function Layout() {
   function signOut() { setProfile(false); logoutAuth(); nav('/login') }
 
   if (!role) return <Navigate to="/login" replace />
-  if (!role.modules.includes(module)) return <Navigate to={`/${role.modules[0]}`} replace />
+  if (!isHelp && !role.modules.includes(module)) return <Navigate to={`/${role.modules[0]}`} replace />
 
   const links = NAV[module]
   const visibleModules = role.modules
@@ -277,7 +278,7 @@ export default function Layout() {
               </div>
 
               {/* Help */}
-              <IconBtn className="hidden sm:grid" aria-label="Help"><HelpCircle size={15} /></IconBtn>
+              <IconBtn className="hidden sm:grid" aria-label="Help" title="Help & overview" onClick={() => nav('/help')}><HelpCircle size={15} /></IconBtn>
 
               {/* Profile */}
               <div className="relative ml-0.5 hidden md:block">
