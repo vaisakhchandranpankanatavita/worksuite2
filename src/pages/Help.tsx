@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import {
-  ArrowRight, Boxes, CalendarCheck, FileText, Home, IndianRupee, Laptop,
+  Boxes, CalendarCheck, FileText, Home, IndianRupee, Laptop,
   LineChart, ListChecks, PiggyBank, Receipt, UserPlus, Users, Wallet, Search, Sparkles,
 } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -88,39 +88,34 @@ export default function Help() {
       <PageHeader title="Help & Overview" subtitle="A map of Worksuite — what each part does and how they connect" />
 
       <Card className="mb-4">
-        <p className="text-sm leading-relaxed text-ink/80">
-          Worksuite is an internal operations app organised into three modules — <strong>People</strong>, <strong>Finance</strong> and{' '}
-          <strong>Assets</strong>. Each module has its own dashboard plus a handful of focused pages. Use the module switcher and nav pills
-          in the header to move around, <kbd className="rounded border border-line bg-soft px-1 py-px text-[10px] font-bold">⌘K</kbd> to
-          search anything by name, and the assistant in the bottom-right corner for quick answers or jumping straight to a page.
+        <p className="text-base leading-relaxed text-ink/80">
+          Worksuite is organised into three modules — <strong>People</strong>, <strong>Finance</strong> and <strong>Assets</strong>.
+          Each has its own dashboard plus a few focused pages. Use the module switcher in the header to move around,{' '}
+          <kbd className="rounded border border-line bg-soft px-1.5 py-0.5 text-xs font-bold">⌘K</kbd> to search anything by name,
+          and the assistant in the bottom-right corner for quick answers.
         </p>
       </Card>
 
       {/* ── Flow diagram ─────────────────────────────────────────── */}
       <Card className="mb-4">
         <CardHeader title="How it flows" subtitle="Every page, grouped by module — click one to trace how it connects" />
-        <div className="mt-5 flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-white">
-            <Sparkles size={13} /> Worksuite
-          </div>
-          <ArrowRight size={16} className="rotate-90 text-ash" />
-
-          <div className="grid w-full gap-3 md:grid-cols-3">
+        <div className="mt-5 flex flex-col items-center gap-4">
+          <div className="grid w-full gap-4 md:grid-cols-3">
             {(['hr', 'finance', 'assets'] as ModuleKey[]).map((m) => {
               const Icon = MODULE_ICON[m]
               const modKey = `mod:${m}`
               const modDim = active !== null && !isRelated(modKey, active)
               return (
-                <div key={m} className={clsx('rounded-2xl border p-3.5 transition-opacity duration-200', active === modKey ? 'border-ink' : 'border-line', modDim && 'opacity-40')}>
+                <div key={m} className={clsx('rounded-2xl border p-4 transition-opacity duration-200', active === modKey ? 'border-ink' : 'border-line', modDim && 'opacity-40')}>
                   <button
                     type="button"
                     onClick={() => setActive(active === modKey ? null : modKey)}
-                    className={clsx('mb-2.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors', MODULE_TONE[m])}
+                    className={clsx('mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-colors', MODULE_TONE[m])}
                   >
-                    <Icon size={12} /> {MODULE_LABEL[m]}
+                    <Icon size={14} /> {MODULE_LABEL[m]}
                   </button>
-                  <p className="mb-3 text-xs text-ash">{MODULE_DESC[m]}</p>
-                  <div className="flex flex-col gap-1.5">
+                  <p className="mb-3 text-sm text-ash">{MODULE_DESC[m]}</p>
+                  <div className="flex flex-col gap-2">
                     {MODULE_PAGES[m].map((p, i) => {
                       const isActive = active === p.to
                       const dim = active !== null && !isRelated(p.to, active)
@@ -135,19 +130,19 @@ export default function Help() {
                           transition={{ delay: i * 0.03, duration: 0.3 }}
                           onClick={() => setActive(isActive ? null : p.to)}
                           className={clsx(
-                            'flex items-start gap-2.5 rounded-xl border p-2.5 text-left transition-all duration-200',
+                            'flex items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200',
                             isActive ? 'border-ink bg-soft' : 'border-line/70 bg-white hover:border-ink/25',
                             dim && 'opacity-40',
                           )}
                         >
-                          <span className={clsx('mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg', MODULE_TONE[m])}>
-                            <p.icon size={13} />
+                          <span className={clsx('mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg', MODULE_TONE[m])}>
+                            <p.icon size={15} />
                           </span>
                           <span className="min-w-0">
-                            <span className="block text-xs font-semibold">{p.label}</span>
-                            <span className="block text-[11px] leading-snug text-ash">{p.desc}</span>
+                            <span className="block text-sm font-semibold">{p.label}</span>
+                            <span className="block text-xs leading-snug text-ash">{p.desc}</span>
                             {rel.length > 0 && (
-                              <span className="mt-1 flex flex-col gap-0.5 text-[10px] font-semibold text-lime-deep">
+                              <span className="mt-1.5 flex flex-col gap-1 text-xs font-semibold text-lime-deep">
                                 {rel.map((f) => {
                                   const outgoing = f.from === p.to
                                   const target = ALL_PAGES[outgoing ? f.to : f.from]
@@ -166,12 +161,6 @@ export default function Help() {
               )
             })}
           </div>
-
-          <div className="mt-1 grid w-full gap-2 text-xs text-ash sm:grid-cols-3">
-            <p className="flex items-center gap-1.5"><Wallet size={13} className="shrink-0 text-lime-deep" /> Payroll (People) feeds cash-out in Finance Reports</p>
-            <p className="flex items-center gap-1.5"><Receipt size={13} className="shrink-0 text-lime-deep" /> Expense Claims &amp; Track Expenses roll up into Budgets</p>
-            <p className="flex items-center gap-1.5"><Boxes size={13} className="shrink-0 text-lime-deep" /> Assets purchases show up as spend in Finance</p>
-          </div>
         </div>
       </Card>
 
@@ -182,20 +171,20 @@ export default function Help() {
           return (
             <Card key={m}>
               <CardHeader
-                title={<span className="flex items-center gap-2"><ModIcon size={15} /> {MODULE_LABEL[m]}</span>}
+                title={<span className="flex items-center gap-2 text-base"><ModIcon size={17} /> {MODULE_LABEL[m]}</span>}
                 subtitle={MODULE_DESC[m]}
               />
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {MODULE_PAGES[m].map((p) => {
                   const PIcon = p.icon
                   return (
-                    <Link key={p.to} to={p.to} className="group flex items-start gap-3 rounded-xl border border-line/70 p-3 transition-colors hover:border-ink/20 hover:bg-soft">
-                      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-soft text-ink/70 group-hover:bg-ink group-hover:text-white">
-                        <PIcon size={14} />
+                    <Link key={p.to} to={p.to} className="group flex items-start gap-3 rounded-xl border border-line/70 p-3.5 transition-colors hover:border-ink/20 hover:bg-soft">
+                      <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-soft text-ink/70 group-hover:bg-ink group-hover:text-white">
+                        <PIcon size={16} />
                       </span>
                       <span className="min-w-0">
-                        <span className="block text-sm font-semibold">{p.label}</span>
-                        <span className="block text-xs text-ash">{p.desc}</span>
+                        <span className="block text-base font-semibold">{p.label}</span>
+                        <span className="block text-sm text-ash">{p.desc}</span>
                       </span>
                     </Link>
                   )
@@ -208,10 +197,10 @@ export default function Help() {
 
       <Card className="mt-4">
         <CardHeader title="Handy shortcuts" />
-        <div className="mt-2 grid gap-2 text-xs text-ash sm:grid-cols-3">
-          <p className="flex items-center gap-1.5"><Search size={13} /> <kbd className="rounded border border-line bg-soft px-1 py-px text-[10px] font-bold">⌘K</kbd> — search employees, invoices &amp; assets</p>
-          <p className="flex items-center gap-1.5"><Sparkles size={13} /> Bottom-right bubble — the in-app assistant</p>
-          <p className="flex items-center gap-1.5"><Home size={13} /> Module switcher (top-left) — jump between People / Finance / Assets</p>
+        <div className="mt-3 grid gap-3 text-sm text-ash sm:grid-cols-3">
+          <p className="flex items-center gap-2"><Search size={15} /> <kbd className="rounded border border-line bg-soft px-1.5 py-0.5 text-xs font-bold">⌘K</kbd> — search employees, invoices &amp; assets</p>
+          <p className="flex items-center gap-2"><Sparkles size={15} /> Bottom-right bubble — the in-app assistant</p>
+          <p className="flex items-center gap-2"><Home size={15} /> Module switcher (top-left) — jump between People / Finance / Assets</p>
         </div>
       </Card>
     </div>
