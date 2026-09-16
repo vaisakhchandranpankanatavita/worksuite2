@@ -118,46 +118,38 @@ export default function AssetsDashboard() {
         <AiInsights />
 
         {/* Stat tiles */}
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
-          <div className="card-dark animate-in relative overflow-hidden p-2.5">
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-12 lg:grid-cols-4">
+          <div className="card-dark animate-in relative overflow-hidden p-2">
             <div className="pointer-events-none absolute -right-14 -top-14 size-48 rounded-full bg-lime/15 blur-3xl" />
-            <div className="relative flex items-start justify-between">
+            <div className="relative flex items-center justify-between">
               <h3 className="font-display text-[12px] font-semibold leading-tight">Total Assets</h3>
               <span className="grid size-5 place-items-center rounded-full bg-white/10"><Laptop size={11} /></span>
             </div>
-            <p className="relative mt-1 font-display text-lg font-semibold tabular-nums"><CountUp value={total} /></p>
-            <p className="mt-0.5 text-[10.5px] text-white/55">{fmtINR(totalValue)} in inventory</p>
+            <p className="relative mt-0.5 font-display text-base font-semibold tabular-nums"><CountUp value={total} /></p>
+            <p className="text-[10.5px] text-white/55">{fmtINR(totalValue)} in inventory</p>
           </div>
 
-          <Card className="p-2.5">
+          <Card className="p-2">
             <CardHeader title="Assigned" className="[&_h3]:text-[12px]" action={<CheckCircle2 size={13} className="text-sage-deep" />} />
-            <p className="mt-1 font-display text-lg font-semibold"><CountUp value={assigned} /></p>
-            <p className="mt-0.5 text-[10.5px] text-ash">{utilizationPct}% utilization</p>
+            <p className="mt-0.5 font-display text-base font-semibold"><CountUp value={assigned} /></p>
+            <p className="text-[10.5px] text-ash">{utilizationPct}% utilization</p>
           </Card>
 
-          <Card className="p-2.5">
+          <Card className="p-2">
             <CardHeader title="Available" className="[&_h3]:text-[12px]" />
-            <p className="mt-1 font-display text-lg font-semibold"><CountUp value={available} /></p>
-            <p className="mt-0.5 text-[10.5px] text-ash">Ready to assign</p>
+            <p className="mt-0.5 font-display text-base font-semibold"><CountUp value={available} /></p>
+            <p className="text-[10.5px] text-ash">Ready to assign</p>
           </Card>
 
-          <Card className="p-2.5">
+          <Card className="p-2">
             <CardHeader title="Needs Attention" className="[&_h3]:text-[12px]" action={<Wrench size={13} className="text-amber-deep" />} />
-            <p className="mt-1 font-display text-lg font-semibold"><CountUp value={maintenance + retired} /></p>
-            <p className="mt-0.5 text-[10.5px] text-ash">{maintenance} maintenance · {retired} retired</p>
+            <p className="mt-0.5 font-display text-base font-semibold"><CountUp value={maintenance + retired} /></p>
+            <p className="text-[10.5px] text-ash">{maintenance} maintenance · {retired} retired</p>
           </Card>
         </div>
 
-        {/* Utilization radial */}
-        <Card className="lg:col-span-4 p-3">
-          <CardHeader title="Utilization" subtitle="Assigned vs. total inventory" />
-          <div className="mt-2 flex flex-1 items-center justify-center">
-            <RadialProgress value={utilizationPct} color="#aece52" size={96} label="Assigned" />
-          </div>
-        </Card>
-
         {/* Category breakdown */}
-        <Card className="lg:col-span-4 p-3">
+        <Card className="lg:col-span-5 p-3">
           <CardHeader title="By Category" subtitle="Inventory distribution" />
           <div className="mt-2 flex flex-1 items-center gap-3">
             <div className="w-32 shrink-0">
@@ -182,6 +174,14 @@ export default function AssetsDashboard() {
           <CardHeader title="By Location" subtitle="Active assets per office" action={<MapPin size={14} className="text-sky-deep" />} />
           <div className="mt-2 min-h-[96px] flex-1">
             <GroupedBar data={locationData} keys={['count']} colors={['#c8d9f4']} xKey="name" height="100%" />
+          </div>
+        </Card>
+
+        {/* Utilization radial */}
+        <Card className="lg:col-span-3 p-3">
+          <CardHeader title="Utilization" subtitle="Assigned vs. total" />
+          <div className="mt-2 flex flex-1 items-center justify-center">
+            <RadialProgress value={utilizationPct} color="#aece52" size={80} label="Assigned" />
           </div>
         </Card>
 
