@@ -36,7 +36,7 @@ const ROUTES = [
   { keys: ['recruit', 'hiring', 'candidate', 'pipeline'], to: '/hr/recruitment', label: 'Recruitment' },
   { keys: ['payroll', 'salary', 'salaries'], to: '/hr/payroll', label: 'Payroll' },
   { keys: ['invoice', 'billing'], to: '/finance/invoices', label: 'Invoices' },
-  { keys: ['expense', 'reimburse'], to: '/finance/expenses', label: 'Expenses' },
+  { keys: ['expense', 'reimburse'], to: '/finance/expenses', label: 'Expense Claims' },
   { keys: ['budget'], to: '/finance/budgets', label: 'Budgets' },
   { keys: ['report', 'analytics'], to: '/finance/reports', label: 'Reports' },
   { keys: ['hr dashboard', 'home', 'overview', 'hr'], to: '/hr', label: 'HR Dashboard' },

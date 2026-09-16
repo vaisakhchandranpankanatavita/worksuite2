@@ -21,7 +21,7 @@ export default function Expenses() {
 
   return (
     <div>
-      <PageHeader title="Expenses" subtitle="Employee claims & reimbursements" actions={<Button onClick={() => setOpen(true)}><Plus size={16} /> New claim</Button>} />
+      <PageHeader title="Expense Claims" subtitle="Employee claims & reimbursements" actions={<Button onClick={() => setOpen(true)}><Plus size={16} /> New claim</Button>} />
 
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="grid grid-cols-2 gap-3 lg:col-span-5">
