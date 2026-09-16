@@ -114,11 +114,11 @@ export default function AssetsDashboard() {
         actions={<Button onClick={() => nav('/assets/inventory?new=1')}><Plus size={15} /> Add asset</Button>}
       />
 
-      <div className="stagger grid gap-4 lg:grid-cols-12">
+      <div className="stagger grid gap-3 lg:grid-cols-12">
         <AiInsights />
 
         {/* Stat tiles */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
           <div className="card-dark animate-in relative overflow-hidden p-4">
             <div className="pointer-events-none absolute -right-14 -top-14 size-48 rounded-full bg-lime/15 blur-3xl" />
             <div className="relative flex items-start justify-between">
@@ -149,7 +149,7 @@ export default function AssetsDashboard() {
         </div>
 
         {/* Utilization radial */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Utilization" subtitle="Assigned vs. total inventory" />
           <div className="mt-3 flex flex-1 items-center justify-center">
             <RadialProgress value={utilizationPct} color="#aece52" size={130} label="Assigned" />
@@ -157,7 +157,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Category breakdown */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="By Category" subtitle="Inventory distribution" />
           <div className="mt-3 flex flex-1 items-center gap-4">
             <div className="w-36 shrink-0">
@@ -178,7 +178,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Location breakdown */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="By Location" subtitle="Active assets per office" action={<MapPin size={15} className="text-sky-deep" />} />
           <div className="mt-3 min-h-[140px] flex-1">
             <GroupedBar data={locationData} keys={['count']} colors={['#c8d9f4']} xKey="name" height="100%" />
@@ -186,11 +186,11 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Warranty watch */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Warranty Watch" subtitle="Expiring within 90 days" action={<ShieldAlert size={15} className="text-rose-deep" />} />
           <div className="mt-3 divide-y divide-line/60">
             {warrantyWatch.map(({ asset, daysLeft }) => (
-              <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2.5 text-left transition-colors hover:bg-soft/60">
+              <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2 text-left transition-colors hover:bg-soft/60">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{asset.name}</p>
                   <p className="truncate text-xs text-ash">{asset.location} · {fmtDate(asset.warrantyUntil!)}</p>
@@ -205,13 +205,13 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Recently assigned */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Recently Assigned" subtitle="Latest handovers" action={<CornerLink onClick={() => nav('/assets/inventory')} />} />
           <div className="mt-3 divide-y divide-line/60">
             {recentlyAssigned.map((a) => {
               const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
               return (
-                <button key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="flex w-full items-center gap-3 py-2.5 text-left transition-colors hover:bg-soft/60">
+                <button key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="flex w-full items-center gap-3 py-2 text-left transition-colors hover:bg-soft/60">
                   {holder && <Avatar name={holder.name} hue={holder.avatarHue} src={photoFor(holder)} size={32} />}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{a.name}</p>
@@ -226,11 +226,11 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Maintenance queue */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Maintenance Queue" subtitle="Awaiting service" action={<AlertTriangle size={15} className="text-amber-deep" />} />
           <div className="mt-3 divide-y divide-line/60">
             {maintenanceQueue.map((a) => (
-              <div key={a.id} className="flex items-center gap-3 py-2.5">
+              <div key={a.id} className="flex items-center gap-3 py-2">
                 <button onClick={() => nav(`/assets/inventory/${a.id}`)} className="min-w-0 flex-1 text-left">
                   <p className="truncate text-sm font-semibold">{a.name}</p>
                   <p className="truncate text-xs text-ash">{a.location} · {a.serial}</p>
@@ -245,13 +245,13 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Overdue returns */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Overdue Returns" subtitle="Loaner check-in due" action={<PackageX size={15} className="text-rose-deep" />} />
           <div className="mt-3 divide-y divide-line/60">
             {overdueReturns.map(({ asset, daysOver }) => {
               const holder = asset.assignedTo ? employeeById(asset.assignedTo) : undefined
               return (
-                <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2.5 text-left transition-colors hover:bg-soft/60">
+                <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2 text-left transition-colors hover:bg-soft/60">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{asset.name}</p>
                     <p className="truncate text-xs text-ash">{holder?.name ?? asset.location} · Due {fmtDate(asset.returnDue!)}</p>
@@ -267,7 +267,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Age distribution */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Age Distribution" subtitle="Active inventory by age" action={<CalendarClock size={15} className="text-ash" />} />
           <div className="mt-3 min-h-[140px] flex-1">
             <GroupedBar data={ageBuckets} keys={['count']} colors={['#f5ddb2']} xKey="name" height="100%" />
@@ -275,7 +275,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Department spend */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Spend by Department" subtitle="Assigned asset value" action={<Building2 size={15} className="text-sky-deep" />} />
           <div className="mt-3 min-h-[140px] flex-1">
             <GroupedBar data={deptSpend} keys={['spend']} colors={['#c6e0c0']} xKey="name" height="100%" format={fmtCompact} />
@@ -283,7 +283,7 @@ export default function AssetsDashboard() {
         </Card>
 
         {/* Portfolio value trend */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-4 p-4">
           <CardHeader title="Portfolio Book Value" subtitle="Depreciated value, 12mo" action={<TrendingDown size={15} className="text-ash" />} />
           <div className="mt-3 min-h-[140px] flex-1">
             <TrendLine data={valueTrend} dataKey="value" xKey="month" height="100%" format={fmtCompact} />

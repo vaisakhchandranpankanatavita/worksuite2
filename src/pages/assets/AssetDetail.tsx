@@ -29,7 +29,7 @@ export default function AssetDetail() {
       </button>
 
       {/* Hero header */}
-      <div className="card animate-in mb-4 flex flex-wrap items-center gap-4 p-5">
+      <div className="card animate-in mb-3 flex flex-wrap items-center gap-4 p-4">
         {a.image ? (
           <img src={a.image} alt={a.name} className="size-16 shrink-0 rounded-2xl object-cover shadow-[0_6px_16px_-6px_rgba(26,29,27,0.3)]" />
         ) : (
@@ -48,10 +48,10 @@ export default function AssetDetail() {
         <Badge tone={a.status === 'Assigned' ? 'green' : a.status === 'Maintenance' ? 'amber' : a.status === 'Retired' ? 'rose' : 'blue'}>{a.status}</Badge>
       </div>
 
-      <div className="grid items-start gap-4 md:grid-cols-3">
+      <div className="grid items-start gap-3 md:grid-cols-3">
         {/* Left: details + notes + activity */}
-        <div className="flex flex-col gap-4 md:col-span-2">
-          <div className="card animate-in p-5">
+        <div className="flex flex-col gap-3 md:col-span-2">
+          <div className="card animate-in p-4">
             <h3 className="mb-3 text-[15px] font-medium">Details</h3>
             <div className="divide-y divide-line/70">
               <Row k="Serial number" v={a.serial} />
@@ -65,13 +65,13 @@ export default function AssetDetail() {
           </div>
 
           {a.notes && (
-            <div className="card animate-in p-5">
+            <div className="card animate-in p-4">
               <h3 className="mb-2 text-[15px] font-medium">Notes</h3>
               <p className="text-sm text-ash">{a.notes}</p>
             </div>
           )}
 
-          <div className="card animate-in p-5">
+          <div className="card animate-in p-4">
             <h3 className="mb-4 flex items-center gap-2 text-[15px] font-medium"><Clock size={14} className="text-ash" /> Activity</h3>
             {history.length > 0 ? (
               <ul className="relative space-y-4 before:absolute before:bottom-1 before:left-[3px] before:top-1 before:w-px before:bg-line">
@@ -92,8 +92,8 @@ export default function AssetDetail() {
         </div>
 
         {/* Right: assignment + status */}
-        <div className="flex flex-col gap-4">
-          <div className="card animate-in p-5">
+        <div className="flex flex-col gap-3">
+          <div className="card animate-in p-4">
             <h3 className="mb-4 text-[15px] font-medium">Assignment</h3>
             {holder ? (
               <div className="flex items-center gap-3">
@@ -116,7 +116,7 @@ export default function AssetDetail() {
             </div>
           </div>
 
-          <div className="card animate-in p-5">
+          <div className="card animate-in p-4">
             <h3 className="mb-4 text-[15px] font-medium">Status actions</h3>
             <div className="flex flex-col gap-2">
               {(['Available', 'Assigned', 'Maintenance'] as AssetStatus[]).map((s) => (

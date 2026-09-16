@@ -188,7 +188,7 @@ export default function Assets() {
           })}
         </div>
       ) : (
-        <Card>
+        <Card className="p-4">
           <Table head={[
             <button key="all" onClick={toggleSelectAll} className="grid place-items-center text-ash hover:text-ink" aria-label="Select all">
               {allVisibleSelected ? <CheckSquare size={15} /> : <Square size={15} />}
