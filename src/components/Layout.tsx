@@ -23,6 +23,7 @@ const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end
     { to: '/finance', label: 'Dashboard', icon: Home, end: true },
     { to: '/finance/invoices', label: 'Invoices', icon: FileText },
     { to: '/finance/expenses', label: 'Expenses', icon: Receipt },
+    { to: '/finance/track-expenses', label: 'Track Expenses', icon: ListChecks },
     { to: '/finance/budgets', label: 'Budgets', icon: IndianRupee },
     { to: '/finance/reports', label: 'Reports', icon: LineChart },
   ],

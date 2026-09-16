@@ -12,6 +12,7 @@ import Payroll from './pages/hr/Payroll'
 import FinanceDashboard from './pages/finance/FinanceDashboard'
 import Invoices from './pages/finance/Invoices'
 import Expenses from './pages/finance/Expenses'
+import TrackExpenses from './pages/finance/TrackExpenses'
 import Budgets from './pages/finance/Budgets'
 import Reports from './pages/finance/Reports'
 import AssetsDashboard from './pages/assets/AssetsDashboard'
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="finance" element={<FinanceDashboard />} />
           <Route path="finance/invoices" element={<Invoices />} />
           <Route path="finance/expenses" element={<Expenses />} />
+          <Route path="finance/track-expenses" element={<TrackExpenses />} />
           <Route path="finance/budgets" element={<Budgets />} />
           <Route path="finance/reports" element={<Reports />} />
           <Route path="assets" element={<AssetsDashboard />} />

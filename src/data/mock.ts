@@ -513,6 +513,94 @@ export const expenseBreakdown = [
   { name: 'Marketing', value: monthlyFinance.at(-1)!.marketing },
 ]
 
+/* ───────────────────────── Track Expenses (overheads / bills) ───────────────────────── */
+
+export const EXPENSE_TRACK_CATEGORIES = [
+  'Administration Exp.', 'Depreciation', 'Finance Exp.', 'Manpower', 'Marketing Exp.',
+  'Other Income/exp.', 'Provisions', 'Selling Exp.', 'Statutory Exp.',
+] as const
+export type TrackCategory = (typeof EXPENSE_TRACK_CATEGORIES)[number]
+
+export interface ExpenseSubCategory { name: string; category: TrackCategory }
+
+export const expenseSubCategories: ExpenseSubCategory[] = [
+  { name: 'Advertising Outdoor', category: 'Marketing Exp.' },
+  { name: 'Advertising Print', category: 'Marketing Exp.' },
+  { name: 'Air Ticket', category: 'Provisions' },
+  { name: 'Audit Fees', category: 'Administration Exp.' },
+  { name: 'Basic', category: 'Manpower' },
+  { name: 'Bonus', category: 'Manpower' },
+  { name: 'Overtime', category: 'Manpower' },
+  { name: 'Staff Welfare', category: 'Manpower' },
+  { name: 'Branding Exp.', category: 'Marketing Exp.' },
+  { name: 'Building', category: 'Depreciation' },
+  { name: 'Computer Hardware', category: 'Depreciation' },
+  { name: 'Computer Software', category: 'Depreciation' },
+  { name: 'Vehicles', category: 'Depreciation' },
+  { name: 'Office Equipment', category: 'Depreciation' },
+  { name: 'Business Trips', category: 'Administration Exp.' },
+  { name: 'Catalogues & Brochures', category: 'Marketing Exp.' },
+  { name: 'Cheque discounting Charges', category: 'Finance Exp.' },
+  { name: 'Exchange gain/(loss)', category: 'Finance Exp.' },
+  { name: 'LC Charges', category: 'Finance Exp.' },
+  { name: 'LTR Interest', category: 'Finance Exp.' },
+  { name: 'Other Bank Charges', category: 'Finance Exp.' },
+  { name: 'Overdraft Interest', category: 'Finance Exp.' },
+  { name: 'Term loan Interest', category: 'Finance Exp.' },
+  { name: 'Cleaning & Office maintenance', category: 'Administration Exp.' },
+  { name: 'Courier & Postage Expenses', category: 'Administration Exp.' },
+  { name: 'Legal & Professional Fees', category: 'Administration Exp.' },
+  { name: 'Telephone & Internet', category: 'Administration Exp.' },
+  { name: 'Vehicle Fuel charges', category: 'Administration Exp.' },
+  { name: 'Miscellaneous', category: 'Administration Exp.' },
+  { name: 'Credit Card Charges', category: 'Selling Exp.' },
+  { name: 'Customer Incentives', category: 'Selling Exp.' },
+  { name: 'Incentives to Employees', category: 'Selling Exp.' },
+  { name: 'Other S&M Exp.', category: 'Selling Exp.' },
+  { name: 'Display Exp.', category: 'Marketing Exp.' },
+  { name: 'Sales Commission', category: 'Marketing Exp.' },
+  { name: 'Documentation Charges', category: 'Statutory Exp.' },
+  { name: 'Municipality Fees', category: 'Statutory Exp.' },
+  { name: 'Trade License Renewal', category: 'Statutory Exp.' },
+  { name: 'Insurance Claims Received', category: 'Other Income/exp.' },
+  { name: 'Interest on PDC', category: 'Other Income/exp.' },
+  { name: 'Miscellaneous Income', category: 'Other Income/exp.' },
+  { name: 'Principal supports', category: 'Other Income/exp.' },
+  { name: 'Profit/Loss Sale of Assets', category: 'Other Income/exp.' },
+  { name: 'Rental Income', category: 'Other Income/exp.' },
+  { name: 'Scrap revenue', category: 'Other Income/exp.' },
+  { name: 'Write back of Liabilities', category: 'Other Income/exp.' },
+  { name: 'Bad Debts Provision', category: 'Provisions' },
+  { name: 'Leave Salary Provision', category: 'Provisions' },
+]
+
+export interface ExpenseBill {
+  id: string
+  date: string
+  category: TrackCategory
+  subCategory: string
+  vendor: string
+  narration: string
+  amount: number
+}
+
+const BILL_VENDORS = ['Oman Oil', 'Al Qabayel Discount Center', 'Gulf Printing Press', 'Bank Muscat', 'National Telecom Co.', 'City Cleaning Services', 'Al Noor Stationery', 'Ahlibank', 'Bahwan Motors', 'Fast Cargo Logistics', 'Prime Facilities Mgmt.', 'Horizon Insurance']
+const BILL_NARRATIONS = ['Monthly charge', 'Reimbursement of expenses', 'Invoice settlement', 'Payment against bill', 'Service charge for the month', 'Renewal payment', 'Annual maintenance charge']
+
+export const expenseBills: ExpenseBill[] = Array.from({ length: 140 }, (_, i) => {
+  const sub = pick(expenseSubCategories)
+  const date = addDays(TODAY, -between(1, 300))
+  return {
+    id: `BILL-${4000 + i}`,
+    date: iso(date),
+    category: sub.category,
+    subCategory: sub.name,
+    vendor: pick(BILL_VENDORS),
+    narration: `${pick(BILL_NARRATIONS)} — ${sub.name}`,
+    amount: round(between(1500, 185000), 500),
+  }
+})
+
 export const bankAccounts = [
   { name: 'HDFC Current A/c', number: '••4821', balance: 98450000 },
   { name: 'ICICI Payroll A/c', number: '••1190', balance: 32600000 },
