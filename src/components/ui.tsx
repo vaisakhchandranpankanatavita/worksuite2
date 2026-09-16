@@ -260,7 +260,7 @@ export function Table({ head, children, className }: { head: ReactNode[]; childr
   return (
     <div className={clsx('overflow-x-auto scroll-thin', className)}>
       <table className="w-full min-w-[720px] text-sm">
-        <thead>
+        <thead className="sticky top-[52px] z-10 bg-white/90 backdrop-blur-sm">
           <tr className="border-b border-line text-left">
             {head.map((h, i) => <th key={i} className="whitespace-nowrap px-3 py-3 text-[11px] font-bold uppercase tracking-wide text-ash/80 first:pl-0 last:pr-0">{h}</th>)}
           </tr>
