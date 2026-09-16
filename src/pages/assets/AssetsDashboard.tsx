@@ -119,31 +119,31 @@ export default function AssetsDashboard() {
 
         {/* Stat tiles */}
         <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
-          <div className="card-dark animate-in relative overflow-hidden p-3">
+          <div className="card-dark animate-in relative overflow-hidden p-2.5">
             <div className="pointer-events-none absolute -right-14 -top-14 size-48 rounded-full bg-lime/15 blur-3xl" />
             <div className="relative flex items-start justify-between">
               <h3 className="font-display text-[12px] font-semibold leading-tight">Total Assets</h3>
               <span className="grid size-5 place-items-center rounded-full bg-white/10"><Laptop size={11} /></span>
             </div>
-            <p className="relative mt-1.5 font-display text-lg font-semibold tabular-nums"><CountUp value={total} /></p>
+            <p className="relative mt-1 font-display text-lg font-semibold tabular-nums"><CountUp value={total} /></p>
             <p className="mt-0.5 text-[10.5px] text-white/55">{fmtINR(totalValue)} in inventory</p>
           </div>
 
-          <Card className="p-3">
+          <Card className="p-2.5">
             <CardHeader title="Assigned" className="[&_h3]:text-[12px]" action={<CheckCircle2 size={13} className="text-sage-deep" />} />
-            <p className="mt-1.5 font-display text-lg font-semibold"><CountUp value={assigned} /></p>
+            <p className="mt-1 font-display text-lg font-semibold"><CountUp value={assigned} /></p>
             <p className="mt-0.5 text-[10.5px] text-ash">{utilizationPct}% utilization</p>
           </Card>
 
-          <Card className="p-3">
+          <Card className="p-2.5">
             <CardHeader title="Available" className="[&_h3]:text-[12px]" />
-            <p className="mt-1.5 font-display text-lg font-semibold"><CountUp value={available} /></p>
+            <p className="mt-1 font-display text-lg font-semibold"><CountUp value={available} /></p>
             <p className="mt-0.5 text-[10.5px] text-ash">Ready to assign</p>
           </Card>
 
-          <Card className="p-3">
+          <Card className="p-2.5">
             <CardHeader title="Needs Attention" className="[&_h3]:text-[12px]" action={<Wrench size={13} className="text-amber-deep" />} />
-            <p className="mt-1.5 font-display text-lg font-semibold"><CountUp value={maintenance + retired} /></p>
+            <p className="mt-1 font-display text-lg font-semibold"><CountUp value={maintenance + retired} /></p>
             <p className="mt-0.5 text-[10.5px] text-ash">{maintenance} maintenance · {retired} retired</p>
           </Card>
         </div>
