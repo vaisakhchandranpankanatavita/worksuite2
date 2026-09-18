@@ -667,6 +667,9 @@ export interface Asset {
   location: (typeof LOCATIONS)[number]
   notes?: string
   image?: string
+  nextMaintenanceDate?: string
+  maintenanceFrequency?: 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Yearly'
+  lastMaintenanceDate?: string
 }
 
 const EXTRA_ASSET_SPECS: { category: AssetCategory; name: string; model: string; cost: number }[] = [
@@ -732,6 +735,9 @@ employees.forEach((e, i) => {
     cost: isDesignEng ? 220000 : 95000,
     location: e.location === 'Remote' ? pick(LOCATIONS.filter((l) => l !== 'Remote')) : e.location,
     image: imageFor(name, 'Laptop'),
+    nextMaintenanceDate: iso(addDays(TODAY, between(-10, 180))),
+    maintenanceFrequency: pick(['Monthly', 'Quarterly', 'Bi-Annually', 'Yearly']),
+    lastMaintenanceDate: iso(addDays(TODAY, -between(30, 200))),
   })
 })
 
@@ -760,6 +766,9 @@ for (let i = 0; i < 60; i++) {
     cost: round(spec.cost, 500),
     location: assignee ? assignee.location : pick(LOCATIONS),
     image: imageFor(spec.name, spec.category),
+    nextMaintenanceDate: rand() > 0.5 ? iso(addDays(TODAY, between(-10, 180))) : undefined,
+    maintenanceFrequency: pick(['Monthly', 'Quarterly', 'Bi-Annually', 'Yearly']),
+    lastMaintenanceDate: iso(addDays(TODAY, -between(30, 200))),
   })
 }
 

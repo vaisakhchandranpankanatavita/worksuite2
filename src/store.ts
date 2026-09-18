@@ -54,6 +54,8 @@ interface AppState {
   unassignAsset: (id: string) => void
   setAssetStatus: (id: string, status: AssetStatus) => void
   retireAsset: (id: string) => void
+  updateAsset: (id: string, updates: Partial<Asset>) => void
+  completeMaintenance: (id: string) => void
   runPayroll: () => void
   toast: (message: string, tone?: Toast['tone']) => void
   dismissToast: (id: number) => void
@@ -142,7 +144,35 @@ export const useApp = create<AppState>((set, get) => ({
     }))
     get().toast(`Asset ${id} retired`, 'info')
   },
+  updateAsset: (id, updates) => {
+    set((s) => ({
+      assets: s.assets.map((a) => (a.id === id ? { ...a, ...updates } : a)),
+      assetLog: [logEntry(id, 'Updated', 'Asset details updated'), ...s.assetLog],
+    }))
+    get().toast(`Asset ${id} updated`)
+  },
+  completeMaintenance: (id) => {
+    const asset = get().assets.find((a) => a.id === id)
+    if (!asset) return
+    const now = new Date(TODAY)
+    const freq = asset.maintenanceFrequency
+    let next: string | undefined
+    if (freq) {
+      const d = new Date(now)
+      if (freq === 'Monthly') d.setMonth(d.getMonth() + 1)
+      else if (freq === 'Quarterly') d.setMonth(d.getMonth() + 3)
+      else if (freq === 'Bi-Annually') d.setMonth(d.getMonth() + 6)
+      else if (freq === 'Yearly') d.setFullYear(d.getFullYear() + 1)
+      next = d.toISOString().slice(0, 10)
+    }
+    set((s) => ({
+      assets: s.assets.map((a) => (a.id === id ? { ...a, lastMaintenanceDate: TODAY.toISOString().slice(0, 10), nextMaintenanceDate: next } : a)),
+      assetLog: [logEntry(id, 'Maintenance', 'Preventive maintenance completed'), ...s.assetLog],
+    }))
+    get().toast(`Maintenance completed for asset ${id}`)
+  },
   runPayroll: () => {
+
     set({ payrollStatus: 'Processing' })
     get().toast('Payroll run started — processing salaries', 'info')
     setTimeout(() => {

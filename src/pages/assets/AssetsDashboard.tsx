@@ -23,6 +23,7 @@ export default function AssetsDashboard() {
   const available = assets.filter((a) => a.status === 'Available').length
   const maintenance = assets.filter((a) => a.status === 'Maintenance').length
   const retired = assets.filter((a) => a.status === 'Retired').length
+  const maintenanceDue = assets.filter((a) => a.nextMaintenanceDate && new Date(a.nextMaintenanceDate) <= TODAY).length
   const totalValue = assets.reduce((s, a) => s + a.cost, 0)
   const utilizationPct = total ? Math.round((assigned / total) * 100) : 0
 
@@ -141,6 +142,11 @@ export default function AssetsDashboard() {
             <p className="mt-1.5 text-xs text-ash">Ready to assign</p>
           </Card>
 
+          <Card>
+            <CardHeader title="Maintenance Due" action={<AlertTriangle size={15} className="text-amber-deep" />} />
+            <p className="mt-5 font-display text-3xl font-semibold"><CountUp value={maintenanceDue} /></p>
+            <p className="mt-1.5 text-xs text-ash">Scheduled for service</p>
+          </Card>
           <Card>
             <CardHeader title="Needs Attention" action={<Wrench size={15} className="text-amber-deep" />} />
             <p className="mt-5 font-display text-3xl font-semibold"><CountUp value={maintenance + retired} /></p>
