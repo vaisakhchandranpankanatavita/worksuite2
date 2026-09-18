@@ -1,7 +1,7 @@
 import { ArrowLeft, Clock, Headphones, Laptop, Monitor, Smartphone, Tablet, Wrench } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Avatar, Badge, Button, Empty, Field, Modal, Select } from '../../components/ui'
+import { Avatar, Badge, Button, Empty, Field, Input, Modal, Select } from '../../components/ui'
 import { employeeById, employees, type AssetStatus } from '../../data/mock'
 import { bookValue } from '../../lib/depreciation'
 import { fmtDate, fmtINR } from '../../lib/format'
@@ -13,8 +13,9 @@ const CATEGORY_ICON = { Laptop, Phone: Smartphone, Monitor, Headset: Headphones,
 export default function AssetDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { assets, assetLog, assignAsset, unassignAsset, setAssetStatus, retireAsset } = useApp()
+  const { assets, assetLog, assignAsset, unassignAsset, setAssetStatus, retireAsset, updateAsset, completeMaintenance } = useApp()
   const [assignOpen, setAssignOpen] = useState(false)
+  const [maintenanceOpen, setMaintenanceOpen] = useState(false)
   const a = assets.find((x) => x.id === id)
   const history = useMemo(() => assetLog.filter((l) => l.assetId === id), [assetLog, id])
   if (!a) return <p className="py-20 text-center text-ash">Asset not found.</p>
@@ -61,6 +62,23 @@ export default function AssetDetail() {
               {a.returnDue && <Row k="Return due" v={<span className={new Date(a.returnDue) < new Date() ? 'font-bold text-rose-deep' : undefined}>{fmtDate(a.returnDue)}</span>} />}
               <Row k="Cost" v={fmtINR(a.cost)} />
               <Row k="Book value" v={<b>{fmtINR(bookValue(a.cost, a.purchaseDate))}</b>} />
+            </div>
+          </div>
+
+          <div className="card animate-in p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[15px] font-medium">Planned Preventive Maintenance</h3>
+              <div className="flex gap-2">
+                <Button size="sm" variant="light" onClick={() => setMaintenanceOpen(true)}>Edit</Button>
+                {a.nextMaintenanceDate && new Date(a.nextMaintenanceDate) <= TODAY && (
+                  <Button size="sm" variant="dark" onClick={() => completeMaintenance(a.id)}>Complete Maintenance</Button>
+                )}
+              </div>
+            </div>
+            <div className="divide-y divide-line/70">
+              <Row k="Frequency" v={a.maintenanceFrequency ?? 'Not set'} />
+              <Row k="Last maintenance" v={a.lastMaintenanceDate ? fmtDate(a.lastMaintenanceDate) : '—'} />
+              <Row k="Next due" v={a.nextMaintenanceDate ? <span className={new Date(a.nextMaintenanceDate) < new Date() ? 'font-bold text-rose-deep' : undefined}>{fmtDate(a.nextMaintenanceDate)}</span> : '—'} />
             </div>
           </div>
 
@@ -131,7 +149,50 @@ export default function AssetDetail() {
       </div>
 
       <AssignModal open={assignOpen} onClose={() => setAssignOpen(false)} onAssign={(employeeId) => { assignAsset(a.id, employeeId); setAssignOpen(false) }} />
+      <MaintenanceModal open={maintenanceOpen} onClose={() => setMaintenanceOpen(false)} asset={a} onSave={(updates) => { updateAsset(a.id, updates); setMaintenanceOpen(false) }} />
     </div>
+  )
+}
+
+function MaintenanceModal({ open, onClose, asset, onSave }: { open: boolean; onClose: () => void; asset: any; onSave: (updates: any) => void }) {
+  const [freq, setFreq] = useState(asset.maintenanceFrequency ?? '')
+  const [next, setNext] = useState(asset.nextMaintenanceDate ?? '')
+  const [last, setLast] = useState(asset.lastMaintenanceDate ?? '')
+
+  return (
+    <Modal open={open} onClose={onClose} title="Preventive Maintenance" width={440}>
+      <form
+        className="grid gap-4"
+        onSubmit={(ev) => {
+          ev.preventDefault()
+          onSave({
+            maintenanceFrequency: freq || undefined,
+            nextMaintenanceDate: next || undefined,
+            lastMaintenanceDate: last || undefined,
+          })
+        }}
+      >
+        <Field label="Frequency">
+          <Select className="w-full !rounded-xl" value={freq} onChange={(e) => setFreq(e.target.value)}>
+            <option value="">Not set</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+            <option value="Bi-Annually">Bi-Annually</option>
+            <option value="Yearly">Yearly</option>
+          </Select>
+        </Field>
+        <Field label="Last maintenance date">
+          <Input type="date" value={last} onChange={(e) => setLast(e.target.value)} />
+        </Field>
+        <Field label="Next maintenance due">
+          <Input type="date" value={next} onChange={(e) => setNext(e.target.value)} />
+        </Field>
+        <div className="flex items-center justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button type="submit">Save</Button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 

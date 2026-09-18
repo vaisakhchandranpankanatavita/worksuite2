@@ -10,7 +10,7 @@ import { fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
-const STATUSES: (AssetStatus | 'All')[] = ['All', 'Available', 'Assigned', 'Maintenance', 'Retired']
+const STATUSES: (AssetStatus | 'All' | 'Due')[] = ['All', 'Available', 'Assigned', 'Maintenance', 'Retired', 'Due']
 const KANBAN_COLUMNS: AssetStatus[] = ['Available', 'Assigned', 'Maintenance', 'Retired']
 
 export default function Assets() {
@@ -31,7 +31,7 @@ export default function Assets() {
       assets.filter(
         (a) =>
           (category === 'All' || a.category === category) &&
-          (status === 'All' || a.status === status) &&
+          (status === 'All' || (status === 'Due' ? (a.nextMaintenanceDate && new Date(a.nextMaintenanceDate) <= TODAY) : a.status === status)) &&
           `${a.name} ${a.model} ${a.serial} ${a.id}`.toLowerCase().includes(q.toLowerCase()),
       ),
     [assets, q, category, status],
@@ -100,7 +100,7 @@ export default function Assets() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        {(['Available', 'Assigned', 'Maintenance', 'Retired'] as const).map((s, i) => (
+        {(['Available', 'Assigned', 'Maintenance', 'Retired', 'Due'] as const).map((s, i) => (
           <button
             key={s}
             onClick={() => setStatus(status === s ? 'All' : s)}
@@ -109,10 +109,10 @@ export default function Assets() {
               status === s ? 'border-ink bg-ink text-white' : 'border-line bg-white/70 text-ash hover:border-ink/30 hover:text-ink',
             )}
           >
-            <span className={clsx('size-1.5 rounded-full', ['bg-sky-deep', 'bg-sage-deep', 'bg-amber-deep', 'bg-ash'][i])} />
+            <span className={clsx('size-1.5 rounded-full', ['bg-sky-deep', 'bg-sage-deep', 'bg-amber-deep', 'bg-ash', 'bg-rose-deep'][i])} />
             {s}
             <span className={clsx('font-display font-medium tabular-nums', status === s ? 'text-white/70' : 'text-ink/60')}>
-              {assets.filter((a) => a.status === s).length}
+              {s === 'Due' ? assets.filter((a) => a.nextMaintenanceDate && new Date(a.nextMaintenanceDate) <= TODAY).length : assets.filter((a) => a.status === s).length}
             </span>
           </button>
         ))}
@@ -165,7 +165,10 @@ export default function Assets() {
               <button key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="card group overflow-hidden p-4 text-left">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-ash">{a.id} · {a.category}</span>
-                  <Badge>{a.status}</Badge>
+                  <div className="flex items-center gap-1">
+                    {a.nextMaintenanceDate && new Date(a.nextMaintenanceDate) <= TODAY && <Badge tone="rose" className="shrink-0">Due</Badge>}
+                    <Badge>{a.status}</Badge>
+                  </div>
                 </div>
                 {a.image && (
                   <img src={a.image} alt={a.name} className="mt-3 h-28 w-full rounded-xl object-cover" />
@@ -222,7 +225,12 @@ export default function Assets() {
                   </td>
                   <td className="whitespace-nowrap">{fmtDate(a.purchaseDate)}</td>
                   <td>{fmtINR(a.cost)}</td>
-                  <td><Badge>{a.status}</Badge></td>
+                  <td className="whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      {a.nextMaintenanceDate && new Date(a.nextMaintenanceDate) <= TODAY && <Badge tone="rose" className="shrink-0">Due</Badge>}
+                      <Badge>{a.status}</Badge>
+                    </div>
+                  </td>
                 </tr>
               )
             })}
