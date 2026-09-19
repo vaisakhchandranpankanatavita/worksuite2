@@ -19,7 +19,7 @@ export default function Assets() {
   const { assets, addAsset, addAssets, assignAsset, setAssetStatus, retireAsset } = useApp()
   const [q, setQ] = useState('')
   const [category, setCategory] = useState<'All' | AssetCategory>('All')
-  const [status, setStatus] = useState<AssetStatus | 'All'>('All')
+  const [status, setStatus] = useState<AssetStatus | 'All' | 'Due'>('All')
   const [view, setView] = useState<'grid' | 'list' | 'kanban'>('list')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false)

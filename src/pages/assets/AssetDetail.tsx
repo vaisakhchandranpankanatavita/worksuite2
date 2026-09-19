@@ -2,7 +2,7 @@ import { ArrowLeft, Clock, Headphones, Laptop, Monitor, Smartphone, Tablet, Wren
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Empty, Field, Input, Modal, Select } from '../../components/ui'
-import { employeeById, employees, type AssetStatus } from '../../data/mock'
+import { employeeById, employees, TODAY, type AssetStatus } from '../../data/mock'
 import { bookValue } from '../../lib/depreciation'
 import { fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
