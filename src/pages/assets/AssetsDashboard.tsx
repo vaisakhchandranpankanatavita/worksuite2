@@ -119,16 +119,29 @@ export default function AssetsDashboard() {
         <AiInsights />
 
         {/* Stat tiles */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-12 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-12 lg:grid-cols-5">
           <div className="card-dark animate-in relative overflow-hidden p-5">
             <div className="pointer-events-none absolute -right-14 -top-14 size-48 rounded-full bg-lime/15 blur-3xl" />
             <div className="relative flex items-start justify-between">
               <h3 className="font-display text-[16px] font-semibold leading-tight tracking-tight">Total Assets</h3>
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10"><Laptop size={16} /></span>
             </div>
+            {
+              (maintenance + retired > 0) && (
+                <div className="absolute -right-2 -top-2 size-5 rounded-full bg-amber-500 ring-2 ring-black flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-black">{maintenance + retired}</span>
+                </div>
+              )
+            }
             <p className="relative mt-5 font-display text-3xl font-semibold tabular-nums"><CountUp value={total} /></p>
             <p className="mt-1.5 text-xs text-white/55">{fmtINR(totalValue)} in inventory</p>
           </div>
+
+          <Card>
+            <CardHeader title="Needs Attention" action={<Wrench size={15} className="text-amber-deep" />} />
+            <p className="mt-5 font-display text-3xl font-semibold"><CountUp value={maintenance + retired} /></p>
+            <p className="mt-1.5 text-xs text-ash">{maintenance} maintenance · {retired} retired</p>
+          </Card>
 
           <Card>
             <CardHeader title="Assigned" action={<CheckCircle2 size={15} className="text-sage-deep" />} />
@@ -137,20 +150,15 @@ export default function AssetsDashboard() {
           </Card>
 
           <Card>
-            <CardHeader title="Available" />
-            <p className="mt-5 font-display text-3xl font-semibold"><CountUp value={available} /></p>
-            <p className="mt-1.5 text-xs text-ash">Ready to assign</p>
-          </Card>
-
-          <Card>
             <CardHeader title="Maintenance Due" action={<AlertTriangle size={15} className="text-amber-deep" />} />
             <p className="mt-5 font-display text-3xl font-semibold"><CountUp value={maintenanceDue} /></p>
             <p className="mt-1.5 text-xs text-ash">Scheduled for service</p>
           </Card>
+
           <Card>
-            <CardHeader title="Needs Attention" action={<Wrench size={15} className="text-amber-deep" />} />
-            <p className="mt-5 font-display text-3xl font-semibold"><CountUp value={maintenance + retired} /></p>
-            <p className="mt-1.5 text-xs text-ash">{maintenance} maintenance · {retired} retired</p>
+            <CardHeader title="Available" />
+            <p className="mt-5 font-display text-3xl font-semibold"><CountUp value={available} /></p>
+            <p className="mt-1.5 text-xs text-ash">Ready to assign</p>
           </Card>
         </div>
 
