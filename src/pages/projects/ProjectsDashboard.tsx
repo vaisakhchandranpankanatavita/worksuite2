@@ -161,13 +161,13 @@ export default function ProjectsDashboard() {
               const posted = u?.date === todayIso
               return (
                 <li key={r.project.id}>
-                  <button onClick={() => nav(`/projects/${r.project.id}?tab=updates`)} className="group flex w-full items-start gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-soft">
+                  <button onClick={() => nav(`/projects/${r.project.id}?tab=updates`)} className="clickable group flex w-full items-start gap-3 rounded-xl px-2 py-2.5 text-left">
                     <span className={clsx('mt-0.5 grid size-6 shrink-0 place-items-center rounded-full', posted ? 'bg-sage text-sage-deep' : 'bg-amber text-amber-deep')}>
                       {posted ? <CheckCircle2 size={14} /> : <Clock size={14} />}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center justify-between gap-2">
-                        <span className="truncate text-[13px] font-semibold">{r.project.name}</span>
+                        <span className="clickable-title truncate text-[13px] font-semibold transition-colors">{r.project.name}</span>
                         {r.project.status === 'On Hold' && <Badge tone="gray" dot={false}>On hold</Badge>}
                       </span>
                       <span className="mt-0.5 line-clamp-2 text-xs text-ash">
@@ -208,9 +208,9 @@ export default function ProjectsDashboard() {
           <ul className="mt-3 space-y-3">
             {[...s.live].filter((r) => r.project.status !== 'Initiated').sort((a, b) => b.fc.slipDays - a.fc.slipDays).slice(0, 5).map((r) => (
               <li key={r.project.id}>
-                <button onClick={() => nav(`/projects/${r.project.id}?tab=timeline`)} className="group w-full rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-soft">
+                <button onClick={() => nav(`/projects/${r.project.id}?tab=timeline`)} className="clickable group w-full rounded-xl px-2 py-1.5 text-left">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-[13px] font-semibold">{r.project.name}</span>
+                    <span className="clickable-title truncate text-[13px] font-semibold transition-colors">{r.project.name}</span>
                     <SlipTag days={r.fc.slipDays} />
                   </div>
                   <div className="mt-1.5 flex items-center gap-2 text-[11px] text-ash">
@@ -230,17 +230,17 @@ export default function ProjectsDashboard() {
         <Card className="lg:col-span-7">
           <CardHeader title="Where our resources go" subtitle="People, assets and money drawn from the other modules into projects" />
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <button onClick={() => nav('/hr/employees')} className="rounded-2xl border border-line/70 bg-sky/25 p-4 text-left transition-colors hover:bg-sky/40">
+            <button onClick={() => nav('/hr/employees')} className="clickable-tile rounded-2xl border border-line/70 bg-sky/25 p-4 text-left hover:bg-sky/40">
               <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-sky-deep"><Users size={14} /> People</span>
               <p className="mt-2 font-display text-2xl font-semibold tabular-nums">{resources.fte.toFixed(1)} <span className="text-sm font-medium text-ash">FTE</span></p>
               <p className="mt-1 text-xs text-ash">{resources.people} allocations · {fmtCompact(resources.peopleCost)} salary cost to date</p>
             </button>
-            <button onClick={() => nav('/assets/inventory')} className="rounded-2xl border border-line/70 bg-sage/25 p-4 text-left transition-colors hover:bg-sage/40">
+            <button onClick={() => nav('/assets/inventory')} className="clickable-tile rounded-2xl border border-line/70 bg-sage/25 p-4 text-left hover:bg-sage/40">
               <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-sage-deep"><Boxes size={14} /> Assets</span>
               <p className="mt-2 font-display text-2xl font-semibold tabular-nums">{resources.assetCount} <span className="text-sm font-medium text-ash">deployed</span></p>
               <p className="mt-1 text-xs text-ash">{fmtCompact(resources.assetCharge)} depreciation charged to projects</p>
             </button>
-            <button onClick={() => nav('/finance/invoices')} className="rounded-2xl border border-line/70 bg-lime/30 p-4 text-left transition-colors hover:bg-lime/50">
+            <button onClick={() => nav('/finance/invoices')} className="clickable-tile rounded-2xl border border-line/70 bg-lime/30 p-4 text-left hover:bg-lime/50">
               <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#495d16]"><Receipt size={14} /> Finance</span>
               <p className="mt-2 font-display text-2xl font-semibold tabular-nums">{fmtCompact(resources.claims)} <span className="text-sm font-medium text-ash">claims</span></p>
               <p className="mt-1 text-xs text-ash">{fmtCompact(resources.billed)} billed · {fmtCompact(resources.collected)} collected</p>
@@ -285,8 +285,8 @@ export default function ProjectsDashboard() {
               )
             })}
           </ol>
-          <button onClick={() => nav('/projects/portfolio')} className="mt-3 inline-flex items-center gap-1.5 self-start text-xs font-semibold text-ash transition-colors hover:text-ink">
-            See every project <ArrowRight size={13} />
+          <button onClick={() => nav('/projects/portfolio')} className="group mt-3 inline-flex items-center gap-1.5 self-start text-xs font-semibold text-ash transition-colors hover:text-ink">
+            See every project <ArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-1" />
           </button>
         </Card>
       </div>

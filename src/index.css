@@ -645,6 +645,84 @@ div.card:hover {
 .recharts-surface:focus, .recharts-wrapper:focus { outline: none; }
 .recharts-tooltip-wrapper { filter: drop-shadow(0 8px 24px rgba(26,29,27,0.18)); }
 
+/* ─── Clickable affordances ────────────────────────────────── */
+/* Tailwind v4 preflight resets buttons to the default arrow — restore the hand */
+button:not(:disabled),
+[role="button"],
+a[href],
+summary,
+select,
+label[for],
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+/* List rows: soft lime wash sweeps in, accent bar grows on the left, row nudges right */
+.clickable {
+  position: relative;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    transform 0.35s cubic-bezier(.22,1,.36,1),
+    box-shadow 0.35s cubic-bezier(.22,1,.36,1);
+}
+.clickable::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 24%; bottom: 24%;
+  width: 3px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, var(--color-lime-deep), var(--color-sage-deep));
+  transform: scaleY(0);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(.22,1,.36,1), opacity 0.2s ease;
+  pointer-events: none;
+}
+.clickable:hover {
+  background-image: linear-gradient(90deg, rgba(216,236,160,0.34) 0%, rgba(240,243,239,0.6) 55%, rgba(240,243,239,0) 100%);
+  transform: translateX(3px);
+}
+.clickable:hover::before { transform: scaleY(1); opacity: 1; }
+.clickable:active { transform: translateX(3px) scale(0.985); transition-duration: 0.1s; }
+/* Titles and chevrons inside a hovered row react too */
+.clickable:hover .clickable-title { color: var(--color-sage-deep); }
+.clickable .clickable-chevron { opacity: 0; transform: translateX(-4px); transition: opacity 0.25s ease, transform 0.3s cubic-bezier(.22,1,.36,1); }
+.clickable:hover .clickable-chevron { opacity: 1; transform: none; }
+
+/* Tile-style buttons: lift, coloured ring glow and a light sweep */
+.clickable-tile {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform 0.35s cubic-bezier(.22,1,.36,1),
+    box-shadow 0.35s cubic-bezier(.22,1,.36,1),
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+.clickable-tile::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.42), transparent);
+  transform: translateX(-120%) skewX(-12deg);
+  pointer-events: none;
+}
+.clickable-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 1px rgba(95,160,89,0.28), 0 10px 28px -8px rgba(26,29,27,0.18), 0 0 26px -6px rgba(174,206,82,0.45);
+}
+.clickable-tile:hover::after { animation: shimmer 0.7s ease both; }
+.clickable-tile:active { transform: translateY(-1px) scale(0.985); transition-duration: 0.1s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .clickable:hover, .clickable:active,
+  .clickable-tile:hover, .clickable-tile:active { transform: none !important; }
+  .clickable-tile:hover::after { animation: none; }
+}
+
 /* ─── Focus ring ───────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid rgba(174,206,82,0.85);

@@ -38,8 +38,8 @@ export function IconBtn({ children, className, dark, ...rest }: ButtonHTMLAttrib
   return (
     <button
       className={clsx(
-        'grid size-9 shrink-0 place-items-center rounded-full border transition-all duration-200',
-        'active:scale-90',
+        'group grid size-9 shrink-0 place-items-center rounded-full border transition-all duration-200',
+        'hover:-translate-y-0.5 active:translate-y-0 active:scale-90',
         dark
           ? 'border-ink bg-ink text-white hover:bg-black hover:shadow-md'
           : 'border-line/70 bg-white/70 text-ink/70 hover:bg-white hover:border-ink/15 hover:text-ink hover:shadow-sm',
@@ -53,7 +53,7 @@ export function IconBtn({ children, className, dark, ...rest }: ButtonHTMLAttrib
 }
 
 export const CornerLink = (props: ButtonHTMLAttributes<HTMLButtonElement>) => (
-  <IconBtn aria-label="Open" {...props}><ArrowUpRight size={15} /></IconBtn>
+  <IconBtn aria-label="Open" {...props}><ArrowUpRight size={15} className="transition-transform duration-300 group-hover:translate-x-px group-hover:-translate-y-px group-hover:scale-110" /></IconBtn>
 )
 
 /* ─── Button ────────────────────────────────────────────────── */

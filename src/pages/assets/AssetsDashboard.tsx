@@ -204,9 +204,9 @@ export default function AssetsDashboard() {
           <CardHeader title="Warranty Watch" subtitle="Expiring within 90 days" action={<ShieldAlert size={14} className="text-rose-deep" />} />
           <div className="mt-3 divide-y divide-line/60">
             {warrantyWatch.map(({ asset, daysLeft }) => (
-              <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2 text-left transition-colors hover:bg-soft/60">
+              <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="clickable -mx-2 flex w-[calc(100%+1rem)] items-center justify-between gap-3 rounded-xl px-2 py-2 text-left">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{asset.name}</p>
+                  <p className="clickable-title truncate text-sm font-semibold transition-colors">{asset.name}</p>
                   <p className="truncate text-xs text-ash">{asset.location} · {fmtDate(asset.warrantyUntil!)}</p>
                 </div>
                 <Badge tone={daysLeft < 0 ? 'rose' : daysLeft <= 30 ? 'amber' : 'gray'} className="shrink-0">
@@ -225,10 +225,10 @@ export default function AssetsDashboard() {
             {recentlyAssigned.map((a) => {
               const holder = a.assignedTo ? employeeById(a.assignedTo) : undefined
               return (
-                <button key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="flex w-full items-center gap-3 py-2 text-left transition-colors hover:bg-soft/60">
+                <button key={a.id} onClick={() => nav(`/assets/inventory/${a.id}`)} className="clickable -mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-xl px-2 py-2 text-left">
                   {holder && <Avatar name={holder.name} hue={holder.avatarHue} src={photoFor(holder)} size={28} />}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{a.name}</p>
+                    <p className="clickable-title truncate text-sm font-semibold transition-colors">{a.name}</p>
                     <p className="truncate text-xs text-ash">{holder ? `${holder.name} · ${fmtDate(a.assignedOn!)}` : fmtDate(a.assignedOn!)}</p>
                   </div>
                   <Badge>{a.category}</Badge>
@@ -245,11 +245,11 @@ export default function AssetsDashboard() {
           <div className="mt-3 divide-y divide-line/60">
             {maintenanceQueue.map((a) => (
               <div key={a.id} className="flex items-center gap-3 py-2">
-                <button onClick={() => nav(`/assets/inventory/${a.id}`)} className="min-w-0 flex-1 text-left">
-                  <p className="truncate text-sm font-semibold">{a.name}</p>
+                <button onClick={() => nav(`/assets/inventory/${a.id}`)} className="group min-w-0 flex-1 text-left">
+                  <p className="truncate text-sm font-semibold transition-colors group-hover:text-sage-deep">{a.name}</p>
                   <p className="truncate text-xs text-ash">{a.location} · {a.serial}</p>
                 </button>
-                <button onClick={() => setAssetStatus(a.id, 'Available')} className="shrink-0 rounded-full border border-line px-3 py-1 text-[11px] font-bold text-ash transition-colors hover:border-sage-deep/40 hover:text-sage-deep">
+                <button onClick={() => setAssetStatus(a.id, 'Available')} className="shrink-0 rounded-full border border-line px-3 py-1 text-[11px] font-bold text-ash transition-all duration-200 hover:-translate-y-0.5 hover:border-sage-deep/40 hover:bg-sage/30 hover:text-sage-deep hover:shadow-sm active:translate-y-0 active:scale-95">
                   Mark fixed
                 </button>
               </div>
@@ -265,9 +265,9 @@ export default function AssetsDashboard() {
             {overdueReturns.map(({ asset, daysOver }) => {
               const holder = asset.assignedTo ? employeeById(asset.assignedTo) : undefined
               return (
-                <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="flex w-full items-center justify-between gap-3 py-2 text-left transition-colors hover:bg-soft/60">
+                <button key={asset.id} onClick={() => nav(`/assets/inventory/${asset.id}`)} className="clickable -mx-2 flex w-[calc(100%+1rem)] items-center justify-between gap-3 rounded-xl px-2 py-2 text-left">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{asset.name}</p>
+                    <p className="clickable-title truncate text-sm font-semibold transition-colors">{asset.name}</p>
                     <p className="truncate text-xs text-ash">{holder?.name ?? asset.location} · Due {fmtDate(asset.returnDue!)}</p>
                   </div>
                   <Badge tone={daysOver > 0 ? 'rose' : 'amber'} className="shrink-0">

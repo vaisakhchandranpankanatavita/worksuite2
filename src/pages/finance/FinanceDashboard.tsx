@@ -343,7 +343,7 @@ export default function FinanceDashboard() {
                     <p className="truncate text-sm font-semibold">{fmtINR(x.amount)}</p>
                     <p className="truncate text-[11px] text-ash">{e.name} · {x.category}</p>
                   </div>
-                  <button onClick={() => setExpenseStatus(x.id, 'Approved')} className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-white transition-all duration-200 hover:bg-black active:scale-90" aria-label="Approve">
+                  <button onClick={() => setExpenseStatus(x.id, 'Approved')} className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-sage-deep hover:shadow-[0_0_16px_-2px_rgba(95,160,89,0.6)] active:translate-y-0 active:scale-90" aria-label="Approve">
                     <Check size={14} />
                   </button>
                 </li>
