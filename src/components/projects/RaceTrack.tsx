@@ -13,7 +13,7 @@ import { TONE_HEX } from './projectUi'
  */
 export default function RaceTrack({ rows, onOpen }: { rows: Analysis[]; onOpen: (id: string) => void }) {
   return (
-    <div className="mt-4 space-y-1">
+    <div className="mt-2 space-y-0">
       {rows.map((a, i) => {
         const { project: p, fc, health } = a
         const head = employeeById(p.headId)
@@ -27,14 +27,14 @@ export default function RaceTrack({ rows, onOpen }: { rows: Analysis[]; onOpen: 
           <button
             key={p.id}
             onClick={() => onOpen(p.id)}
-            className="clickable group grid w-full grid-cols-[minmax(0,1fr)] items-center gap-x-4 gap-y-1 rounded-2xl px-2 py-2 text-left md:grid-cols-[190px_minmax(0,1fr)_96px]"
+            className="clickable group grid w-full grid-cols-[minmax(0,1fr)] items-center gap-x-3 gap-y-0.5 rounded-xl px-2 py-1 text-left md:grid-cols-[170px_minmax(0,1fr)_90px]"
           >
             <span className="min-w-0">
               <span className="clickable-title block truncate text-[13px] font-semibold transition-colors">{p.name}</span>
               <span className="block truncate text-[11px] text-ash">{p.client} · {head?.name.split(' ')[0]}</span>
             </span>
 
-            <span className="relative block h-11">
+            <span className="relative block h-9">
               {/* rail */}
               <span className="absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 overflow-hidden rounded-full bg-soft shadow-[inset_0_1px_2px_rgba(26,29,27,0.08)]">
                 <motion.span
@@ -53,7 +53,7 @@ export default function RaceTrack({ rows, onOpen }: { rows: Analysis[]; onOpen: 
               {/* planned ghost */}
               {!done && (
                 <span
-                  className="absolute top-1/2 size-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-ink/35"
+                  className="absolute top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-ink/35"
                   style={{ left: `${planned}%` }}
                   title={`Plan says ${Math.round(planned)}% by today`}
                 />
@@ -66,7 +66,7 @@ export default function RaceTrack({ rows, onOpen }: { rows: Analysis[]; onOpen: 
                 transition={{ type: 'spring', stiffness: 55, damping: 14, delay: i * 0.07 }}
               >
                 <span className="relative block rounded-full" style={{ boxShadow: `0 0 0 3px ${color}, 0 6px 14px -4px ${color}` }}>
-                  <Avatar name={head?.name ?? p.name} hue={head?.avatarHue ?? 120} size={30} src={head ? photoFor(head) : undefined} className="!ring-0" />
+                  <Avatar name={head?.name ?? p.name} hue={head?.avatarHue ?? 120} size={26} src={head ? photoFor(head) : undefined} className="!ring-0" />
                   {hold && <span className="absolute -bottom-1 -right-1 grid size-4 place-items-center rounded-full bg-ink text-white"><Pause size={8} /></span>}
                 </span>
               </motion.span>
@@ -81,7 +81,7 @@ export default function RaceTrack({ rows, onOpen }: { rows: Analysis[]; onOpen: 
           </button>
         )
       })}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-2 pt-2 text-[11px] text-ash">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-0.5 px-2 pt-1.5 text-[10.5px] text-ash">
         <span className="inline-flex items-center gap-1.5"><span className="size-3.5 rounded-full border-2 border-dashed border-ink/35" /> where the plan says we should be today</span>
         <span className="inline-flex items-center gap-1.5"><span className="size-3.5 rounded-full bg-sage-deep" /> where the project head actually is</span>
       </div>
