@@ -1,12 +1,13 @@
 import clsx from 'clsx'
-import { Bell, Boxes, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
+import { Bell, Boxes, CalendarCheck, CalendarRange, ChevronDown, FileText, FolderKanban, HelpCircle, Home, IndianRupee, Laptop, LayoutGrid, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
+import Lenis from 'lenis'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { assets, employees, invoices } from '../data/mock'
 import { roleById, type ModuleKey } from '../data/roles'
-import { useAuth } from '../store'
+import { useApp, useAuth } from '../store'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
 import AssetsEnterOverlay from './AssetsEnterOverlay'
@@ -33,10 +34,15 @@ const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end
     { to: '/assets/inventory', label: 'Inventory', icon: ListChecks },
     { to: '/assets/stock', label: 'Stock', icon: Boxes },
   ],
+  projects: [
+    { to: '/projects', label: 'Mission Control', icon: Home, end: true },
+    { to: '/projects/portfolio', label: 'Portfolio', icon: LayoutGrid },
+    { to: '/projects/timeline', label: 'Timeline', icon: CalendarRange },
+  ],
 }
 
-const MODULE_LABEL: Record<ModuleKey, string> = { hr: 'People', finance: 'Finance', assets: 'Assets' }
-const MODULE_ICON: Record<ModuleKey, typeof Home> = { hr: Users, finance: Wallet, assets: Laptop }
+const MODULE_LABEL: Record<ModuleKey, string> = { hr: 'People', finance: 'Finance', assets: 'Assets', projects: 'Projects' }
+const MODULE_ICON: Record<ModuleKey, typeof Home> = { hr: Users, finance: Wallet, assets: Laptop, projects: FolderKanban }
 
 function Logo() {
   const nav = useNavigate()
@@ -75,6 +81,7 @@ function Logo() {
 function GlobalSearch({ onClose }: { onClose: () => void }) {
   const [q, setQ] = useState('')
   const nav = useNavigate()
+  const projects = useApp((s) => s.projects)
   const ref = useRef<HTMLInputElement>(null)
   useEffect(() => ref.current?.focus(), [])
   useEffect(() => {
@@ -88,8 +95,9 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
     const emps = employees.filter((e) => `${e.name} ${e.role} ${e.id}`.toLowerCase().includes(s)).slice(0, 5).map((e) => ({ key: e.id, title: e.name, sub: `${e.role} · ${e.department}`, to: `/hr/employees/${e.id}`, hue: e.avatarHue }))
     const invs = invoices.filter((i) => `${i.id} ${i.client.name}`.toLowerCase().includes(s)).slice(0, 4).map((i) => ({ key: i.id, title: i.id, sub: i.client.name, to: `/finance/invoices?open=${i.id}`, hue: undefined }))
     const asts = assets.filter((a) => `${a.name} ${a.serial} ${a.id}`.toLowerCase().includes(s)).slice(0, 4).map((a) => ({ key: a.id, title: a.name, sub: `${a.category} · ${a.status}`, to: `/assets/inventory/${a.id}`, hue: undefined }))
-    return [...emps, ...invs, ...asts]
-  }, [q])
+    const prjs = projects.filter((p) => `${p.name} ${p.code} ${p.client}`.toLowerCase().includes(s)).slice(0, 4).map((p) => ({ key: p.id, title: p.name, sub: `${p.code} · ${p.client}`, to: `/projects/${p.id}`, hue: undefined }))
+    return [...emps, ...invs, ...asts, ...prjs]
+  }, [q, projects])
   return createPortal(
     <div className="fixed inset-0 z-50 bg-ink/25 p-4 pt-[11vh] backdrop-blur-md" onMouseDown={onClose}>
       <div className="card card-static animate-in mx-auto max-w-xl p-3" onMouseDown={(e) => e.stopPropagation()}>
@@ -97,7 +105,7 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[inherit] bg-gradient-to-r from-transparent via-lime-deep/50 to-transparent" />
         <div className="flex items-center gap-3 px-2">
           <Search size={17} className="text-ash shrink-0" />
-          <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && onClose()} placeholder="Search employees, invoices, assets…" className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-ash/60" />
+          <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && onClose()} placeholder="Search employees, invoices, assets, projects…" className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-ash/60" />
           <kbd className="shrink-0 rounded-lg border border-line bg-soft px-1.5 py-0.5 text-[10px] font-bold text-ash">ESC</kbd>
         </div>
         {results.length > 0 && (
@@ -158,7 +166,7 @@ export default function Layout() {
   const logoutAuth = useAuth((s) => s.logout)
   const role = roleById(roleId)
   const isHelp = pathname.startsWith('/help')
-  const module: ModuleKey = pathname.startsWith('/finance') ? 'finance' : pathname.startsWith('/assets') ? 'assets' : pathname.startsWith('/hr') ? 'hr' : (role?.modules[0] ?? 'hr')
+  const module: ModuleKey = pathname.startsWith('/finance') ? 'finance' : pathname.startsWith('/assets') ? 'assets' : pathname.startsWith('/projects') ? 'projects' : pathname.startsWith('/hr') ? 'hr' : (role?.modules[0] ?? 'hr')
   const [search, setSearch] = useState(false)
   const [bell, setBell] = useState(false)
   const [mobile, setMobile] = useState(false)
@@ -177,7 +185,23 @@ export default function Layout() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-  useEffect(() => { setMobile(false); setBell(false); setProfile(false); window.scrollTo(0, 0) }, [pathname])
+  // Inertial page scrolling. Nested scroll areas (modals, tables, chat) use `.scroll-thin` and stay native.
+  const lenisRef = useRef<Lenis | null>(null)
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const lenis = new Lenis({
+      lerp: 0.1,
+      wheelMultiplier: 1,
+      prevent: (node) => node.classList.contains('scroll-thin'),
+    })
+    lenisRef.current = lenis
+    let raf = requestAnimationFrame(function tick(t) { lenis.raf(t); raf = requestAnimationFrame(tick) })
+    return () => { cancelAnimationFrame(raf); lenis.destroy(); lenisRef.current = null }
+  }, [])
+  useEffect(() => {
+    setMobile(false); setBell(false); setProfile(false)
+    if (lenisRef.current) lenisRef.current.scrollTo(0, { immediate: true }); else window.scrollTo(0, 0)
+  }, [pathname])
   function signOut() { setProfile(false); logoutAuth(); nav('/login') }
 
   if (!role) return <Navigate to="/login" replace />
@@ -195,9 +219,9 @@ export default function Layout() {
         {/* Glass surface */}
         <div className="relative flex items-center gap-3 px-4 py-2 sm:px-6 lg:px-8"
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(240,245,239,0.38) 100%)',
-            backdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
-            WebkitBackdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(240,245,239,0.20) 100%)',
+            backdropFilter: 'blur(64px) saturate(320%) brightness(1.08)',
+            WebkitBackdropFilter: 'blur(64px) saturate(320%) brightness(1.08)',
             boxShadow: [
               '0 1px 0 rgba(255,255,255,0.95) inset',
               '0 -1px 0 rgba(26,29,27,0.03) inset',

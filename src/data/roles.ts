@@ -1,5 +1,5 @@
-export type ModuleKey = 'hr' | 'finance' | 'assets'
-export type RoleId = 'hr' | 'finance' | 'admin' | 'production'
+export type ModuleKey = 'hr' | 'finance' | 'assets' | 'projects'
+export type RoleId = 'hr' | 'finance' | 'admin' | 'production' | 'pm'
 
 export interface Role {
   id: RoleId
@@ -16,8 +16,8 @@ export const ROLES: Role[] = [
   {
     id: 'admin',
     label: 'Super Admin',
-    description: 'Full access to People & Finance',
-    modules: ['hr', 'finance', 'assets'],
+    description: 'Full access to People, Finance, Assets & Projects',
+    modules: ['hr', 'finance', 'assets', 'projects'],
     name: 'Meera Iyer',
     email: 'meera.iyer@worksuite.io',
     photo: 'https://randomuser.me/api/portraits/women/33.jpg',
@@ -52,6 +52,16 @@ export const ROLES: Role[] = [
     email: 'rohan.verma@worksuite.io',
     photo: 'https://randomuser.me/api/portraits/men/22.jpg',
     hue: 95,
+  },
+  {
+    id: 'pm',
+    label: 'Project Director',
+    description: 'Delivery, timelines & project budgets',
+    modules: ['projects', 'assets'],
+    name: 'Arjun Malhotra',
+    email: 'arjun.malhotra@worksuite.io',
+    photo: 'https://randomuser.me/api/portraits/men/52.jpg',
+    hue: 160,
   },
 ]
 
