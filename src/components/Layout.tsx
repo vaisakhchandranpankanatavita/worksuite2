@@ -219,9 +219,9 @@ export default function Layout() {
         {/* Glass surface */}
         <div className="relative flex items-center gap-3 px-4 py-2 sm:px-6 lg:px-8"
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.52) 0%, rgba(240,245,239,0.38) 100%)',
-            backdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
-            WebkitBackdropFilter: 'blur(48px) saturate(280%) brightness(1.06)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(240,245,239,0.20) 100%)',
+            backdropFilter: 'blur(64px) saturate(320%) brightness(1.08)',
+            WebkitBackdropFilter: 'blur(64px) saturate(320%) brightness(1.08)',
             boxShadow: [
               '0 1px 0 rgba(255,255,255,0.95) inset',
               '0 -1px 0 rgba(26,29,27,0.03) inset',
