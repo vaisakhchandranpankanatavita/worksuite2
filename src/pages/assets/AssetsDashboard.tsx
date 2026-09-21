@@ -1,10 +1,10 @@
-import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Laptop, MapPin, PackageX, Plus, ShieldAlert, TrendingDown, Wrench } from 'lucide-react'
-import { useMemo } from 'react'
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Laptop, MapPin, PackageCheck, PackageX, Plus, ShieldAlert, TrendingDown, Wrench } from 'lucide-react'
+import { useMemo, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AiInsights from '../../components/AiInsights'
 import { DonutChart, GroupedBar, RadialProgress, TrendLine } from '../../components/charts'
 import { CountUp } from '../../components/CountUp'
-import { Avatar, Badge, Button, Card, CardHeader, CornerLink, Empty, PageHeader } from '../../components/ui'
+import { Avatar, Badge, Button, Card, CardHeader, CornerLink, PageHeader } from '../../components/ui'
 import { ASSET_CATEGORIES, LOCATIONS, TODAY, employeeById } from '../../data/mock'
 import { bookValue } from '../../lib/depreciation'
 import { fmtCompact, fmtDate, fmtINR } from '../../lib/format'
@@ -13,6 +13,37 @@ import { useApp } from '../../store'
 
 const CATEGORY_COLORS = ['#1a1d1b', '#d8eca0', '#c8d9f4', '#c6e0c0', '#f0cad8', '#f5ddb2']
 const MS_DAY = 86_400_000
+
+/** Same icon chip on every stat tile; `alert` tints it amber, but only while the count is non-zero. */
+function StatTile({ title, value, hint, icon, alert = false }: {
+  title: string; value: number; hint: string; icon: ReactNode; alert?: boolean
+}) {
+  const live = alert && value > 0
+  return (
+    <Card className="!p-3.5">
+      <CardHeader
+        title={title}
+        action={
+          <span className={`grid size-7 shrink-0 place-items-center rounded-full ${live ? 'bg-amber text-ink' : 'bg-soft text-ash'}`}>
+            {icon}
+          </span>
+        }
+      />
+      <p className="mt-2 font-display text-2xl font-semibold tabular-nums"><CountUp value={value} /></p>
+      <p className="mt-0.5 text-xs text-ash">{hint}</p>
+    </Card>
+  )
+}
+
+/** Compact in-card empty state; the shared <Empty> is sized for full-page panels. */
+function Quiet({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line/70 py-6 text-center text-xs text-ash">
+      <span className="grid size-8 place-items-center rounded-full bg-soft text-ash/80">{icon}</span>
+      {children}
+    </div>
+  )
+}
 
 export default function AssetsDashboard() {
   const nav = useNavigate()
@@ -73,9 +104,9 @@ export default function AssetsDashboard() {
 
   const ageBuckets = useMemo(() => {
     const buckets = [
-      { name: '0–1yr', count: 0 },
-      { name: '1–2yr', count: 0 },
-      { name: '2–3yr', count: 0 },
+      { name: '0-1yr', count: 0 },
+      { name: '1-2yr', count: 0 },
+      { name: '2-3yr', count: 0 },
       { name: '3yr+', count: 0 },
     ]
     const now = Date.now()
@@ -126,40 +157,14 @@ export default function AssetsDashboard() {
               <h3 className="font-display text-[15px] font-semibold leading-tight tracking-tight">Total Assets</h3>
               <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/10"><Laptop size={14} /></span>
             </div>
-            {
-              (maintenance + retired > 0) && (
-                <div className="absolute -right-2 -top-2 size-5 rounded-full bg-amber-500 ring-2 ring-black flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-black">{maintenance + retired}</span>
-                </div>
-              )
-            }
             <p className="relative mt-2 font-display text-2xl font-semibold tabular-nums"><CountUp value={total} /></p>
             <p className="mt-0.5 text-xs text-white/55">{fmtINR(totalValue)} in inventory</p>
           </div>
 
-          <Card className="!p-3.5">
-            <CardHeader title="Needs Attention" action={<Wrench size={15} className="text-amber-deep" />} />
-            <p className="mt-2 font-display text-2xl font-semibold"><CountUp value={maintenance + retired} /></p>
-            <p className="mt-0.5 text-xs text-ash">{maintenance} maintenance · {retired} retired</p>
-          </Card>
-
-          <Card className="!p-3.5">
-            <CardHeader title="Assigned" action={<CheckCircle2 size={15} className="text-sage-deep" />} />
-            <p className="mt-2 font-display text-2xl font-semibold"><CountUp value={assigned} /></p>
-            <p className="mt-0.5 text-xs text-ash">{utilizationPct}% utilization</p>
-          </Card>
-
-          <Card className="!p-3.5">
-            <CardHeader title="Maintenance Due" action={<AlertTriangle size={15} className="text-amber-deep" />} />
-            <p className="mt-2 font-display text-2xl font-semibold"><CountUp value={maintenanceDue} /></p>
-            <p className="mt-0.5 text-xs text-ash">Scheduled for service</p>
-          </Card>
-
-          <Card className="!p-3.5">
-            <CardHeader title="Available" />
-            <p className="mt-2 font-display text-2xl font-semibold"><CountUp value={available} /></p>
-            <p className="mt-0.5 text-xs text-ash">Ready to assign</p>
-          </Card>
+          <StatTile title="Needs Attention" value={maintenance + retired} hint={`${maintenance} in maintenance, ${retired} retired`} icon={<Wrench size={14} />} alert />
+          <StatTile title="Assigned" value={assigned} hint={`${utilizationPct}% utilization`} icon={<CheckCircle2 size={14} />} />
+          <StatTile title="Maintenance Due" value={maintenanceDue} hint="Scheduled for service" icon={<AlertTriangle size={14} />} alert />
+          <StatTile title="Available" value={available} hint="Ready to assign" icon={<PackageCheck size={14} />} />
         </div>
 
         {/* Category breakdown */}
@@ -194,8 +199,21 @@ export default function AssetsDashboard() {
         {/* Utilization radial */}
         <Card className="lg:col-span-3">
           <CardHeader title="Utilization" subtitle="Assigned vs. total" />
-          <div className="mt-3 flex flex-1 items-center justify-center">
+          <div className="mt-3 flex flex-1 flex-col items-center justify-between gap-3">
             <RadialProgress value={utilizationPct} color="#aece52" size={100} label="Assigned" />
+            <dl className="w-full space-y-1.5 border-t border-line/60 pt-3 text-xs">
+              {[
+                ['Assigned', assigned],
+                ['Available', available],
+                ['Maintenance', maintenance],
+                ['Retired', retired],
+              ].map(([label, n]) => (
+                <div key={label} className="flex items-center justify-between">
+                  <dt className="text-ash">{label}</dt>
+                  <dd className="font-bold tabular-nums">{n}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </Card>
 
@@ -214,7 +232,7 @@ export default function AssetsDashboard() {
                 </Badge>
               </button>
             ))}
-            {warrantyWatch.length === 0 && <p className="py-5 text-center text-sm text-ash">Nothing expiring soon.</p>}
+            {warrantyWatch.length === 0 && <Quiet icon={<ShieldAlert size={14} />}>No warranties expiring in the next 90 days.</Quiet>}
           </div>
         </Card>
 
@@ -235,7 +253,7 @@ export default function AssetsDashboard() {
                 </button>
               )
             })}
-            {recentlyAssigned.length === 0 && <p className="py-5 text-center text-sm text-ash">No assignments yet.</p>}
+            {recentlyAssigned.length === 0 && <Quiet icon={<Laptop size={14} />}>No assets have been handed over yet.</Quiet>}
           </div>
         </Card>
 
@@ -244,17 +262,21 @@ export default function AssetsDashboard() {
           <CardHeader title="Maintenance Queue" subtitle="Awaiting service" action={<AlertTriangle size={14} className="text-amber-deep" />} />
           <div className="mt-3 divide-y divide-line/60">
             {maintenanceQueue.map((a) => (
-              <div key={a.id} className="flex items-center gap-3 py-2">
-                <button onClick={() => nav(`/assets/inventory/${a.id}`)} className="group min-w-0 flex-1 text-left">
-                  <p className="truncate text-sm font-semibold transition-colors group-hover:text-sage-deep">{a.name}</p>
+              <div key={a.id} className="flex items-center gap-2 py-1.5">
+                <button onClick={() => nav(`/assets/inventory/${a.id}`)} className="clickable -mx-2 min-w-0 flex-1 rounded-xl px-2 py-1 text-left">
+                  <p className="clickable-title truncate text-sm font-semibold transition-colors">{a.name}</p>
                   <p className="truncate text-xs text-ash">{a.location} · {a.serial}</p>
                 </button>
-                <button onClick={() => setAssetStatus(a.id, 'Available')} className="shrink-0 rounded-full border border-line px-3 py-1 text-[11px] font-bold text-ash transition-all duration-200 hover:-translate-y-0.5 hover:border-sage-deep/40 hover:bg-sage/30 hover:text-sage-deep hover:shadow-sm active:translate-y-0 active:scale-95">
+                <button
+                  onClick={() => setAssetStatus(a.id, 'Available')}
+                  aria-label={`Mark ${a.name} as fixed`}
+                  className="shrink-0 rounded-full border border-line px-3 py-1 text-[11px] font-bold text-ash transition-all duration-200 hover:-translate-y-0.5 hover:border-sage-deep/40 hover:bg-sage/30 hover:text-sage-deep hover:shadow-sm active:translate-y-0 active:scale-95"
+                >
                   Mark fixed
                 </button>
               </div>
             ))}
-            {maintenanceQueue.length === 0 && <Empty>Nothing in maintenance right now.</Empty>}
+            {maintenanceQueue.length === 0 && <Quiet icon={<Wrench size={14} />}>Nothing in maintenance right now.</Quiet>}
           </div>
         </Card>
 
@@ -276,7 +298,7 @@ export default function AssetsDashboard() {
                 </button>
               )
             })}
-            {overdueReturns.length === 0 && <p className="py-5 text-center text-sm text-ash">No loaner returns due.</p>}
+            {overdueReturns.length === 0 && <Quiet icon={<PackageX size={14} />}>No loaner returns are due.</Quiet>}
           </div>
         </Card>
 
