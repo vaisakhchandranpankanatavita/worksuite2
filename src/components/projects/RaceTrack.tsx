@@ -27,10 +27,10 @@ export default function RaceTrack({ rows, onOpen }: { rows: Analysis[]; onOpen: 
           <button
             key={p.id}
             onClick={() => onOpen(p.id)}
-            className="group grid w-full grid-cols-[minmax(0,1fr)] items-center gap-x-4 gap-y-1 rounded-2xl px-2 py-2 text-left transition-colors hover:bg-soft/70 md:grid-cols-[190px_minmax(0,1fr)_96px]"
+            className="clickable group grid w-full grid-cols-[minmax(0,1fr)] items-center gap-x-4 gap-y-1 rounded-2xl px-2 py-2 text-left md:grid-cols-[190px_minmax(0,1fr)_96px]"
           >
             <span className="min-w-0">
-              <span className="block truncate text-[13px] font-semibold">{p.name}</span>
+              <span className="clickable-title block truncate text-[13px] font-semibold transition-colors">{p.name}</span>
               <span className="block truncate text-[11px] text-ash">{p.client} · {head?.name.split(' ')[0]}</span>
             </span>
 

@@ -130,7 +130,7 @@ export default function HrDashboard() {
             <div className="pointer-events-none absolute -right-14 -top-14 size-48 rounded-full bg-lime/15 blur-3xl" />
             <div className="relative flex items-start justify-between">
               <h3 className="font-display text-[16px] font-semibold leading-tight tracking-tight">Total Employees</h3>
-              <button onClick={() => nav('/hr/employees')} aria-label="View employees" className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 transition-all hover:bg-white/20 active:scale-90">
+              <button onClick={() => nav('/hr/employees')} aria-label="View employees" className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/20 hover:shadow-[0_0_18px_-2px_rgba(216,236,160,0.55)] active:translate-y-0 active:scale-90">
                 <Users size={16} />
               </button>
             </div>
@@ -264,7 +264,7 @@ export default function HrDashboard() {
             />
             <div className="mt-3 flex justify-between border-b border-line/70 text-xs">
               {days.map((d) => (
-                <button key={d} onClick={() => setDay(d)} className={clsx('-mb-px flex items-center gap-1.5 border-b-2 pb-2 transition-colors', day === d ? 'border-ink font-bold' : 'border-transparent text-ash hover:text-ink')}>
+                <button key={d} onClick={() => setDay(d)} className={clsx('-mb-px flex items-center gap-1.5 border-b-2 pb-2 transition-all duration-200 active:scale-95', day === d ? 'border-ink font-bold' : 'border-transparent text-ash hover:border-ink/25 hover:text-ink')}>
                   {fmtShortDate(d)}
                   <span className="rounded-full bg-soft px-1.5 text-[10px]">{schedule.filter((s) => s.date === d).length}</span>
                 </button>
@@ -362,7 +362,7 @@ export default function HrDashboard() {
           <button
             onClick={() => nav(`/hr/employees/${employeeOfMonth.id}`)}
             title="Employee of the Month"
-            className="mt-3 flex w-full items-center gap-2 rounded-xl border border-amber-deep/25 bg-amber/40 py-1.5 pl-1.5 pr-3 text-left transition-all hover:border-amber-deep/40 hover:bg-amber/60 hover:shadow-sm"
+            className="clickable-tile mt-3 flex w-full items-center gap-2 rounded-xl border border-amber-deep/25 bg-amber/40 py-1.5 pl-1.5 pr-3 text-left hover:border-amber-deep/45 hover:bg-amber/60"
           >
             <Avatar name={employeeOfMonth.name} hue={employeeOfMonth.avatarHue} src={photoFor(employeeOfMonth)} size={26} />
             <span className="leading-tight">
