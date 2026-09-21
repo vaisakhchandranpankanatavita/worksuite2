@@ -80,6 +80,11 @@ html::-webkit-scrollbar-thumb {
 html:hover::-webkit-scrollbar-thumb { background: rgba(160,166,159,0.55); }
 html:hover::-webkit-scrollbar-thumb:hover { background: rgba(130,136,129,0.8); }
 
+/* Lenis smooth scroll — native smooth-scroll would fight it */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
 /* Typography */
 h1, h2, h3, h4, .font-display { font-family: var(--font-display); }
 
@@ -115,9 +120,9 @@ body::before {
 
 /* ─── Card system ──────────────────────────────────────────── */
 .card {
-  background: linear-gradient(160deg, rgba(255,255,255,0.82) 0%, rgba(245,249,244,0.68) 100%);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  /* No backdrop-filter: dozens of blurred cards re-rasterise on every scroll frame.
+     Background is a touch more opaque instead to keep the frosted look. */
+  background: linear-gradient(160deg, rgba(255,255,255,0.88) 0%, rgba(246,250,245,0.78) 100%);
   border-radius: var(--radius-card);
   border: 1px solid rgba(255, 255, 255, 0.80);
   box-shadow:
@@ -130,7 +135,6 @@ body::before {
     box-shadow 0.4s cubic-bezier(.22,1,.36,1),
     border-color 0.4s cubic-bezier(.22,1,.36,1),
     transform 0.4s cubic-bezier(.22,1,.36,1);
-  will-change: transform;
 }
 /* Only interactive cards (button/a) get the lift — static divs keep shadow only */
 button.card:hover,
@@ -206,9 +210,7 @@ div.card:hover {
 
 /* Glass card variant */
 .card-glass {
-  background: linear-gradient(160deg, rgba(255,255,255,0.60) 0%, rgba(240,246,240,0.45) 100%);
-  backdrop-filter: blur(32px) saturate(240%);
-  -webkit-backdrop-filter: blur(32px) saturate(240%);
+  background: linear-gradient(160deg, rgba(255,255,255,0.78) 0%, rgba(240,246,240,0.66) 100%);
   border-radius: var(--radius-card);
   border: 1px solid rgba(255, 255, 255, 0.75);
   box-shadow:

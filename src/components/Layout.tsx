@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import { Bell, Boxes, CalendarCheck, ChevronDown, FileText, HelpCircle, Home, IndianRupee, Laptop, LineChart, ListChecks, LogOut, Menu, PiggyBank, Receipt, Search, Settings, User, UserPlus, Users, Wallet, X } from 'lucide-react'
+import Lenis from 'lenis'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -177,7 +178,23 @@ export default function Layout() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
-  useEffect(() => { setMobile(false); setBell(false); setProfile(false); window.scrollTo(0, 0) }, [pathname])
+  // Inertial page scrolling. Nested scroll areas (modals, tables, chat) use `.scroll-thin` and stay native.
+  const lenisRef = useRef<Lenis | null>(null)
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const lenis = new Lenis({
+      lerp: 0.1,
+      wheelMultiplier: 1,
+      prevent: (node) => node.classList.contains('scroll-thin'),
+    })
+    lenisRef.current = lenis
+    let raf = requestAnimationFrame(function tick(t) { lenis.raf(t); raf = requestAnimationFrame(tick) })
+    return () => { cancelAnimationFrame(raf); lenis.destroy(); lenisRef.current = null }
+  }, [])
+  useEffect(() => {
+    setMobile(false); setBell(false); setProfile(false)
+    if (lenisRef.current) lenisRef.current.scrollTo(0, { immediate: true }); else window.scrollTo(0, 0)
+  }, [pathname])
   function signOut() { setProfile(false); logoutAuth(); nav('/login') }
 
   if (!role) return <Navigate to="/login" replace />
