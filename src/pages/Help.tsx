@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import {
-  Boxes, CalendarCheck, FileText, Home, IndianRupee, Laptop,
+  Boxes, CalendarCheck, CalendarRange, FileText, FolderKanban, Home, IndianRupee, Laptop, LayoutGrid,
   LineChart, ListChecks, PiggyBank, Receipt, UserPlus, Users, Wallet, Search, Sparkles,
 } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -34,15 +34,21 @@ const MODULE_PAGES: Record<ModuleKey, PageInfo[]> = {
     { to: '/assets/inventory', label: 'Inventory', icon: ListChecks, desc: 'Asset register, assignment and detail' },
     { to: '/assets/stock', label: 'Stock', icon: Boxes, desc: 'Consumable stock levels' },
   ],
+  projects: [
+    { to: '/projects', label: 'Mission Control', icon: Home, desc: 'Portfolio health, the race to the finish line, today’s pulse and the league table' },
+    { to: '/projects/portfolio', label: 'Portfolio', icon: LayoutGrid, desc: 'Every project with its budget, allotment, usage and projected finish' },
+    { to: '/projects/timeline', label: 'Timeline', icon: CalendarRange, desc: 'Waterfall chart of all projects — plan, progress and projected slips' },
+  ],
 }
 
-const MODULE_LABEL: Record<ModuleKey, string> = { hr: 'People', finance: 'Finance', assets: 'Assets' }
-const MODULE_ICON: Record<ModuleKey, typeof Home> = { hr: Users, finance: Wallet, assets: Laptop }
-const MODULE_TONE: Record<ModuleKey, string> = { hr: 'bg-sky/40 text-sky-deep', finance: 'bg-lime/40 text-lime-deep', assets: 'bg-sage/40 text-sage-deep' }
+const MODULE_LABEL: Record<ModuleKey, string> = { hr: 'People', finance: 'Finance', assets: 'Assets', projects: 'Projects' }
+const MODULE_ICON: Record<ModuleKey, typeof Home> = { hr: Users, finance: Wallet, assets: Laptop, projects: FolderKanban }
+const MODULE_TONE: Record<ModuleKey, string> = { hr: 'bg-sky/40 text-sky-deep', finance: 'bg-lime/40 text-lime-deep', assets: 'bg-sage/40 text-sage-deep', projects: 'bg-amber/60 text-amber-deep' }
 const MODULE_DESC: Record<ModuleKey, string> = {
   hr: 'Manage people — from hiring through attendance, leave and payroll.',
   finance: 'Track money — invoices coming in, claims and overheads going out, budgets and reports.',
   assets: 'Track equipment — what the company owns, who holds it, and stock on hand.',
+  projects: 'Deliver work — see how people, assets and money are used on each project, and when it will really finish.',
 }
 
 const ALL_PAGES: Record<string, PageInfo> = Object.fromEntries(
@@ -55,6 +61,10 @@ const FLOWS: { from: string; to: string; label: string }[] = [
   { from: '/finance/expenses', to: '/finance/budgets', label: 'rolls up into' },
   { from: '/finance/track-expenses', to: '/finance/budgets', label: 'rolls up into' },
   { from: '/assets/inventory', to: '/finance/reports', label: 'shows as spend' },
+  { from: '/hr/employees', to: '/projects/portfolio', label: 'staff the projects' },
+  { from: '/assets/inventory', to: '/projects/portfolio', label: 'is deployed on' },
+  { from: '/finance/budgets', to: '/projects/portfolio', label: 'funds' },
+  { from: '/finance/expenses', to: '/projects/portfolio', label: 'is charged to' },
 ]
 
 function relatedSet(key: string): Set<string> {
@@ -80,7 +90,7 @@ function isRelated(key: string, active: string): boolean {
 export default function Help() {
   const roleId = useAuth((s) => s.role)
   const role = roleById(roleId)
-  const modules = role?.modules ?? (['hr', 'finance', 'assets'] as ModuleKey[])
+  const modules = role?.modules ?? (['hr', 'finance', 'assets', 'projects'] as ModuleKey[])
   const [active, setActive] = useState<string | null>(null)
 
   return (
@@ -89,7 +99,7 @@ export default function Help() {
 
       <Card className="mb-4">
         <p className="text-base leading-relaxed text-ink/80">
-          Worksuite is organised into three modules — <strong>People</strong>, <strong>Finance</strong> and <strong>Assets</strong>.
+          Worksuite is organised into four modules — <strong>People</strong>, <strong>Finance</strong>, <strong>Assets</strong> and <strong>Projects</strong>.
           Each has its own dashboard plus a few focused pages. Use the module switcher in the header to move around,{' '}
           <kbd className="rounded border border-line bg-soft px-1.5 py-0.5 text-xs font-bold">⌘K</kbd> to search anything by name,
           and the assistant in the bottom-right corner for quick answers.
@@ -100,8 +110,8 @@ export default function Help() {
       <Card className="mb-4">
         <CardHeader title="How it flows" subtitle="Every page, grouped by module — click one to trace how it connects" />
         <div className="mt-5 flex flex-col items-center gap-4">
-          <div className="grid w-full gap-4 md:grid-cols-3">
-            {(['hr', 'finance', 'assets'] as ModuleKey[]).map((m) => {
+          <div className="grid w-full gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {(['hr', 'finance', 'assets', 'projects'] as ModuleKey[]).map((m) => {
               const Icon = MODULE_ICON[m]
               const modKey = `mod:${m}`
               const modDim = active !== null && !isRelated(modKey, active)
