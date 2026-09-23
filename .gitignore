@@ -5,3 +5,4 @@ tsconfig.tsbuildinfo
 *.local
 .vercel
 .claude
+server/data

@@ -1,8 +1,10 @@
 import { ChevronDown, ChevronRight, FolderPlus, Plus, Tag } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 import { Badge, Button, Card, CardHeader, Field, Input, Modal, PageHeader, Segmented, Select, Table } from '../../components/ui'
-import { EXPENSE_TRACK_CATEGORIES, TODAY, expenseBills as initialBills, expenseSubCategories as initialSubCategories, type ExpenseBill } from '../../data/mock'
+import { TODAY, expenseBills as initialBills, expenseSubCategories as initialSubCategories, type ExpenseBill } from '../../data/mock'
 import { fmtDate, fmtINR } from '../../lib/format'
+import { api, connection } from '../../lib/api'
+import { appSettings } from '../../data/registry'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const TABS = ['Consolidated', 'Expense Details', 'Categories'] as const
@@ -15,7 +17,7 @@ const yearOf = (d: string) => new Date(d).getFullYear()
 
 export default function TrackExpenses() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Consolidated')
-  const [categories, setCategories] = useState<string[]>([...EXPENSE_TRACK_CATEGORIES])
+  const [categories, setCategories] = useState<string[]>([...appSettings.expenseTrackCategories])
   const [subCategories, setSubCategories] = useState<SubCat[]>(initialSubCategories)
   const [bills, setBills] = useState<ExpenseBill[]>(initialBills)
 
@@ -172,7 +174,12 @@ function ExpenseDetails({ categories, subCategories, bills, setBills }: {
       </Table>
       {filtered.length === 0 && <p className="py-10 text-center text-sm text-ash">No bills in this range.</p>}
 
-      <NewBill open={open} onClose={() => setOpen(false)} categories={categories} subCategories={subCategories} onSave={(v) => { setBills((prev) => [{ ...v, id: `BILL-${5000 + prev.length}` }, ...prev]); setOpen(false) }} />
+      <NewBill open={open} onClose={() => setOpen(false)} categories={categories} subCategories={subCategories} onSave={(v) => {
+        const bill = { ...v, id: `BILL-${5000 + bills.length}` }
+        setBills((prev) => [bill, ...prev])
+        if (connection.online) api.create('expenseBills', bill).catch(() => {})
+        setOpen(false)
+      }} />
     </Card>
   )
 }
@@ -267,10 +274,21 @@ function Categories({ categories, setCategories, subCategories, setSubCategories
       )}
 
       <Modal open={openCat} onClose={() => setOpenCat(false)} title="Add expense category">
-        <AddCategoryForm onClose={() => setOpenCat(false)} onSave={(name) => { setCategories((prev) => (prev.includes(name) ? prev : [...prev, name])); setOpenCat(false) }} />
+        <AddCategoryForm onClose={() => setOpenCat(false)} onSave={(name) => {
+          if (!categories.includes(name)) {
+            const next = [...categories, name]
+            setCategories(next)
+            if (connection.online) api.setSetting('expenseTrackCategories', next).catch(() => {})
+          }
+          setOpenCat(false)
+        }} />
       </Modal>
       <Modal open={openSub} onClose={() => setOpenSub(false)} title="Add expense sub category">
-        <AddSubCategoryForm categories={categories} onClose={() => setOpenSub(false)} onSave={(v) => { setSubCategories((prev) => [...prev, v]); setOpenSub(false) }} />
+        <AddSubCategoryForm categories={categories} onClose={() => setOpenSub(false)} onSave={(v) => {
+          setSubCategories((prev) => [...prev, v])
+          if (connection.online) api.create('expenseSubCategories', v, 'end').catch(() => {})
+          setOpenSub(false)
+        }} />
       </Modal>
     </Card>
   )

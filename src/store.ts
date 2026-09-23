@@ -5,6 +5,8 @@ import type { RoleId } from './data/roles'
 import { projects as seedProjects, type Project, type ProjectStatus } from './data/projects'
 import { fromDay, todayDay, toDay } from './lib/dates'
 import { overallProgress } from './lib/projectMetrics'
+import { api, onWriteError } from './lib/api'
+import { appSettings, collectionSources } from './data/registry'
 
 interface AuthState {
   role: RoleId | null
@@ -82,7 +84,8 @@ let assetLogId = 0
 let projectSeq = 0
 const nextId = (prefix: string) => `${prefix}-${Date.now().toString(36)}${++projectSeq}`
 function logEntry(assetId: string, action: string, detail: string): AssetLogEntry {
-  return { id: ++assetLogId, assetId, date: new Date().toISOString(), action, detail }
+  // Unique across sessions now that the log is persisted server-side.
+  return { id: Date.now() * 100 + (++assetLogId % 100), assetId, date: new Date().toISOString(), action, detail }
 }
 
 export const useApp = create<AppState>((set, get) => ({
@@ -292,3 +295,64 @@ export const useApp = create<AppState>((set, get) => ({
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }))
+
+/* ───────────────────────── Server sync ───────────────────────── */
+
+/** Store slices persisted to the API, keyed by their collection name on the server. */
+const SYNCED = ['leaves', 'expenses', 'invoices', 'candidates', 'assets', 'assetLog', 'projects'] as const
+type SyncedKey = (typeof SYNCED)[number]
+type Row = { id: string | number }
+const ignore = () => {}
+
+/**
+ * Store actions update immutably, so a record whose reference changed is exactly a record that was
+ * edited. Diff each synced slice against its previous value and send the minimal writes.
+ */
+function pushDiff(name: SyncedKey, next: Row[], prev: Row[]) {
+  const before = new Map(prev.map((r) => [String(r.id), r]))
+  const seen = new Set<string>()
+  const added: { row: Row; index: number }[] = []
+  next.forEach((row, index) => {
+    const id = String(row.id)
+    seen.add(id)
+    const old = before.get(id)
+    if (!old) added.push({ row, index })
+    else if (old !== row) api.replace(name, id, row).catch(ignore)
+  })
+  // Rows ahead of the existing list were prepended (newest-first): insert bottom-up to keep their order.
+  const firstExisting = next.findIndex((r) => before.has(String(r.id)))
+  const head = added.filter((a) => firstExisting === -1 || a.index < firstExisting)
+  const tail = added.filter((a) => !head.includes(a))
+  head.reverse().forEach(({ row }) => api.create(name, row, 'start').catch(ignore))
+  tail.forEach(({ row }) => api.create(name, row, 'end').catch(ignore))
+  for (const id of before.keys()) if (!seen.has(id)) api.remove(name, id).catch(ignore)
+}
+
+let syncing = false
+
+/** Load the API-hydrated data into the store and persist every change from here on. */
+export function startSync() {
+  if (syncing) return
+  syncing = true
+  useApp.setState({
+    leaves: [...collectionSources.leaves],
+    expenses: [...collectionSources.expenses],
+    invoices: [...collectionSources.invoices],
+    candidates: [...collectionSources.candidates],
+    assets: [...collectionSources.assets],
+    assetLog: [...collectionSources.assetLog],
+    projects: [...collectionSources.projects],
+    payrollStatus: appSettings.payrollStatus,
+  })
+  useApp.subscribe((state, prev) => {
+    for (const key of SYNCED) if (state[key] !== prev[key]) pushDiff(key, state[key] as Row[], prev[key] as Row[])
+    if (state.payrollStatus !== prev.payrollStatus) api.setSetting('payrollStatus', state.payrollStatus).catch(ignore)
+  })
+  let lastError = 0
+  onWriteError((err) => {
+    // One toast per burst of failures, not one per request.
+    if (Date.now() - lastError < 4000) return
+    lastError = Date.now()
+    useApp.getState().toast(`Couldn't save to the server — ${err.message}`, 'error')
+  })
+}

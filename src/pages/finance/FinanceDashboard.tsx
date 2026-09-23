@@ -14,8 +14,8 @@ import { useApp } from '../../store'
 
 const PIE_COLORS = ['#1a1d1b', '#d8eca0', '#c8d9f4', '#f0cad8']
 
-// Cash flow waterfall data — derived from monthlyFinance
-const cashFlowData = [
+// Cash flow waterfall data — derived from monthlyFinance (built on mount, after the API has hydrated it)
+const buildCashFlow = () => [
   { name: 'Opening', value: 8200000 },
   ...monthlyFinance.slice(-4).map((m, i) => ({
     name: m.month ?? `M${i + 1}`,
@@ -25,7 +25,7 @@ const cashFlowData = [
 ]
 
 // MoM Revenue vs Budget
-const revVsBudget = monthlyFinance.slice(-6).map((m) => ({
+const buildRevVsBudget = () => monthlyFinance.slice(-6).map((m) => ({
   month: m.month,
   revenue: m.revenue,
   budget: Math.round(m.revenue * (0.92 + Math.random() * 0.16)),
@@ -35,6 +35,8 @@ const revVsBudget = monthlyFinance.slice(-6).map((m) => ({
 
 export default function FinanceDashboard() {
   const nav = useNavigate()
+  const cashFlowData = useMemo(buildCashFlow, [])
+  const revVsBudget = useMemo(buildRevVsBudget, [])
   const { invoices, expenses, setExpenseStatus } = useApp()
   const [range, setRange] = useState<'Quarter' | 'Year'>('Year')
 

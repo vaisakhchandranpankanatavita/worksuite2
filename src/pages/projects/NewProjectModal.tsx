@@ -6,10 +6,9 @@ import { DEPT_HEAD_COUNT, buildPhases, TRANCHE_SPLIT, type Project } from '../..
 import { fromDay, todayDay, toDay } from '../../lib/dates'
 import { useApp } from '../../store'
 
-const heads = employees.slice(0, DEPT_HEAD_COUNT)
-
 export default function NewProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const nav = useNavigate()
+  const heads = employees.slice(0, DEPT_HEAD_COUNT)
   const count = useApp((s) => s.projects.length)
   const addProject = useApp((s) => s.addProject)
   const toast = useApp((s) => s.toast)
