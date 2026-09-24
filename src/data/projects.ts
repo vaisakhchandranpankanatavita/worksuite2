@@ -1,6 +1,6 @@
-import { assets, employees, type Department } from './mock'
-import { fromDay, isWeekday, todayDay, toDay } from '../lib/dates'
-import { mulberry32 } from '../lib/format'
+import { assets, employees, type Department } from './mock.js'
+import { fromDay, isWeekday, todayDay, toDay } from '../lib/dates.js'
+import { mulberry32 } from '../lib/format.js'
 
 export type ProjectStatus = 'Initiated' | 'In Progress' | 'On Hold' | 'Completed'
 

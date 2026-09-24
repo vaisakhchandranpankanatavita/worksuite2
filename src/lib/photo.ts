@@ -1,4 +1,4 @@
-import type { Employee } from '../data/mock'
+import type { Employee } from '../data/mock.js'
 
 /**
  * Placeholder portrait for demo purposes; Avatar falls back to initials if

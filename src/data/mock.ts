@@ -1,5 +1,5 @@
-import { mulberry32 } from '../lib/format'
-import { photoFor } from '../lib/photo'
+import { mulberry32 } from '../lib/format.js'
+import { photoFor } from '../lib/photo.js'
 
 const rand = mulberry32(20260914)
 const pick = <T,>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)]

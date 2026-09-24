@@ -9,8 +9,8 @@ import {
   activity, assets, attendanceTrend, bankAccounts, budgets, candidates, clients, COMPANY, complianceDeadlines, departmentAttendance,
   employees, EXPENSE_TRACK_CATEGORIES, expenseBills, expenseBreakdown, expenses, expenseSubCategories, headcountTrend, HOLIDAYS,
   invoices, jobs, LEAVE_POLICY, leaveRequests, monthlyFinance, payrollRuns, schedule, todayAttendance, transactions,
-} from './mock'
-import { projects } from './projects'
+} from './mock.js'
+import { projects } from './projects.js'
 
 /** CRUD collections. Names must match `COLLECTIONS` in server/db.ts. */
 export const collectionSources = {
