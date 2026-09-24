@@ -1,8 +1,21 @@
 # Worksuite API
 
-Express + SQLite (Node's built-in `node:sqlite`, Node ≥ 22.13) backend for the Worksuite app.
+Express + Postgres (via `pg`) backend for the Worksuite app. Runs as a normal Express process locally
+(and everywhere `npm run server`/`npm start` are used) and as a Vercel serverless function in
+production (`api/[...path].ts` catches every `/api/*` request and hands it to the same Express app).
 The database is seeded from the app's original demo data (`src/data/mock.ts`, `src/data/projects.ts`
 via `src/data/registry.ts`).
+
+## Database
+
+Set `DATABASE_URL` to a Postgres connection string — any provider works the same way over `pg`
+(Vercel Postgres, [Neon](https://neon.tech) has a free tier, Supabase, or a local Postgres). Locally,
+put it in a `.env` file or export it before running a script; on Vercel, add it as a Project
+environment variable (Production **and** Preview) — that's the only setup step required for the
+"Can't reach the Worksuite server" error on a deployed app: it means `/api/*` has no database to
+talk to yet.
+
+Tables are created automatically on first connection — no separate migration step.
 
 ## Running
 
@@ -13,7 +26,6 @@ via `src/data/registry.ts`).
 | `npm start` | Build the front-end, then serve app + API from one process |
 | `npm run seed` | Wipe the database and re-seed it from the demo data and demo accounts |
 
-The database lives at `server/data/worksuite.db` (git-ignored; override with `WORKSUITE_DB`).
 An empty database is seeded automatically on start. Seeded dates are relative to the day of seeding,
 so re-seed (`npm run seed` or `POST /api/admin/reseed`) to refresh them.
 

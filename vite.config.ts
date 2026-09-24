@@ -12,7 +12,7 @@ function worksuiteApi(): Plugin {
       const { ensureSeeded } = await import('./server/seed')
       const { createApp } = await import('./server/app')
       const store = openDb()
-      if (ensureSeeded(store)) server.config.logger.info('[api] empty database — seeded from demo data')
+      if (await ensureSeeded(store)) server.config.logger.info('[api] empty database — seeded from demo data')
       const app = createApp(store)
       server.middlewares.use((req, res, next) => (req.url?.startsWith('/api') ? app(req as never, res as never, next) : next()))
     },

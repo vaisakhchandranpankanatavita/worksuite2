@@ -15,35 +15,36 @@ export const DEMO_PASSWORD = process.env.WORKSUITE_DEMO_PASSWORD ?? 'demo1234'
 /** JSON round-trip drops `undefined` fields and gives the stored shape exactly what the API will return. */
 const plain = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
-export function seedDatabase(store: Store) {
+export async function seedDatabase(store: Store) {
   const counts: Record<string, number> = {}
-  store.tx(() => {
+  await store.tx(async () => {
     for (const name of Object.keys(COLLECTIONS) as Collection[]) {
       const docs = plain(collectionSources[name]) as Doc[]
-      store.replaceAll(name, docs)
+      await store.replaceAll(name, docs)
       counts[name] = docs.length
     }
-    store.db.exec('DELETE FROM datasets; DELETE FROM settings;')
-    for (const [key, value] of Object.entries(datasetSources)) store.setJson('datasets', key, plain(value))
-    for (const [key, value] of Object.entries(appSettings)) store.setJson('settings', key, plain(value))
-    store.setMeta('seededAt', new Date().toISOString())
+    await store.clearTable('datasets')
+    await store.clearTable('settings')
+    for (const [key, value] of Object.entries(datasetSources)) await store.setJson('datasets', key, plain(value))
+    for (const [key, value] of Object.entries(appSettings)) await store.setJson('settings', key, plain(value))
+    await store.setMeta('seededAt', new Date().toISOString())
   })
   return counts
 }
 
 /** One sign-in account per role (Super Admin, HR, Finance, Production, Project Director). Signs everyone out. */
-export function seedUsers(store: Store) {
+export async function seedUsers(store: Store) {
   const users = ROLES.map((r) => ({
     id: `U-${r.id}`, email: r.email, name: r.name, role: r.id, label: r.label, description: r.description,
     modules: r.modules, photo: r.photo, hue: r.hue, passwordHash: hashPassword(DEMO_PASSWORD),
   }))
-  store.tx(() => store.replaceUsers(users))
+  await store.tx(() => store.replaceUsers(users))
   return users.length
 }
 
 /** Fills in whatever is missing (data and/or accounts) — used on server start. */
-export function ensureSeeded(store: Store) {
-  const users = store.listUsers().length === 0 ? seedUsers(store) : 0
-  const data = store.getMeta('seededAt') ? null : seedDatabase(store)
+export async function ensureSeeded(store: Store) {
+  const users = (await store.listUsers()).length === 0 ? await seedUsers(store) : 0
+  const data = (await store.getMeta('seededAt')) ? null : await seedDatabase(store)
   return users || data ? { users, data } : null
 }

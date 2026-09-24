@@ -66,10 +66,10 @@ function recordFailure(ip: string) {
   else f.count++
 }
 
-export function login(store: Store, req: Request, res: Response, email: string, password: string): PublicUser {
+export async function login(store: Store, req: Request, res: Response, email: string, password: string): Promise<PublicUser> {
   const ip = req.ip ?? 'unknown'
   if (throttled(ip)) throw new HttpError(429, 'Too many sign-in attempts. Try again in a few minutes.')
-  const user = store.userByEmail(email.trim())
+  const user = await store.userByEmail(email.trim())
   const ok = verifyPassword(password, user?.passwordHash ?? DUMMY_HASH) && !!user
   if (!ok || !user) {
     recordFailure(ip)
@@ -77,19 +77,19 @@ export function login(store: Store, req: Request, res: Response, email: string, 
   }
   failures.delete(ip)
   const token = randomBytes(32).toString('base64url')
-  store.createSession(sha256(token), user.id, SESSION_TTL_MS)
+  await store.createSession(sha256(token), user.id, SESSION_TTL_MS)
   res.setHeader('Set-Cookie', sessionCookie(req, token, SESSION_TTL_MS / 1000))
   const { passwordHash: _omit, ...pub } = user
   return pub
 }
 
-export function logout(store: Store, req: Request, res: Response) {
+export async function logout(store: Store, req: Request, res: Response) {
   const token = readCookie(req, SESSION_COOKIE)
-  if (token) store.deleteSession(sha256(token))
+  if (token) await store.deleteSession(sha256(token))
   res.setHeader('Set-Cookie', sessionCookie(req, '', 0))
 }
 
-export function currentUser(store: Store, req: Request): PublicUser | undefined {
+export async function currentUser(store: Store, req: Request): Promise<PublicUser | undefined> {
   const token = readCookie(req, SESSION_COOKIE)
   return token ? store.userBySession(sha256(token)) : undefined
 }
@@ -99,9 +99,13 @@ declare module 'express-serve-static-core' {
 }
 
 /** Rejects requests without a valid session; attaches `req.user` otherwise. */
-export const requireAuth = (store: Store) => (req: Request, _res: Response, next: NextFunction) => {
-  const user = currentUser(store, req)
-  if (!user) return next(new HttpError(401, 'Sign in required'))
-  req.user = user
-  next()
+export const requireAuth = (store: Store) => async (req: Request, _res: Response, next: NextFunction) => {
+  try {
+    const user = await currentUser(store, req)
+    if (!user) return next(new HttpError(401, 'Sign in required'))
+    req.user = user
+    next()
+  } catch (err) {
+    next(err)
+  }
 }
