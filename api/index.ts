@@ -1,6 +1,7 @@
 /**
- * Vercel serverless entry point: catches every /api/* request and hands it to the same Express app
- * used locally (server/app.ts). The app + DB pool are built once and reused across warm invocations.
+ * Vercel serverless entry point. vercel.json rewrites every /api/* request here, which hands it to
+ * the same Express app used locally (server/app.ts). The app + DB pool are built once and reused
+ * across warm invocations.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createApp } from '../server/app.js'
