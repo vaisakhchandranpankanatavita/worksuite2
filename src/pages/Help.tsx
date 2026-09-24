@@ -7,7 +7,7 @@ import { motion } from 'motion/react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardHeader, PageHeader } from '../components/ui'
-import { roleById, type ModuleKey } from '../data/roles'
+import type { ModuleKey } from '../data/roles'
 import { useAuth } from '../store'
 
 type PageInfo = { to: string; label: string; icon: typeof Home; desc: string }
@@ -88,9 +88,7 @@ function isRelated(key: string, active: string): boolean {
 }
 
 export default function Help() {
-  const roleId = useAuth((s) => s.role)
-  const role = roleById(roleId)
-  const modules = role?.modules ?? (['hr', 'finance', 'assets', 'projects'] as ModuleKey[])
+  const modules = useAuth((s) => s.user)?.modules ?? (['hr', 'finance', 'assets', 'projects'] as ModuleKey[])
   const [active, setActive] = useState<string | null>(null)
 
   return (

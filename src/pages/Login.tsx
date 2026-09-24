@@ -1,12 +1,12 @@
 import clsx from 'clsx'
 import { ArrowRight, Check, ChevronDown, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { HeroArt } from '../components/charts'
 import { Avatar, Button } from '../components/ui'
-import { ROLES, type RoleId } from '../data/roles'
+import { api, ApiError, type DemoAccount } from '../lib/api'
 import { useCountUp } from '../lib/useCountUp'
-import { useAuth } from '../store'
+import { signIn, useAuth } from '../store'
 
 function Logo() {
   return (
@@ -47,15 +47,22 @@ function HeroStat({ value, label, decimals = 0, suffix = '', delay = 0 }: { valu
 
 export default function Login() {
   const nav = useNavigate()
-  const login = useAuth((s) => s.login)
-  const [roleId, setRoleId] = useState<RoleId>('admin')
-  const role = ROLES.find((r) => r.id === roleId)!
-  const [email, setEmail] = useState(role.email)
-  const [password, setPassword] = useState('demo1234')
+  const signedInUser = useAuth((s) => s.user)
+  const [accounts, setAccounts] = useState<DemoAccount[]>([])
+  const [accountId, setAccountId] = useState<string | null>(null)
+  const account = accounts.find((a) => a.id === accountId) ?? null
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [roleOpen, setRoleOpen] = useState(false)
   const roleRef = useRef<HTMLDivElement>(null)
+
+  // Demo accounts come from the server; picking one fills in its email and the demo password.
+  useEffect(() => {
+    api.accounts().then(setAccounts, () => setError('Can’t reach the Worksuite server. Start it with "npm run dev" or "npm run server".'))
+  }, [])
 
   useEffect(() => {
     if (!roleOpen) return
@@ -66,18 +73,28 @@ export default function Login() {
 
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
 
-  function pickRole(id: RoleId) {
-    setRoleId(id)
-    setEmail(ROLES.find((r) => r.id === id)!.email)
+  function pickAccount(a: DemoAccount) {
+    setAccountId(a.id)
+    setEmail(a.email)
+    setPassword('demo1234')
+    setError(null)
     setRoleOpen(false)
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    login(roleId)
-    nav(`/${role.modules[0]}`)
+    setError(null)
+    try {
+      const user = await signIn(email, password)
+      nav(`/${user.modules[0]}`)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Can’t reach the Worksuite server. Check that it is running.')
+      setLoading(false)
+    }
   }
+
+  if (signedInUser) return <Navigate to={`/${signedInUser.modules[0]}`} replace />
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f1f3f1] p-4 sm:p-6 lg:p-8">
@@ -102,8 +119,8 @@ export default function Login() {
               baseDelay={160}
             />
 
-            <div className="mt-7">
-              <span className="mb-1.5 block text-xs font-bold text-ash">Sign in as</span>
+            {accounts.length > 0 && <div className="mt-7">
+              <span className="mb-1.5 block text-xs font-bold text-ash">Demo account</span>
               <div ref={roleRef} className="relative">
                 <button
                   type="button"
@@ -112,8 +129,9 @@ export default function Login() {
                   aria-haspopup="listbox"
                   aria-expanded={roleOpen}
                 >
-                  <Avatar name={role.name} hue={role.hue} src={role.photo} size={26} />
-                  <span className="flex-1 truncate text-sm font-medium">{role.label}</span>
+                  {account
+                    ? <><Avatar name={account.name} hue={account.hue} src={account.photo} size={26} /><span className="flex-1 truncate text-sm font-medium">{account.label}</span></>
+                    : <span className="flex-1 truncate pl-1 text-sm text-ash">Choose an account to fill in…</span>}
                   <ChevronDown size={16} className={clsx('shrink-0 text-ash transition-transform', roleOpen && 'rotate-180')} />
                 </button>
 
@@ -129,32 +147,32 @@ export default function Login() {
                       boxShadow: '0 0 0 1px rgba(255,255,255,0.9) inset, 0 8px 40px -8px rgba(26,29,27,0.18), 0 24px 64px -16px rgba(26,29,27,0.12)',
                     }}
                   >
-                    {ROLES.map((r) => (
+                    {accounts.map((r) => (
                       <button
                         key={r.id}
                         type="button"
                         role="option"
-                        aria-selected={r.id === roleId}
-                        onClick={() => pickRole(r.id)}
+                        aria-selected={r.id === accountId}
+                        onClick={() => pickAccount(r)}
                         className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/60"
                       >
                         <Avatar name={r.name} hue={r.hue} src={r.photo} size={26} />
                         <span className="min-w-0 flex-1 truncate font-medium">{r.label}</span>
-                        {r.id === roleId && <Check size={14} className="shrink-0 text-ink" />}
+                        {r.id === accountId && <Check size={14} className="shrink-0 text-ink" />}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
-              <p className="mt-1.5 text-[11px] text-ash">{role.description}</p>
-            </div>
+              <p className="mt-1.5 text-[11px] text-ash">{account ? account.description : 'Every demo account uses the password demo1234.'}</p>
+            </div>}
 
             <form onSubmit={submit} className="mt-5 space-y-4">
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold text-ash">Work email</span>
                 <div className="flex h-11 items-center gap-2.5 rounded-lg border border-line bg-white px-3.5 transition-all focus-within:border-ink focus-within:shadow-sm">
                   <Mail size={16} className="text-ash" />
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-full flex-1 bg-transparent text-sm outline-none" placeholder="you@company.com" />
+                  <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setAccountId(null) }} autoComplete="username" required className="h-full flex-1 bg-transparent text-sm outline-none" placeholder="you@company.com" />
                 </div>
               </label>
 
@@ -162,7 +180,7 @@ export default function Login() {
                 <span className="mb-1.5 block text-xs font-bold text-ash">Password</span>
                 <div className="flex h-11 items-center gap-2.5 rounded-lg border border-line bg-white px-3.5 transition-all focus-within:border-ink focus-within:shadow-sm">
                   <Lock size={16} className="text-ash" />
-                  <input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="h-full flex-1 bg-transparent text-sm outline-none" placeholder="••••••••" />
+                  <input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required className="h-full flex-1 bg-transparent text-sm outline-none" placeholder="••••••••" />
                   <button type="button" onClick={() => setShow((s) => !s)} className="text-ash transition-colors hover:text-ink" aria-label={show ? 'Hide password' : 'Show password'}>
                     {show ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -175,6 +193,8 @@ export default function Login() {
                 </label>
                 <a href="#" className="font-bold text-ink hover:underline">Forgot password?</a>
               </div>
+
+              {error && <p role="alert" className="rounded-lg bg-rose/40 px-3 py-2 text-xs font-medium text-rose-deep">{error}</p>}
 
               <Button type="submit" disabled={loading} className="mt-2 w-full">
                 {loading ? 'Signing in…' : <>Sign in <ArrowRight size={16} /></>}

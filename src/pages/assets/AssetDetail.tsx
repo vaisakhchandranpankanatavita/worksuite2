@@ -6,13 +6,14 @@ import { employeeById, employees, TODAY, type AssetStatus } from '../../data/moc
 import { bookValue } from '../../lib/depreciation'
 import { fmtDate, fmtINR } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
-import { useApp } from '../../store'
+import { useApp, useCanOpen } from '../../store'
 
 const CATEGORY_ICON = { Laptop, Phone: Smartphone, Monitor, Headset: Headphones, Tablet, Accessory: Wrench } as const
 
 export default function AssetDetail() {
   const { id } = useParams()
   const nav = useNavigate()
+  const canOpen = useCanOpen()
   const { assets, assetLog, assignAsset, unassignAsset, setAssetStatus, retireAsset, updateAsset, completeMaintenance } = useApp()
   const [assignOpen, setAssignOpen] = useState(false)
   const [maintenanceOpen, setMaintenanceOpen] = useState(false)
@@ -117,7 +118,7 @@ export default function AssetDetail() {
               <div className="flex items-center gap-3">
                 <Avatar name={holder.name} hue={holder.avatarHue} src={photoFor(holder)} size={44} />
                 <div className="min-w-0 flex-1">
-                  <button className="truncate text-left font-bold underline" onClick={() => nav(`/hr/employees/${holder.id}`)}>{holder.name}</button>
+                  <button disabled={!canOpen('/hr')} className="truncate text-left font-bold underline disabled:pointer-events-none disabled:no-underline" onClick={() => nav(`/hr/employees/${holder.id}`)}>{holder.name}</button>
                   <p className="truncate text-xs text-ash">{holder.role} · {holder.department}</p>
                   {a.assignedOn && <p className="mt-1 text-[11px] text-ash">Since {fmtDate(a.assignedOn)}</p>}
                 </div>

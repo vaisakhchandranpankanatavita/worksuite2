@@ -9,6 +9,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { ModuleKey } from '../src/data/roles'
 
 const here = dirname(fileURLToPath(import.meta.url))
 export const DB_PATH = process.env.WORKSUITE_DB ?? resolve(here, 'data', 'worksuite.db')
@@ -43,6 +44,7 @@ export function openDb(path = DB_PATH) {
   const db = new DatabaseSync(path)
   db.exec(`
     PRAGMA journal_mode = WAL;
+    PRAGMA foreign_keys = ON;
     CREATE TABLE IF NOT EXISTS records (
       collection TEXT NOT NULL,
       id         TEXT NOT NULL,
@@ -57,6 +59,27 @@ export function openDb(path = DB_PATH) {
     -- Small mutable app-wide values (payroll status, custom expense categories…).
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, data TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    -- Sign-in accounts. modules = JSON array of the modules the account can use.
+    CREATE TABLE IF NOT EXISTS users (
+      id            TEXT PRIMARY KEY,
+      email         TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      password_hash TEXT NOT NULL,
+      name          TEXT NOT NULL,
+      role          TEXT NOT NULL,
+      label         TEXT NOT NULL,
+      description   TEXT NOT NULL DEFAULT '',
+      modules       TEXT NOT NULL,
+      photo         TEXT,
+      hue           INTEGER NOT NULL DEFAULT 200,
+      active        INTEGER NOT NULL DEFAULT 1
+    );
+    -- Only a SHA-256 of each session token is stored, so a leaked database can't be used to sign in.
+    CREATE TABLE IF NOT EXISTS sessions (
+      token_hash TEXT PRIMARY KEY,
+      user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL
+    );
   `)
   return new Store(db)
 }
@@ -166,5 +189,64 @@ export class Store {
 
   setMeta(key: string, value: string) {
     this.db.prepare('INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, value)
+  }
+
+  /* ── Users & sessions ── */
+
+  replaceUsers(users: (PublicUser & { passwordHash: string })[]) {
+    this.db.exec('DELETE FROM sessions; DELETE FROM users;')
+    const ins = this.db.prepare('INSERT INTO users (id, email, password_hash, name, role, label, description, modules, photo, hue) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    for (const u of users) ins.run(u.id, u.email, u.passwordHash, u.name, u.role, u.label, u.description, JSON.stringify(u.modules), u.photo ?? null, u.hue)
+  }
+
+  userByEmail(email: string): (PublicUser & { passwordHash: string }) | undefined {
+    const row = this.db.prepare('SELECT * FROM users WHERE email = ? AND active = 1').get(email) as UserRow | undefined
+    return row ? { ...toPublicUser(row), passwordHash: row.password_hash } : undefined
+  }
+
+  listUsers(): PublicUser[] {
+    return (this.db.prepare('SELECT * FROM users WHERE active = 1 ORDER BY rowid').all() as unknown as UserRow[]).map(toPublicUser)
+  }
+
+  createSession(tokenHash: string, userId: string, ttlMs: number) {
+    this.db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run()
+    const expires = new Date(Date.now() + ttlMs).toISOString().replace('T', ' ').slice(0, 19)
+    this.db.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)').run(tokenHash, userId, expires)
+  }
+
+  userBySession(tokenHash: string): PublicUser | undefined {
+    const row = this.db.prepare(`
+      SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id
+      WHERE s.token_hash = ? AND s.expires_at > datetime('now') AND u.active = 1`).get(tokenHash) as UserRow | undefined
+    return row ? toPublicUser(row) : undefined
+  }
+
+  deleteSession(tokenHash: string) {
+    this.db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(tokenHash)
+  }
+}
+
+/** A signed-in account as the client sees it (never includes the password hash). */
+export interface PublicUser {
+  id: string
+  email: string
+  name: string
+  role: string
+  label: string
+  description: string
+  modules: ModuleKey[]
+  photo?: string
+  hue: number
+}
+
+interface UserRow {
+  id: string; email: string; password_hash: string; name: string; role: string; label: string
+  description: string; modules: string; photo: string | null; hue: number
+}
+
+function toPublicUser(r: UserRow): PublicUser {
+  return {
+    id: r.id, email: r.email, name: r.name, role: r.role, label: r.label, description: r.description,
+    modules: JSON.parse(r.modules), photo: r.photo ?? undefined, hue: r.hue,
   }
 }

@@ -8,7 +8,7 @@ import { dayLabel, todayDay, toDay } from '../../../lib/dates'
 import { fmtCompact, fmtINR } from '../../../lib/format'
 import { photoFor } from '../../../lib/photo'
 import type { Analysis } from '../../../lib/projectMetrics'
-import { useApp } from '../../../store'
+import { useApp, useCanOpen } from '../../../store'
 
 const MONTH = 30.44
 const ROLES = ['Engineer', 'Senior Engineer', 'QA Engineer', 'Designer', 'Analyst', 'Business Analyst', 'DevOps Engineer', 'Scrum Master', 'Specialist']
@@ -71,6 +71,7 @@ function DeployAssetModal({ a, open, onClose }: { a: Analysis; open: boolean; on
 
 export default function ResourcesTab({ a }: { a: Analysis }) {
   const nav = useNavigate()
+  const canOpen = useCanOpen()
   const { project: p, fin } = a
   const assets = useApp((s) => s.assets)
   const removeMember = useApp((s) => s.removeProjectMember)
@@ -102,7 +103,7 @@ export default function ResourcesTab({ a }: { a: Analysis }) {
             return (
               <tr key={m.employeeId + m.since} className={clsx(m.until && 'opacity-50')}>
                 <td>
-                  <button onClick={() => nav(`/hr/employees/${e.id}`)} className="flex items-center gap-2.5 text-left">
+                  <button disabled={!canOpen('/hr')} onClick={() => nav(`/hr/employees/${e.id}`)} className="disabled:pointer-events-none flex items-center gap-2.5 text-left">
                     <Avatar name={e.name} hue={e.avatarHue} src={photoFor(e)} size={28} />
                     <span className="leading-tight"><span className="block text-[13px] font-semibold">{e.name}</span><span className="text-[11px] text-ash">{e.department}</span></span>
                   </button>
@@ -137,7 +138,7 @@ export default function ResourcesTab({ a }: { a: Analysis }) {
               const holder = x.assignedTo ? employeeById(x.assignedTo) : undefined
               return (
                 <li key={l.assetId + l.since} className={clsx('flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-soft', l.until && 'opacity-50')}>
-                  <button onClick={() => nav(`/assets/inventory/${x.id}`)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <button disabled={!canOpen('/assets')} onClick={() => nav(`/assets/inventory/${x.id}`)} className="disabled:pointer-events-none flex min-w-0 flex-1 items-center gap-3 text-left">
                     <img src={x.image} alt="" className="size-10 shrink-0 rounded-xl bg-soft object-cover" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />
                     <span className="min-w-0">
                       <span className="block truncate text-[13px] font-semibold">{x.name}</span>
@@ -181,7 +182,7 @@ export default function ResourcesTab({ a }: { a: Analysis }) {
         {fin.invoices.length === 0 ? <div className="mt-3"><Empty>{p.client === 'Internal' ? 'No client billing on internal projects.' : 'No invoices raised since kick-off.'}</Empty></div> : (
           <Table className="mt-3" head={['Invoice', 'Issued', 'Due', 'Total', 'Status']}>
             {fin.invoices.map((i) => (
-              <tr key={i.id} className="cursor-pointer" onClick={() => nav(`/finance/invoices?open=${i.id}`)}>
+              <tr key={i.id} className={canOpen('/finance') ? 'cursor-pointer' : undefined} onClick={canOpen('/finance') ? () => nav(`/finance/invoices?open=${i.id}`) : undefined}>
                 <td className="text-xs font-semibold">{i.id}</td>
                 <td className="text-xs">{dayLabel(toDay(i.issueDate))}</td>
                 <td className="text-xs">{dayLabel(toDay(i.dueDate))}</td>

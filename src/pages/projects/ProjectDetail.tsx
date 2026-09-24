@@ -5,7 +5,7 @@ import { Confetti, HealthRing } from '../../components/projects/projectUi'
 import { Avatar, Badge, Button, Segmented } from '../../components/ui'
 import { employeeById } from '../../data/mock'
 import { photoFor } from '../../lib/photo'
-import { useApp } from '../../store'
+import { useApp, useCanOpen } from '../../store'
 import FinanceTab from './detail/FinanceTab'
 import OverviewTab from './detail/OverviewTab'
 import ResourcesTab from './detail/ResourcesTab'
@@ -20,6 +20,7 @@ const STATUS_TONE = { Initiated: 'gray', 'In Progress': 'blue', 'On Hold': 'ambe
 export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
+  const canOpen = useCanOpen()
   const [params, setParams] = useSearchParams()
   const rows = useAnalyzed()
   const setStatus = useApp((s) => s.setProjectStatus)
@@ -60,13 +61,13 @@ export default function ProjectDetail() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-5">
               {head && (
-                <button onClick={() => nav(`/hr/employees/${head.id}`)} className="flex items-center gap-2.5 text-left">
+                <button disabled={!canOpen('/hr')} onClick={() => nav(`/hr/employees/${head.id}`)} className="disabled:pointer-events-none flex items-center gap-2.5 text-left">
                   <Avatar name={head.name} hue={head.avatarHue} src={photoFor(head)} size={40} />
                   <span className="leading-tight"><span className="block text-[10px] font-bold uppercase tracking-wide text-ash">Project head</span><span className="text-[13px] font-semibold">{head.name}</span></span>
                 </button>
               )}
               {lead && (
-                <button onClick={() => nav(`/hr/employees/${lead.id}`)} className="hidden items-center gap-2.5 text-left sm:flex">
+                <button disabled={!canOpen('/hr')} onClick={() => nav(`/hr/employees/${lead.id}`)} className="disabled:pointer-events-none hidden items-center gap-2.5 text-left sm:flex">
                   <Avatar name={lead.name} hue={lead.avatarHue} src={photoFor(lead)} size={40} />
                   <span className="leading-tight"><span className="block text-[10px] font-bold uppercase tracking-wide text-ash">Delivery lead</span><span className="text-[13px] font-semibold">{lead.name}</span></span>
                 </button>

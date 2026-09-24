@@ -14,12 +14,14 @@ import { photoFor } from '../../lib/photo'
 import { deptDraw } from '../../lib/projectMetrics'
 import NewProjectModal from './NewProjectModal'
 import { PORTFOLIO_TITLES, useAnalyzed } from './useAnalyzed'
+import { useCanOpen } from '../../store'
 
 const XP_PER_LEVEL = 250
 const RANK_ICON = ['text-amber-deep', 'text-ash', 'text-[#a8703a]']
 
 export default function ProjectsDashboard() {
   const nav = useNavigate()
+  const canOpen = useCanOpen()
   const rows = useAnalyzed()
   const [creating, setCreating] = useState(false)
   const today = todayDay()
@@ -260,17 +262,17 @@ export default function ProjectsDashboard() {
           <CardHeader title="Where our resources go" subtitle="People, assets and money drawn from the other modules into projects" />
           <div className="mt-3 grid gap-4 lg:grid-cols-5">
             <div className="grid gap-2 sm:grid-cols-3 lg:col-span-3">
-              <button onClick={() => nav('/hr/employees')} className="clickable-tile rounded-2xl border border-line/70 bg-sky/25 p-3 text-left hover:bg-sky/40">
+              <button disabled={!canOpen('/hr/employees')} onClick={() => nav('/hr/employees')} className="disabled:pointer-events-none clickable-tile rounded-2xl border border-line/70 bg-sky/25 p-3 text-left hover:bg-sky/40">
                 <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-sky-deep"><Users size={13} /> People</span>
                 <p className="mt-1 font-display text-xl font-semibold tabular-nums">{resources.fte.toFixed(1)} <span className="text-xs font-medium text-ash">FTE</span></p>
                 <p className="mt-0.5 text-[11px] leading-snug text-ash">{resources.people} allocations · {fmtCompact(resources.peopleCost)} salary to date</p>
               </button>
-              <button onClick={() => nav('/assets/inventory')} className="clickable-tile rounded-2xl border border-line/70 bg-sage/25 p-3 text-left hover:bg-sage/40">
+              <button disabled={!canOpen('/assets/inventory')} onClick={() => nav('/assets/inventory')} className="disabled:pointer-events-none clickable-tile rounded-2xl border border-line/70 bg-sage/25 p-3 text-left hover:bg-sage/40">
                 <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-sage-deep"><Boxes size={13} /> Assets</span>
                 <p className="mt-1 font-display text-xl font-semibold tabular-nums">{resources.assetCount} <span className="text-xs font-medium text-ash">deployed</span></p>
                 <p className="mt-0.5 text-[11px] leading-snug text-ash">{fmtCompact(resources.assetCharge)} depreciation charged</p>
               </button>
-              <button onClick={() => nav('/finance/invoices')} className="clickable-tile rounded-2xl border border-line/70 bg-lime/30 p-3 text-left hover:bg-lime/50">
+              <button disabled={!canOpen('/finance/invoices')} onClick={() => nav('/finance/invoices')} className="disabled:pointer-events-none clickable-tile rounded-2xl border border-line/70 bg-lime/30 p-3 text-left hover:bg-lime/50">
                 <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#495d16]"><Receipt size={13} /> Finance</span>
                 <p className="mt-1 font-display text-xl font-semibold tabular-nums">{fmtCompact(resources.claims)} <span className="text-xs font-medium text-ash">claims</span></p>
                 <p className="mt-0.5 text-[11px] leading-snug text-ash">{fmtCompact(resources.billed)} billed · {fmtCompact(resources.collected)} collected</p>

@@ -1,37 +1,68 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { assets, candidates, employeeById, expenses, invoices, leaveRequests, payrollRuns, TODAY, type Asset, type AssetStatus, type Candidate, type Expense, type ExpenseStatus, type Invoice, type InvoiceStatus, type LeaveRequest, type LeaveStatus, type Stage } from './data/mock'
-import type { RoleId } from './data/roles'
+import type { ModuleKey, RoleId } from './data/roles'
 import { projects as seedProjects, type Project, type ProjectStatus } from './data/projects'
 import { fromDay, todayDay, toDay } from './lib/dates'
 import { overallProgress } from './lib/projectMetrics'
-import { api, onWriteError } from './lib/api'
+import { api, onUnauthorized, onWriteError, type SessionUser } from './lib/api'
+import { loadWorkspace } from './data/hydrate'
 import { appSettings, collectionSources } from './data/registry'
 
+type AuthStatus = 'checking' | 'signedOut' | 'signedIn'
+
 interface AuthState {
+  /** Checking = restoring a session on page load. */
+  status: AuthStatus
+  user: SessionUser | null
   role: RoleId | null
   showSplash: boolean
-  login: (role: RoleId) => void
-  logout: () => void
   clearSplash: () => void
 }
 
-export const useAuth = create<AuthState>()(
-  persist(
-    (set) => ({
-      role: null,
-      showSplash: false,
-      login: (role) => set({ role, showSplash: true }),
-      logout: () => set({ role: null, showSplash: false }),
-      clearSplash: () => set({ showSplash: false }),
-    }),
-    {
-      name: 'worksuite-auth',
-      // Don't persist splash flag — always start fresh
-      partialize: (s) => ({ role: s.role }),
-    },
-  ),
-)
+/** The signed-in account. The server session cookie is the source of truth; nothing is kept in localStorage. */
+export const useAuth = create<AuthState>()((set) => ({
+  status: 'checking',
+  user: null,
+  role: null,
+  showSplash: false,
+  clearSplash: () => set({ showSplash: false }),
+}))
+
+async function enterWorkspace(splash: boolean) {
+  const user = await loadWorkspace()
+  startSync()
+  useAuth.setState({ status: 'signedIn', user, role: user.role, showSplash: splash })
+  return user
+}
+
+/** On page load: resume the session if the cookie is still valid. */
+export async function restoreSession() {
+  try {
+    await api.me()
+    await enterWorkspace(false)
+  } catch {
+    useAuth.setState({ status: 'signedOut', user: null, role: null })
+  }
+}
+
+/** Email + password sign-in; loads only the data this account's role may see. Throws ApiError on failure. */
+export async function signIn(email: string, password: string) {
+  await api.login(email, password)
+  return enterWorkspace(true)
+}
+
+/** Ends the session and reloads, so no data from this account stays in memory. */
+export async function signOut() {
+  await api.logout().catch(() => {})
+  window.location.hash = '#/login'
+  window.location.reload()
+}
+
+onUnauthorized(() => {
+  if (useAuth.getState().status !== 'signedIn') return
+  window.location.hash = '#/login'
+  window.location.reload()
+})
 
 export interface Toast { id: number; message: string; tone?: 'success' | 'info' | 'error' }
 
@@ -355,4 +386,13 @@ export function startSync() {
     lastError = Date.now()
     useApp.getState().toast(`Couldn't save to the server — ${err.message}`, 'error')
   })
+}
+
+/** Whether the signed-in role can open an in-app path (e.g. `/finance/invoices`) — for links into other modules. */
+export function useCanOpen() {
+  const modules = useAuth((s) => s.user?.modules)
+  return (path: string) => {
+    const mod = path.split(/[/?#]/).filter(Boolean)[0]
+    return mod === 'help' || (!!modules && modules.includes(mod as ModuleKey))
+  }
 }

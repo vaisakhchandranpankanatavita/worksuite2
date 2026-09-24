@@ -1,9 +1,13 @@
 import clsx from 'clsx'
-import { AlertTriangle, ArrowUpRight, CalendarClock, Lightbulb, RefreshCw, Sparkles, TrendingUp, Users, Wallet } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, Boxes, CalendarClock, FolderKanban, Lightbulb, RefreshCw, Sparkles, TrendingUp, Users, Wallet, Wrench } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { attendanceTrend, complianceDeadlines, employees, headcountTrend, jobs, monthlyFinance, todayAttendance } from '../data/mock'
-import { useApp } from '../store'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { attendanceTrend, complianceDeadlines, employees, headcountTrend, jobs, monthlyFinance, todayAttendance, type Asset, type Expense, type Invoice, type LeaveRequest } from '../data/mock'
+import type { Project } from '../data/projects'
+import type { ModuleKey } from '../data/roles'
+import { toDay, todayDay } from '../lib/dates'
+import { fmtCompact } from '../lib/format'
+import { useApp, useAuth } from '../store'
 
 type InsightTone = 'positive' | 'warning' | 'neutral'
 type Insight = {
@@ -16,74 +20,167 @@ type Insight = {
   cta?: string
 }
 
-function buildInsights(pending: number, overdue: number): Insight[] {
-  const present = todayAttendance.filter((a) => a.status === 'Present' || a.status === 'Late').length
-  const rate = ((present + todayAttendance.filter((a) => a.status === 'Remote').length) / employees.length) * 100
-  const lastHires = headcountTrend.at(-1)!.hires
-  const prevHires = headcountTrend.at(-2)!.hires
-  const hireDelta = lastHires - prevHires
-  const openings = jobs.reduce((s, j) => s + j.openings, 0)
-  const attnUp = attendanceTrend.at(-1)!.present - attendanceTrend.at(-2)!.present
+/** Everything the insights are drawn from (store slices + the role's modules). */
+interface Inputs {
+  modules: ModuleKey[]
+  focus: ModuleKey
+  leaves: LeaveRequest[]
+  invoices: Invoice[]
+  expenses: Expense[]
+  assets: Asset[]
+  projects: Project[]
+}
 
-  return [
-    {
-      tone: rate >= 90 ? 'positive' : 'warning',
-      icon: TrendingUp,
-      stat: `${rate.toFixed(1)}%`,
-      statLabel: 'present today',
-      title: attnUp >= 0
-        ? `Up ${attnUp} vs. yesterday — Engineering and Sales leading on-site presence.`
-        : `Down ${Math.abs(attnUp)} vs. yesterday — worth a nudge to team leads.`,
-      to: '/hr/attendance',
-      cta: 'View attendance',
-    },
-    {
-      tone: pending > 0 ? 'warning' : 'positive',
-      icon: AlertTriangle,
-      stat: `${pending}`,
-      statLabel: 'awaiting approval',
-      title: pending > 0
-        ? `Clearing these keeps rota planning accurate — action from the AI assistant.`
-        : `No leave requests pending — rota planning is fully up to date.`,
-      to: '/hr/leave',
-      cta: 'Review requests',
-    },
-    {
-      tone: hireDelta >= 0 ? 'positive' : 'neutral',
-      icon: Sparkles,
-      stat: `${lastHires}`,
-      statLabel: 'hires this month',
+type Tagged<T> = T & { module: ModuleKey }
+
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+
+function hrInsights({ leaves }: Inputs): Tagged<Insight>[] {
+  const out: Tagged<Insight>[] = []
+  if (employees.length && todayAttendance.length) {
+    const present = todayAttendance.filter((a) => a.status === 'Present' || a.status === 'Late').length
+    const rate = ((present + todayAttendance.filter((a) => a.status === 'Remote').length) / employees.length) * 100
+    const [prev, last] = attendanceTrend.slice(-2)
+    const attnUp = last && prev ? last.present - prev.present : 0
+    out.push({
+      module: 'hr', tone: rate >= 90 ? 'positive' : 'warning', icon: TrendingUp, stat: `${rate.toFixed(1)}%`, statLabel: 'present today',
+      title: attnUp >= 0 ? `Up ${attnUp} vs. yesterday — Engineering and Sales leading on-site presence.` : `Down ${Math.abs(attnUp)} vs. yesterday — worth a nudge to team leads.`,
+      to: '/hr/attendance', cta: 'View attendance',
+    })
+  }
+  const pending = leaves.filter((l) => l.status === 'Pending').length
+  out.push({
+    module: 'hr', tone: pending > 0 ? 'warning' : 'positive', icon: AlertTriangle, stat: `${pending}`, statLabel: 'awaiting approval',
+    title: pending > 0 ? 'Clearing these keeps rota planning accurate — action from the AI assistant.' : 'No leave requests pending — rota planning is fully up to date.',
+    to: '/hr/leave', cta: 'Review requests',
+  })
+  const [prevM, lastM] = headcountTrend.slice(-2)
+  if (lastM) {
+    const openings = jobs.reduce((s, j) => s + j.openings, 0)
+    out.push({
+      module: 'hr', tone: !prevM || lastM.hires >= prevM.hires ? 'positive' : 'neutral', icon: Sparkles, stat: `${lastM.hires}`, statLabel: 'hires this month',
       title: `${openings} roles open across ${jobs.length} pipelines — likely to close ${Math.max(1, Math.round(openings * 0.4))} within 30 days.`,
-      to: '/hr/recruitment',
-      cta: 'Open recruitment',
+      to: '/hr/recruitment', cta: 'Open recruitment',
+    })
+  }
+  return out
+}
+
+function financeInsights({ invoices, expenses }: Inputs): Tagged<Insight>[] {
+  const overdue = invoices.filter((i) => i.status === 'Overdue')
+  const claims = expenses.filter((e) => e.status === 'Pending')
+  const lastMonth = monthlyFinance.at(-1)
+  const out: Tagged<Insight>[] = [
+    {
+      module: 'finance', tone: overdue.length > 0 ? 'warning' : 'positive', icon: Lightbulb, stat: `${overdue.length}`, statLabel: 'invoices overdue',
+      title: overdue.length > 0 ? `Chasing these first would improve this month's collection ratio the most.` : 'No overdue invoices — collections are healthy heading into payroll.',
+      to: '/finance/invoices', cta: 'Go to invoices',
     },
     {
-      tone: overdue > 0 ? 'warning' : 'positive',
-      icon: Lightbulb,
-      stat: `${overdue}`,
-      statLabel: 'invoices overdue',
-      title: overdue > 0
-        ? `Chasing these first would improve this month's collection ratio the most.`
-        : `No overdue invoices — collections are healthy heading into payroll.`,
-      to: '/finance/invoices',
-      cta: 'Go to invoices',
+      module: 'finance', tone: claims.length > 0 ? 'warning' : 'positive', icon: Wallet, stat: `${claims.length}`, statLabel: 'claims to review',
+      title: claims.length > 0 ? `${fmtCompact(claims.reduce((s, e) => s + e.amount, 0))} in expense claims waiting on approval.` : 'Every expense claim has been reviewed.',
+      to: '/finance/expenses', cta: 'Review claims',
+    },
+  ]
+  if (lastMonth && lastMonth.revenue) {
+    const margin = (lastMonth.profit / lastMonth.revenue) * 100
+    out.push({
+      module: 'finance', tone: margin >= 15 ? 'positive' : 'neutral', icon: TrendingUp, stat: `${margin.toFixed(1)}%`, statLabel: 'profit margin',
+      title: `${fmtCompact(lastMonth.revenue)} revenue against ${fmtCompact(lastMonth.expenses)} spend this month.`,
+      to: '/finance/reports', cta: 'Open reports',
+    })
+  }
+  return out
+}
+
+function assetInsights({ assets }: Inputs): Tagged<Insight>[] {
+  const today = todayDay()
+  const live = assets.filter((a) => a.status !== 'Retired')
+  const available = live.filter((a) => a.status === 'Available').length
+  const due = live.filter((a) => a.nextMaintenanceDate && toDay(a.nextMaintenanceDate) - today <= 7).length
+  const late = live.filter((a) => a.status === 'Assigned' && a.returnDue && toDay(a.returnDue) < today).length
+  const warranty = live.filter((a) => { const d = a.warrantyUntil ? toDay(a.warrantyUntil) - today : -1; return d >= 0 && d <= 60 }).length
+  return [
+    {
+      module: 'assets', tone: available > 0 ? 'positive' : 'warning', icon: Boxes, stat: `${available}`, statLabel: 'ready to assign',
+      title: `${plural(live.length, 'active asset')} — ${Math.round(((live.length - available) / Math.max(1, live.length)) * 100)}% in use or in service.`,
+      to: '/assets/inventory', cta: 'Open inventory',
+    },
+    {
+      module: 'assets', tone: due > 0 ? 'warning' : 'positive', icon: Wrench, stat: `${due}`, statLabel: 'maintenance due',
+      title: due > 0 ? 'Due within 7 days — schedule them before they fall overdue.' : 'No preventive maintenance due this week.',
+      to: '/assets/inventory', cta: 'Plan maintenance',
+    },
+    {
+      module: 'assets', tone: late > 0 ? 'warning' : 'positive', icon: AlertTriangle, stat: `${late}`, statLabel: 'loans overdue',
+      title: late > 0 ? 'Loaned devices past their return date — follow up with the holders.' : 'Every loaned device is within its return date.',
+      to: '/assets/inventory', cta: 'View loans',
+    },
+    {
+      module: 'assets', tone: warranty > 0 ? 'neutral' : 'positive', icon: CalendarClock, stat: `${warranty}`, statLabel: 'warranties ending',
+      title: warranty > 0 ? 'Warranty cover ends within 60 days — raise any claims now.' : 'No warranties expiring in the next 60 days.',
+      to: '/assets/inventory', cta: 'Review assets',
     },
   ]
 }
 
-function buildSignals() {
-  const avgTenureYrs = employees.reduce((s, e) => s + (Date.now() - new Date(e.joinDate).getTime()) / 3.15576e10, 0) / employees.length
-  const nextDeadline = complianceDeadlines[0]
-  const lastMonth = monthlyFinance.at(-1)!
-  const profitMargin = (lastMonth.profit / lastMonth.revenue) * 100
-  const probation = employees.filter((e) => e.status === 'Probation').length
+function projectInsights({ projects }: Inputs): Tagged<Insight>[] {
+  const today = todayDay()
+  const active = projects.filter((p) => p.status !== 'Completed')
+  const late = active.filter((p) => toDay(p.plannedEnd) < today).length
+  const hold = projects.filter((p) => p.status === 'On Hold').length
+  const blocked = active.filter((p) => p.updates[0]?.blocker).length
   return [
-    { icon: Users, label: 'Avg. tenure', value: `${avgTenureYrs.toFixed(1)} yrs` },
-    { icon: CalendarClock, label: nextDeadline.title, value: `${nextDeadline.daysLeft}d left` },
-    { icon: Wallet, label: 'Profit margin MTD', value: `${profitMargin.toFixed(1)}%` },
-    { icon: Users, label: 'On probation', value: `${probation}` },
+    {
+      module: 'projects', tone: late > 0 ? 'warning' : 'positive', icon: CalendarClock, stat: `${late}`, statLabel: 'past planned end',
+      title: late > 0 ? 'Re-plan or unblock these before the slip compounds.' : `All ${plural(active.length, 'active project')} are within their planned dates.`,
+      to: '/projects/timeline', cta: 'Open timeline',
+    },
+    {
+      module: 'projects', tone: blocked > 0 ? 'warning' : 'positive', icon: AlertTriangle, stat: `${blocked}`, statLabel: 'reporting blockers',
+      title: blocked > 0 ? 'Their latest update flags a blocker — worth a check-in.' : 'No blockers in the latest project updates.',
+      to: '/projects/portfolio', cta: 'View portfolio',
+    },
+    {
+      module: 'projects', tone: hold > 0 ? 'neutral' : 'positive', icon: FolderKanban, stat: `${hold}`, statLabel: 'on hold',
+      title: `${plural(projects.length, 'project')} in the portfolio, ${plural(projects.length - active.length, 'delivered')}.`,
+      to: '/projects/portfolio', cta: 'Open portfolio',
+    },
   ]
 }
+
+/** Insights for the modules this role can use, the current dashboard's module first. Max 4. */
+function buildInsights(input: Inputs): Insight[] {
+  const all = [...hrInsights(input), ...financeInsights(input), ...assetInsights(input), ...projectInsights(input)]
+    .filter((i) => input.modules.includes(i.module))
+  return [...all.filter((i) => i.module === input.focus), ...all.filter((i) => i.module !== input.focus)].slice(0, 4)
+}
+
+function buildSignals({ modules, assets, projects }: Inputs) {
+  const can = (m: ModuleKey) => modules.includes(m)
+  const out: { icon: typeof Users; label: string; value: string }[] = []
+  if (can('hr') && employees.length) {
+    const avgTenureYrs = employees.reduce((s, e) => s + (Date.now() - new Date(e.joinDate).getTime()) / 3.15576e10, 0) / employees.length
+    out.push({ icon: Users, label: 'Avg. tenure', value: `${avgTenureYrs.toFixed(1)} yrs` })
+    out.push({ icon: Users, label: 'On probation', value: `${employees.filter((e) => e.status === 'Probation').length}` })
+  }
+  const nextDeadline = can('hr') || can('finance') ? complianceDeadlines[0] : undefined
+  if (nextDeadline) out.push({ icon: CalendarClock, label: nextDeadline.title, value: `${nextDeadline.daysLeft}d left` })
+  const lastMonth = can('finance') ? monthlyFinance.at(-1) : undefined
+  if (lastMonth?.revenue) out.push({ icon: Wallet, label: 'Profit margin MTD', value: `${((lastMonth.profit / lastMonth.revenue) * 100).toFixed(1)}%` })
+  if (can('assets')) {
+    const live = assets.filter((a) => a.status !== 'Retired')
+    out.push({ icon: Boxes, label: 'Fleet value', value: fmtCompact(live.reduce((s, a) => s + a.cost, 0)) })
+    out.push({ icon: Wrench, label: 'In maintenance', value: `${live.filter((a) => a.status === 'Maintenance').length}` })
+  }
+  if (can('projects')) {
+    out.push({ icon: FolderKanban, label: 'Projects in flight', value: `${projects.filter((p) => p.status === 'In Progress').length}` })
+    out.push({ icon: Wallet, label: 'Portfolio budget', value: fmtCompact(projects.reduce((s, p) => s + p.budget, 0)) })
+  }
+  return out.slice(0, 5)
+}
+
+const NO_MODULES: ModuleKey[] = []
 
 const TONE_RING: Record<InsightTone, string> = {
   positive: 'bg-sage/70',
@@ -103,11 +200,19 @@ const TONE_STAT: Record<InsightTone, string> = {
 
 export default function AiInsights() {
   const nav = useNavigate()
-  const { leaves, invoices } = useApp()
-  const pending = leaves.filter((l) => l.status === 'Pending').length
-  const overdue = invoices.filter((i) => i.status === 'Overdue').length
-  const insights = useMemo(() => buildInsights(pending, overdue), [pending, overdue])
-  const signals = useMemo(() => buildSignals(), [])
+  const { pathname } = useLocation()
+  const { leaves, invoices, expenses, assets, projects } = useApp()
+  const modules = useAuth((s) => s.user?.modules) ?? NO_MODULES
+  // Lead with the insights for the dashboard being viewed.
+  const focus = (pathname.split('/')[1] || modules[0]) as ModuleKey
+  const insights = useMemo(
+    () => buildInsights({ modules, focus, leaves, invoices, expenses, assets, projects }),
+    [modules, focus, leaves, invoices, expenses, assets, projects],
+  )
+  const signals = useMemo(
+    () => buildSignals({ modules, focus, leaves, invoices, expenses, assets, projects }),
+    [modules, assets, projects],
+  )
 
   const [analyzing, setAnalyzing] = useState(true)
   const [revealed, setRevealed] = useState(0)

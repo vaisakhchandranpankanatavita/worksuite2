@@ -25,13 +25,21 @@ import ProjectList from './pages/projects/ProjectList'
 import ProjectTimeline from './pages/projects/ProjectTimeline'
 import ProjectDetail from './pages/projects/ProjectDetail'
 import { useAuth } from './store'
-import { roleById } from './data/roles'
 
 export default function App() {
   const showSplash  = useAuth((s) => s.showSplash)
   const clearSplash = useAuth((s) => s.clearSplash)
-  const roleId      = useAuth((s) => s.role)
-  const role        = roleById(roleId)
+  const role        = useAuth((s) => s.user)
+  const status      = useAuth((s) => s.status)
+
+  // Restoring a session on page load — hold the UI until we know who is signed in.
+  if (status === 'checking') {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#f1f3f1]" role="status" aria-label="Loading workspace">
+        <span className="size-9 animate-spin rounded-full border-[3px] border-line border-t-ink" />
+      </div>
+    )
+  }
 
   return (
     <>

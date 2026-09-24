@@ -5,12 +5,14 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { assets, employees, invoices } from '../data/mock'
-import { roleById, type ModuleKey } from '../data/roles'
-import { useApp, useAuth } from '../store'
+import { assets, complianceDeadlines, employees, invoices, payrollRuns } from '../data/mock'
+import { toDay, todayDay } from '../lib/dates'
+import type { ModuleKey } from '../data/roles'
+import { signOut as endSession, useApp, useAuth } from '../store'
 import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
 import AssetsEnterOverlay from './AssetsEnterOverlay'
+import VoiceControl from './VoiceControl'
 
 const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end?: boolean }[]> = {
   hr: [
@@ -78,10 +80,13 @@ function Logo() {
   )
 }
 
+const NO_MODULES: ModuleKey[] = []
+
 function GlobalSearch({ onClose }: { onClose: () => void }) {
   const [q, setQ] = useState('')
   const nav = useNavigate()
   const projects = useApp((s) => s.projects)
+  const modules = useAuth((s) => s.user?.modules ?? NO_MODULES)
   const ref = useRef<HTMLInputElement>(null)
   useEffect(() => ref.current?.focus(), [])
   useEffect(() => {
@@ -92,12 +97,15 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
   const results = useMemo(() => {
     if (!q.trim()) return []
     const s = q.toLowerCase()
-    const emps = employees.filter((e) => `${e.name} ${e.role} ${e.id}`.toLowerCase().includes(s)).slice(0, 5).map((e) => ({ key: e.id, title: e.name, sub: `${e.role} · ${e.department}`, to: `/hr/employees/${e.id}`, hue: e.avatarHue }))
-    const invs = invoices.filter((i) => `${i.id} ${i.client.name}`.toLowerCase().includes(s)).slice(0, 4).map((i) => ({ key: i.id, title: i.id, sub: i.client.name, to: `/finance/invoices?open=${i.id}`, hue: undefined }))
-    const asts = assets.filter((a) => `${a.name} ${a.serial} ${a.id}`.toLowerCase().includes(s)).slice(0, 4).map((a) => ({ key: a.id, title: a.name, sub: `${a.category} · ${a.status}`, to: `/assets/inventory/${a.id}`, hue: undefined }))
-    const prjs = projects.filter((p) => `${p.name} ${p.code} ${p.client}`.toLowerCase().includes(s)).slice(0, 4).map((p) => ({ key: p.id, title: p.name, sub: `${p.code} · ${p.client}`, to: `/projects/${p.id}`, hue: undefined }))
+    const can = (m: ModuleKey) => modules.includes(m)
+    const emps = !can('hr') ? [] : employees.filter((e) => `${e.name} ${e.role} ${e.id}`.toLowerCase().includes(s)).slice(0, 5).map((e) => ({ key: e.id, title: e.name, sub: `${e.role} · ${e.department}`, to: `/hr/employees/${e.id}`, hue: e.avatarHue }))
+    const invs = !can('finance') ? [] : invoices.filter((i) => `${i.id} ${i.client.name}`.toLowerCase().includes(s)).slice(0, 4).map((i) => ({ key: i.id, title: i.id, sub: i.client.name, to: `/finance/invoices?open=${i.id}`, hue: undefined }))
+    const asts = !can('assets') ? [] : assets.filter((a) => `${a.name} ${a.serial} ${a.id}`.toLowerCase().includes(s)).slice(0, 4).map((a) => ({ key: a.id, title: a.name, sub: `${a.category} · ${a.status}`, to: `/assets/inventory/${a.id}`, hue: undefined }))
+    const prjs = !can('projects') ? [] : projects.filter((p) => `${p.name} ${p.code} ${p.client}`.toLowerCase().includes(s)).slice(0, 4).map((p) => ({ key: p.id, title: p.name, sub: `${p.code} · ${p.client}`, to: `/projects/${p.id}`, hue: undefined }))
     return [...emps, ...invs, ...asts, ...prjs]
-  }, [q, projects])
+  }, [q, projects, modules])
+  const placeholder = `Search ${[can('hr') && 'employees', can('finance') && 'invoices', can('assets') && 'assets', can('projects') && 'projects'].filter(Boolean).join(', ')}…`
+  function can(m: ModuleKey) { return modules.includes(m) }
   return createPortal(
     <div className="fixed inset-0 z-50 bg-ink/25 p-4 pt-[11vh] backdrop-blur-md" onMouseDown={onClose}>
       <div className="card card-static animate-in mx-auto max-w-xl p-3" onMouseDown={(e) => e.stopPropagation()}>
@@ -105,7 +113,7 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-[inherit] bg-gradient-to-r from-transparent via-lime-deep/50 to-transparent" />
         <div className="flex items-center gap-3 px-2">
           <Search size={17} className="text-ash shrink-0" />
-          <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && onClose()} placeholder="Search employees, invoices, assets, projects…" className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-ash/60" />
+          <input ref={ref} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && onClose()} placeholder={placeholder} className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-ash/60" />
           <kbd className="shrink-0 rounded-lg border border-line bg-soft px-1.5 py-0.5 text-[10px] font-bold text-ash">ESC</kbd>
         </div>
         {results.length > 0 && (
@@ -130,12 +138,46 @@ function GlobalSearch({ onClose }: { onClose: () => void }) {
   )
 }
 
-const NOTIFICATIONS = [
-  { title: '8 leave requests awaiting approval', time: '10 min ago', tone: 'bg-amber', dot: 'bg-amber-deep' },
-  { title: 'September payroll draft is ready', time: '1 hour ago', tone: 'bg-lime', dot: 'bg-lime-deep' },
-  { title: '3 invoices are overdue', time: 'Today', tone: 'bg-rose', dot: 'bg-rose-deep' },
-  { title: 'PF & ESI remittance due this week', time: 'Today', tone: 'bg-sky', dot: 'bg-sky-deep' },
-]
+interface Notice { title: string; time: string; dot: string; to: string }
+
+/** Live alerts drawn only from the modules the signed-in role can use. */
+function useNotifications(modules: ModuleKey[]): Notice[] {
+  const { leaves, invoices: invs, expenses, assets: assetList, projects, payrollStatus } = useApp()
+  return useMemo(() => {
+    const out: Notice[] = []
+    const can = (m: ModuleKey) => modules.includes(m)
+    const today = todayDay()
+    const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+    if (can('hr')) {
+      const pending = leaves.filter((l) => l.status === 'Pending').length
+      if (pending) out.push({ title: `${plural(pending, 'leave request')} awaiting approval`, time: 'Leave', dot: 'bg-amber-deep', to: '/hr/leave' })
+      if (payrollRuns[0] && payrollStatus !== 'Paid') out.push({ title: `${payrollRuns[0].label} payroll is ${payrollStatus.toLowerCase()}`, time: 'Payroll', dot: 'bg-lime-deep', to: '/hr/payroll' })
+    }
+    if (can('finance')) {
+      const overdue = invs.filter((i) => i.status === 'Overdue').length
+      if (overdue) out.push({ title: `${plural(overdue, 'invoice')} overdue`, time: 'Receivables', dot: 'bg-rose-deep', to: '/finance/invoices' })
+      const claims = expenses.filter((e) => e.status === 'Pending').length
+      if (claims) out.push({ title: `${plural(claims, 'expense claim')} to review`, time: 'Expenses', dot: 'bg-amber-deep', to: '/finance/expenses' })
+    }
+    if (can('hr') || can('finance')) {
+      const next = complianceDeadlines.find((c) => c.daysLeft >= 0)
+      if (next) out.push({ title: `${next.title} due in ${plural(next.daysLeft, 'day')}`, time: 'Compliance', dot: 'bg-sky-deep', to: can('finance') ? '/finance' : '/hr' })
+    }
+    if (can('assets')) {
+      const due = assetList.filter((a) => a.status !== 'Retired' && a.nextMaintenanceDate && toDay(a.nextMaintenanceDate) - today <= 7).length
+      if (due) out.push({ title: `${plural(due, 'asset')} due for maintenance this week`, time: 'Maintenance', dot: 'bg-amber-deep', to: '/assets/inventory' })
+      const late = assetList.filter((a) => a.status === 'Assigned' && a.returnDue && toDay(a.returnDue) < today).length
+      if (late) out.push({ title: `${plural(late, 'loaned asset')} past return date`, time: 'Returns', dot: 'bg-rose-deep', to: '/assets/inventory' })
+    }
+    if (can('projects')) {
+      const late = projects.filter((p) => p.status !== 'Completed' && toDay(p.plannedEnd) < today).length
+      if (late) out.push({ title: `${plural(late, 'project')} past planned end date`, time: 'Delivery', dot: 'bg-rose-deep', to: '/projects/portfolio' })
+      const hold = projects.filter((p) => p.status === 'On Hold').length
+      if (hold) out.push({ title: `${plural(hold, 'project')} on hold`, time: 'Portfolio', dot: 'bg-sky-deep', to: '/projects/portfolio' })
+    }
+    return out
+  }, [modules, leaves, invs, expenses, assetList, projects, payrollStatus])
+}
 
 /**
  * Decorative static blobs behind the card grid — no scroll-driven motion.
@@ -162,13 +204,12 @@ function ParallaxBlobs() {
 export default function Layout() {
   const { pathname } = useLocation()
   const nav = useNavigate()
-  const roleId = useAuth((s) => s.role)
-  const logoutAuth = useAuth((s) => s.logout)
-  const role = roleById(roleId)
+  const role = useAuth((s) => s.user)
   const isHelp = pathname.startsWith('/help')
   const module: ModuleKey = pathname.startsWith('/finance') ? 'finance' : pathname.startsWith('/assets') ? 'assets' : pathname.startsWith('/projects') ? 'projects' : pathname.startsWith('/hr') ? 'hr' : (role?.modules[0] ?? 'hr')
   const [search, setSearch] = useState(false)
   const [bell, setBell] = useState(false)
+  const notices = useNotifications(role?.modules ?? NO_MODULES)
   const [mobile, setMobile] = useState(false)
   const [profile, setProfile] = useState(false)
   const [enteringAssets, setEnteringAssets] = useState(false)
@@ -202,7 +243,7 @@ export default function Layout() {
     setMobile(false); setBell(false); setProfile(false)
     if (lenisRef.current) lenisRef.current.scrollTo(0, { immediate: true }); else window.scrollTo(0, 0)
   }, [pathname])
-  function signOut() { setProfile(false); logoutAuth(); nav('/login') }
+  function signOut() { setProfile(false); endSession() }
 
   if (!role) return <Navigate to="/login" replace />
   if (!isHelp && !role.modules.includes(module)) return <Navigate to={`/${role.modules[0]}`} replace />
@@ -240,6 +281,7 @@ export default function Layout() {
             {/* Left: Logo + module switcher */}
             <div className="flex flex-1 items-center gap-4">
               <Logo />
+              <VoiceControl />
               {visibleModules.length > 1 && (
                 <div className="hidden rounded-full border border-white/60 bg-white/40 p-1 backdrop-blur-xl sm:inline-flex" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 8px -2px rgba(26,29,27,0.08)' }}>
                   {visibleModules.map((m) => {
@@ -276,7 +318,7 @@ export default function Layout() {
               <div className="relative">
                 <IconBtn onClick={() => setBell((b) => { const next = !b; if (next) { setProfile(false); setMobile(false) } return next })} aria-label="Notifications">
                   <Bell size={15} />
-                  <span className="absolute right-2 top-2 size-2 rounded-full bg-rose-deep ring-2 ring-white" />
+                  {notices.length > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-rose-deep ring-2 ring-white" />}
                 </IconBtn>
                 {bell && (
                   <div className="animate-in absolute right-0 top-12 z-40 w-80 rounded-2xl p-3"
@@ -290,14 +332,15 @@ export default function Layout() {
                   >
                     <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-2xl bg-gradient-to-r from-transparent via-rose-deep/30 to-transparent" />
                     <p className="px-2 pb-2 font-display text-sm font-semibold">Notifications</p>
-                    {NOTIFICATIONS.map((n) => (
-                      <div key={n.title} className="flex gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-white/60">
+                    {notices.length === 0 && <p className="px-2 py-4 text-center text-sm text-ash">You're all caught up.</p>}
+                    {notices.map((n) => (
+                      <button key={n.title} onClick={() => { setBell(false); nav(n.to) }} className="flex w-full gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-white/60">
                         <span className={clsx('mt-1.5 size-2 shrink-0 rounded-full', n.dot)} />
-                        <div>
-                          <p className="text-sm">{n.title}</p>
-                          <p className="text-xs text-ash">{n.time}</p>
-                        </div>
-                      </div>
+                        <span>
+                          <span className="block text-sm">{n.title}</span>
+                          <span className="block text-xs text-ash">{n.time}</span>
+                        </span>
+                      </button>
                     ))}
                   </div>
                 )}
