@@ -1,8 +1,8 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createApp } from './app'
-import { openDb } from './db'
-import { ensureSeeded } from './seed'
+import { createApp } from './app.js'
+import { openDb } from './db.js'
+import { ensureSeeded } from './seed.js'
 
 const PORT = Number(process.env.PORT ?? 4000)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')

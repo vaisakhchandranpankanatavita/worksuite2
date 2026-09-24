@@ -1,10 +1,10 @@
 import express, { type NextFunction, type Request, type RequestHandler, type Response } from 'express'
 import { existsSync } from 'node:fs'
-import { canReadCollection, canReadDataset, canReadSetting, canWriteCollection, canWriteSetting } from './access'
-import { login, logout, currentUser, requireAuth } from './auth'
-import { COLLECTIONS, HttpError, isCollection, type Collection, type Doc, type PublicUser, type Store } from './db'
-import { seedDatabase } from './seed'
-import { appSettings } from '../src/data/registry'
+import { canReadCollection, canReadDataset, canReadSetting, canWriteCollection, canWriteSetting } from './access.js'
+import { login, logout, currentUser, requireAuth } from './auth.js'
+import { COLLECTIONS, HttpError, isCollection, type Collection, type Doc, type PublicUser, type Store } from './db.js'
+import { seedDatabase } from './seed.js'
+import { appSettings } from '../src/data/registry.js'
 
 const isSetting = (k: string): k is keyof typeof appSettings => Object.hasOwn(appSettings, k)
 const isPlainObject = (v: unknown): v is Doc => typeof v === 'object' && v !== null && !Array.isArray(v)

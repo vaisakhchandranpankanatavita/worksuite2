@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "tsx server/index.ts",
-    "seed": "tsx server/seed-cli.ts",
+    "server": "tsx --env-file=.env server/index.ts",
+    "seed": "tsx --env-file=.env server/seed-cli.ts",
     "build": "tsc -b && tsc -p server && vite build",
-    "start": "vite build && tsx server/index.ts",
+    "start": "vite build && tsx --env-file=.env server/index.ts",
     "preview": "vite preview"
   },
   "dependencies": {

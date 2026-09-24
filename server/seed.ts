@@ -4,10 +4,10 @@
  *
  * `npm run seed` (server/seed-cli.ts) wipes and re-seeds data and accounts; the server fills in an empty database on start.
  */
-import { COLLECTIONS, type Collection, type Doc, type Store } from './db'
-import { collectionSources, datasetSources, appSettings } from '../src/data/registry'
-import { ROLES } from '../src/data/roles'
-import { hashPassword } from './auth'
+import { COLLECTIONS, type Collection, type Doc, type Store } from './db.js'
+import { collectionSources, datasetSources, appSettings } from '../src/data/registry.js'
+import { ROLES } from '../src/data/roles.js'
+import { hashPassword } from './auth.js'
 
 /** Password for the seeded demo accounts (override with WORKSUITE_DEMO_PASSWORD). */
 export const DEMO_PASSWORD = process.env.WORKSUITE_DEMO_PASSWORD ?? 'demo1234'

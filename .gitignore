@@ -3,6 +3,7 @@ dist
 tsconfig.tsbuildinfo
 .DS_Store
 *.local
+.env
 .vercel
 .claude
 server/data

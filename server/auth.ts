@@ -8,7 +8,7 @@
  */
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 import type { NextFunction, Request, Response } from 'express'
-import { HttpError, type PublicUser, type Store } from './db'
+import { HttpError, type PublicUser, type Store } from './db.js'
 
 export const SESSION_COOKIE = 'ws_session'
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000

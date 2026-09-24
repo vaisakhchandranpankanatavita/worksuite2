@@ -3,9 +3,9 @@
  * used locally (server/app.ts). The app + DB pool are built once and reused across warm invocations.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { createApp } from '../server/app'
-import { openDb } from '../server/db'
-import { ensureSeeded } from '../server/seed'
+import { createApp } from '../server/app.js'
+import { openDb } from '../server/db.js'
+import { ensureSeeded } from '../server/seed.js'
 
 let appPromise: ReturnType<typeof buildApp> | null = null
 

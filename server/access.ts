@@ -6,8 +6,8 @@
  * shared read-only across modules — e.g. Projects reads invoices and expense claims to cost a project,
  * and every module shows employee names.
  */
-import type { ModuleKey } from '../src/data/roles'
-import type { Collection } from './db'
+import type { ModuleKey } from '../src/data/roles.js'
+import type { Collection } from './db.js'
 
 interface Rule { read: ModuleKey[]; write: ModuleKey[] }
 

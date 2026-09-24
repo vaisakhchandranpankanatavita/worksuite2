@@ -9,7 +9,7 @@
  * prepended (lower seq) the same way the client store does.
  */
 import { Pool, type Pool as PoolType, type PoolClient, type QueryResultRow } from 'pg'
-import type { ModuleKey } from '../src/data/roles'
+import type { ModuleKey } from '../src/data/roles.js'
 
 /** Record collections the API allows CRUD on. Value = field used as the record id. */
 export const COLLECTIONS = {
