@@ -1,11 +1,26 @@
-const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
-const num = new Intl.NumberFormat('en-IN')
+/** Currency and number locale come from the company's configuration (set on sign-in by data/hydrate). */
+let money = { currency: 'INR', locale: 'en-IN' }
+let moneyFmt = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
+let numFmt = new Intl.NumberFormat('en-IN')
 
-export const fmtINR = (n: number) => inr.format(Math.round(n))
-export const fmtNum = (n: number) => num.format(Math.round(n))
+export function setMoneyFormat(currency: string, locale: string) {
+  money = { currency, locale }
+  moneyFmt = new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 })
+  numFmt = new Intl.NumberFormat(locale)
+}
 
-/** Compact Indian notation: ₹4.2L, ₹1.35Cr */
+/** The currency's symbol, e.g. "₹" or "$" — for labels like "Cost (₹)". */
+export const currencySymbol = () =>
+  new Intl.NumberFormat(money.locale, { style: 'currency', currency: money.currency }).formatToParts(0).find((p) => p.type === 'currency')?.value ?? money.currency
+
+export const fmtMoney = (n: number) => moneyFmt.format(Math.round(n))
+export const fmtNum = (n: number) => numFmt.format(Math.round(n))
+
+/** Compact amounts: ₹4.2L / ₹1.35Cr for rupees, the locale's own short form (e.g. $4.2M) otherwise. */
 export function fmtCompact(n: number) {
+  if (money.currency !== 'INR') {
+    return new Intl.NumberFormat(money.locale, { style: 'currency', currency: money.currency, notation: 'compact', maximumFractionDigits: 1 }).format(n)
+  }
   const abs = Math.abs(n)
   const sign = n < 0 ? '-' : ''
   if (abs >= 1e7) return `${sign}₹${(abs / 1e7).toFixed(2)}Cr`

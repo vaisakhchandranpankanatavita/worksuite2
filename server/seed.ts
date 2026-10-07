@@ -6,11 +6,9 @@
  */
 import { COLLECTIONS, type Collection, type Doc, type Store } from './db.js'
 import { collectionSources, datasetSources, appSettings } from '../src/data/registry.js'
-import { ROLES } from '../src/data/roles.js'
+import { randomBytes } from 'node:crypto'
 import { hashPassword } from './auth.js'
-
-/** Password for the seeded demo accounts (override with WORKSUITE_DEMO_PASSWORD). */
-export const DEMO_PASSWORD = process.env.WORKSUITE_DEMO_PASSWORD ?? 'demo1234'
+import { isConfigSetting } from './access.js'
 
 /** JSON round-trip drops `undefined` fields and gives the stored shape exactly what the API will return. */
 const plain = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
@@ -23,28 +21,41 @@ export async function seedDatabase(store: Store) {
       await store.replaceAll(name, docs)
       counts[name] = docs.length
     }
+    // Company configuration is the superadmin's, not demo data — a reseed keeps what they set up.
+    const kept = Object.entries(await store.allJson('settings')).filter(([k]) => isConfigSetting(k))
     await store.clearTable('datasets')
     await store.clearTable('settings')
     for (const [key, value] of Object.entries(datasetSources)) await store.setJson('datasets', key, plain(value))
     for (const [key, value] of Object.entries(appSettings)) await store.setJson('settings', key, plain(value))
+    for (const [key, value] of kept) await store.setJson('settings', key, value)
     await store.setMeta('seededAt', new Date().toISOString())
   })
   return counts
 }
 
-/** One sign-in account per role (Super Admin, HR, Finance, Production, Project Director). Signs everyone out. */
-export async function seedUsers(store: Store) {
-  const users = ROLES.map((r) => ({
-    id: `U-${r.id}`, email: r.email, name: r.name, role: r.id, label: r.label, description: r.description,
-    modules: r.modules, photo: r.photo, hue: r.hue, passwordHash: hashPassword(DEMO_PASSWORD),
-  }))
-  await store.tx(() => store.replaceUsers(users))
-  return users.length
+/**
+ * A fresh database gets exactly one account, the superadmin, who creates everyone else. The password comes
+ * from SUPERADMIN_PASSWORD; without it a random one is generated and printed once (it is never stored in clear).
+ */
+export async function bootstrapSuperadmin(store: Store): Promise<{ email: string; password?: string } | null> {
+  if ((await store.countUsers()) > 0) return null
+  const email = process.env.SUPERADMIN_EMAIL?.trim() || 'superadmin@worksuite.local'
+  const generated = process.env.SUPERADMIN_PASSWORD ? undefined : randomBytes(9).toString('base64url')
+  try {
+    await store.createUser({
+      id: 'U-superadmin', email, passwordHash: hashPassword(process.env.SUPERADMIN_PASSWORD ?? generated!),
+      name: 'Super Admin', label: 'Super Admin', description: 'Manages users, access and company configuration',
+      modules: ['hr', 'finance', 'assets', 'projects'], readOnly: [], isSuperadmin: true, hue: 200,
+    })
+  } catch {
+    return null // another instance created it first
+  }
+  return { email, password: generated }
 }
 
-/** Fills in whatever is missing (data and/or accounts) — used on server start. */
+/** Fills in whatever is missing (data and/or the superadmin) — used on server start. */
 export async function ensureSeeded(store: Store) {
-  const users = (await store.listUsers()).length === 0 ? await seedUsers(store) : 0
+  const superadmin = await bootstrapSuperadmin(store)
   const data = (await store.getMeta('seededAt')) ? null : await seedDatabase(store)
-  return users || data ? { users, data } : null
+  return superadmin || data ? { superadmin, data } : null
 }

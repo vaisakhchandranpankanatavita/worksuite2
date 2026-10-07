@@ -48,6 +48,13 @@ export const DATASET_ACCESS: Record<string, ModuleKey[]> = {
   transactions: ['finance'],
 }
 
+/** Company configuration: every signed-in user reads it (labels, currency, fields); only the superadmin writes it. */
+export const CONFIG_SETTINGS = ['orgConfig', 'customFields', 'theme'] as const
+export const isConfigSetting = (k: string) => (CONFIG_SETTINGS as readonly string[]).includes(k)
+
+/** The modules a user may change data in: their modules minus the ones they were given read-only. */
+export const writableModules = (u: { modules: ModuleKey[]; readOnly: ModuleKey[] }) => u.modules.filter((m) => !u.readOnly.includes(m))
+
 export const SETTING_ACCESS: Record<string, Rule> = {
   payrollStatus: { read: ['hr', 'finance'], write: ['hr'] },
   expenseTrackCategories: { read: ['finance'], write: ['finance'] },
@@ -58,5 +65,5 @@ const overlaps = (have: readonly ModuleKey[], need: readonly ModuleKey[]) => nee
 export const canReadCollection = (modules: ModuleKey[], c: Collection) => overlaps(modules, COLLECTION_ACCESS[c].read)
 export const canWriteCollection = (modules: ModuleKey[], c: Collection) => overlaps(modules, COLLECTION_ACCESS[c].write)
 export const canReadDataset = (modules: ModuleKey[], key: string) => overlaps(modules, DATASET_ACCESS[key] ?? [])
-export const canReadSetting = (modules: ModuleKey[], key: string) => overlaps(modules, SETTING_ACCESS[key]?.read ?? [])
+export const canReadSetting = (modules: ModuleKey[], key: string) => isConfigSetting(key) || overlaps(modules, SETTING_ACCESS[key]?.read ?? [])
 export const canWriteSetting = (modules: ModuleKey[], key: string) => overlaps(modules, SETTING_ACCESS[key]?.write ?? [])

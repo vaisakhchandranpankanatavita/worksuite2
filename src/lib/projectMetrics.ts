@@ -1,5 +1,5 @@
 import { budgets, employees, type Asset, type Expense, type Invoice } from '../data/mock'
-import type { Phase, Project } from '../data/projects'
+import { openBlockers, type Phase, type Project } from '../data/projects'
 import { fromDay, isWeekday, toDay, todayDay } from './dates'
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
@@ -265,7 +265,7 @@ function healthOf(p: Project, fc: Forecast, fin: Finance): Health {
   const schedule = clamp(100 - Math.max(0, fc.slipDays) * 4.5 - Math.max(0, 1 - fc.spi) * 60, 0, 100)
   const budget = clamp(100 - Math.max(0, overrunPct) * 4 - Math.max(0, burnGap - 8) * 2, 0, 100)
   const cadence = p.status === 'Initiated' || p.status === 'Completed' ? 100 : clamp(100 - Math.max(0, fc.lastUpdateAge - 1) * 15, 0, 100)
-  const blockers = p.updates.filter((u) => u.blocker && fc.today - toDay(u.date) <= 6).length
+  const blockers = openBlockers(p).length
   const risk = clamp(100 - blockers * 20, 0, 100)
   let score = Math.round(schedule * 0.5 + budget * 0.25 + cadence * 0.15 + risk * 0.1)
   if (p.status === 'On Hold') score = Math.min(score, 55)

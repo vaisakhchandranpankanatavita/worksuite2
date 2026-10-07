@@ -4,9 +4,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Empty, Field, Input, Modal, Select } from '../../components/ui'
 import { employeeById, employees, TODAY, type AssetStatus } from '../../data/mock'
 import { bookValue } from '../../lib/depreciation'
-import { fmtDate, fmtINR } from '../../lib/format'
+import { fmtDate, fmtMoney } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp, useCanOpen } from '../../store'
+import { CustomFieldRows } from '../../components/CustomFields'
 
 const CATEGORY_ICON = { Laptop, Phone: Smartphone, Monitor, Headset: Headphones, Tablet, Accessory: Wrench } as const
 
@@ -14,7 +15,7 @@ export default function AssetDetail() {
   const { id } = useParams()
   const nav = useNavigate()
   const canOpen = useCanOpen()
-  const { assets, assetLog, assignAsset, unassignAsset, setAssetStatus, retireAsset, updateAsset, completeMaintenance } = useApp()
+  const { assets, assetLog, assignAsset, unassignAsset, setAssetStatus, retireAsset, updateAsset, completeMaintenance, setCustom } = useApp()
   const [assignOpen, setAssignOpen] = useState(false)
   const [maintenanceOpen, setMaintenanceOpen] = useState(false)
   const a = assets.find((x) => x.id === id)
@@ -61,9 +62,10 @@ export default function AssetDetail() {
               <Row k="Purchase date" v={fmtDate(a.purchaseDate)} />
               {a.warrantyUntil && <Row k="Warranty until" v={fmtDate(a.warrantyUntil)} />}
               {a.returnDue && <Row k="Return due" v={<span className={new Date(a.returnDue) < new Date() ? 'font-bold text-rose-deep' : undefined}>{fmtDate(a.returnDue)}</span>} />}
-              <Row k="Cost" v={fmtINR(a.cost)} />
-              <Row k="Book value" v={<b>{fmtINR(bookValue(a.cost, a.purchaseDate))}</b>} />
+              <Row k="Cost" v={fmtMoney(a.cost)} />
+              <Row k="Book value" v={<b>{fmtMoney(bookValue(a.cost, a.purchaseDate))}</b>} />
             </div>
+            <div className="mt-3"><CustomFieldRows entity="assets" values={a.custom} onSave={(v) => setCustom('assets', a.id, v)} /></div>
           </div>
 
           <div className="card animate-in p-4">

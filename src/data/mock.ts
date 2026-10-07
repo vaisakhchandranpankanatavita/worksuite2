@@ -1,5 +1,6 @@
 import { mulberry32 } from '../lib/format.js'
 import { photoFor } from '../lib/photo.js'
+import type { CustomValues } from './industries.js'
 
 const rand = mulberry32(20260914)
 const pick = <T,>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)]
@@ -32,8 +33,9 @@ const FIRST = ['Aarav', 'Vivaan', 'Aditya', 'Arjun', 'Rohan', 'Karthik', 'Nikhil
   'Ananya', 'Diya', 'Aditi', 'Priya', 'Sneha', 'Kavya', 'Meera', 'Ishita', 'Pooja', 'Riya', 'Divya', 'Lakshmi', 'Nandini', 'Shreya', 'Fatima', 'Ayesha', 'Neha', 'Anjali', 'Sara', 'Tanvi'] as const
 const LAST = ['Sharma', 'Iyer', 'Nair', 'Menon', 'Reddy', 'Patel', 'Gupta', 'Rao', 'Pillai', 'Kulkarni', 'Joshi', 'Verma', 'Khan', 'Das', 'Chatterjee', 'Singh', 'Mehta', 'Kapoor', 'Thomas', 'Varghese', 'Hegde', 'Shetty', 'Banerjee', 'Mishra'] as const
 
-export const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'Human Resources', 'Operations', 'Customer Success', 'Design'] as const
-export type Department = (typeof DEPARTMENTS)[number]
+/** Department names come from the company's configuration (replaced in place on sign-in); these seed the demo data. */
+export type Department = string
+export const DEPARTMENTS: string[] = ['Engineering', 'Sales', 'Marketing', 'Finance', 'Human Resources', 'Operations', 'Customer Success', 'Design']
 
 const ROLES: Record<Department, string[]> = {
   Engineering: ['Software Engineer', 'Senior Software Engineer', 'Tech Lead', 'QA Engineer', 'DevOps Engineer', 'Engineering Manager'],
@@ -71,6 +73,8 @@ export interface Employee {
   bank: string
   avatarHue: number
   performance: number // 1-5
+  /** Values of the company's custom employee fields (see data/industries.ts). */
+  custom?: CustomValues
 }
 
 const usedNames = new Set<string>()
@@ -425,6 +429,7 @@ export interface Invoice {
   gst: number
   total: number
   status: InvoiceStatus
+  custom?: CustomValues
 }
 
 const SERVICES = ['Platform subscription — Enterprise', 'Implementation & onboarding', 'Custom integration development', 'Dedicated support retainer', 'UX audit & redesign sprint', 'Cloud hosting (managed)', 'Data migration services']
@@ -670,6 +675,7 @@ export interface Asset {
   nextMaintenanceDate?: string
   maintenanceFrequency?: 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Yearly'
   lastMaintenanceDate?: string
+  custom?: CustomValues
 }
 
 const EXTRA_ASSET_SPECS: { category: AssetCategory; name: string; model: string; cost: number }[] = [

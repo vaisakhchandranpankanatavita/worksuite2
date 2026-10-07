@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { employees, invoices as mockInvoices, jobs, monthlyFinance, todayAttendance } from '../data/mock'
 import type { ModuleKey } from '../data/roles'
 import { toDay, todayDay } from '../lib/dates'
-import { fmtCompact, fmtINR } from '../lib/format'
+import { fmtCompact, fmtMoney } from '../lib/format'
 import { useApp, useAuth } from '../store'
 
 /* ─── Types ─────────────────────────────────────────────────── */
@@ -244,7 +244,7 @@ const INTENTS: Intent[] = [
     handle: (_q, { api }) => {
       const o = api.invoices.filter((i) => i.status === 'Overdue')
       return {
-        text: `${o.length} invoice${o.length !== 1 ? 's are' : ' is'} overdue totalling ${fmtINR(o.reduce((s, i) => s + i.total, 0))}.`,
+        text: `${o.length} invoice${o.length !== 1 ? 's are' : ' is'} overdue totalling ${fmtMoney(o.reduce((s, i) => s + i.total, 0))}.`,
         widget: {
           kind: 'action-list',
           actions: [

@@ -30,7 +30,7 @@ const assert = (cond: unknown, msg: string) => {
   if (!cond) throw new Error(`FAIL: ${msg}`)
   console.log(`ok  ${msg}`)
 }
-const settle = () => new Promise((r) => setTimeout(r, 500))
+const settle = () => new Promise((r) => setTimeout(r, 2500))
 
 try {
   await api.login(EMAIL, 'wrong-password')

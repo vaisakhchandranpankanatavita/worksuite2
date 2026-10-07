@@ -12,7 +12,9 @@ let appPromise: ReturnType<typeof buildApp> | null = null
 
 async function buildApp() {
   const store = openDb()
-  await ensureSeeded(store)
+  const seeded = await ensureSeeded(store)
+  // The only place a generated superadmin password is ever shown — it lands in the function logs.
+  if (seeded?.superadmin) console.log(`[api] created the superadmin account: ${seeded.superadmin.email}${seeded.superadmin.password ? `  password: ${seeded.superadmin.password}` : ''}`)
   return createApp(store)
 }
 

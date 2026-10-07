@@ -7,7 +7,7 @@ import {
 import { chartTooltip } from './ui'
 
 /* ─── HalfGauge ─────────────────────────────────────────────── */
-export function HalfGauge({ value, label, color = '#c8d9f4', track = '#edf0ed', size = 130 }: {
+export function HalfGauge({ value, label, color = 'var(--color-sky)', track = '#edf0ed', size = 130 }: {
   value: number; label?: string; color?: string; track?: string; size?: number
 }) {
   const r = 50
@@ -20,9 +20,9 @@ export function HalfGauge({ value, label, color = '#c8d9f4', track = '#edf0ed', 
       {/* Filled arc with glow */}
       <path d="M10 62 A50 50 0 0 1 110 62" fill="none" stroke={color} strokeWidth="16" strokeLinecap="round"
         strokeDasharray={`${filled} ${c}`}
-        style={{ filter: `drop-shadow(0 0 6px ${color}88)` }} />
+        style={{ filter: `drop-shadow(0 0 6px color-mix(in srgb, ${color} 53%, transparent))` }} />
       {label && (
-        <text x="60" y="62" textAnchor="middle" fontSize="11" fill="#6a6f68" fontFamily="var(--font-display)">
+        <text x="60" y="62" textAnchor="middle" fontSize="11" fill="var(--color-ash)" fontFamily="var(--font-display)">
           {label}
         </text>
       )}
@@ -31,7 +31,7 @@ export function HalfGauge({ value, label, color = '#c8d9f4', track = '#edf0ed', 
 }
 
 /* ─── SoftBars ──────────────────────────────────────────────── */
-export function SoftBars({ values, highlight, height = 70, color = '#c6e0c0', hi = '#5fa059' }: {
+export function SoftBars({ values, highlight, height = 70, color = 'var(--color-sage)', hi = 'var(--color-sage-deep)' }: {
   values: number[]; highlight?: number; height?: number; color?: string; hi?: string
 }) {
   const max = Math.max(...values)
@@ -45,7 +45,7 @@ export function SoftBars({ values, highlight, height = 70, color = '#c6e0c0', hi
             height: `${(v / max) * 100}%`,
             background: i === highlight ? hi : color,
             opacity: i === highlight ? 1 : 0.72,
-            boxShadow: i === highlight ? `0 -2px 8px ${hi}55` : 'none',
+            boxShadow: i === highlight ? `0 -2px 8px color-mix(in srgb, ${hi} 33%, transparent)` : 'none',
           }}
         />
       ))}
@@ -74,8 +74,8 @@ export function HatchedArea({ data, dataKey, xKey, height = 220, compare, zoom, 
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} stroke="#edf0ec" strokeDasharray="0" />
-        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={8} tick={{ fontSize: 11, fill: '#6a6f68' }} />
-        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={56} tick={{ fontSize: 11, fill: '#6a6f68' }} domain={zoom ? [(min: number) => Math.floor((min * 0.9) / 10) * 10, 'auto'] : undefined} />
+        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={8} tick={{ fontSize: 11, fill: 'var(--color-ash)' }} />
+        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={56} tick={{ fontSize: 11, fill: 'var(--color-ash)' }} domain={zoom ? [(min: number) => Math.floor((min * 0.9) / 10) * 10, 'auto'] : undefined} />
         <Tooltip {...chartTooltip} formatter={(v: number) => format(v)} />
         {compare && (
           <Area type="monotone" dataKey={compare} stroke="#b8beb8" strokeDasharray="3 4" fill="url(#hatch-compare-fade)"
@@ -83,14 +83,14 @@ export function HatchedArea({ data, dataKey, xKey, height = 220, compare, zoom, 
         )}
         <Area type="monotone" dataKey={dataKey} stroke="#8a9289" strokeWidth={1.6} fill="url(#hatch)"
           dot={{ r: 2.5, fill: '#8a9289', strokeWidth: 0 }}
-          activeDot={{ r: 6, fill: '#d8eca0', stroke: '#1a1d1b', strokeWidth: 1.5 }} />
+          activeDot={{ r: 6, fill: 'var(--color-lime)', stroke: 'var(--color-ink)', strokeWidth: 1.5 }} />
       </AreaChart>
     </ResponsiveContainer>
   )
 }
 
 /* ─── Sparkline ─────────────────────────────────────────────── */
-export function Sparkline({ values, color = '#cd6a96', height = 60 }: {
+export function Sparkline({ values, color = 'var(--color-rose-deep)', height = 60 }: {
   values: number[]; color?: string; height?: number
 }) {
   const data = values.map((v, i) => ({ i, v }))
@@ -112,7 +112,7 @@ export function Sparkline({ values, color = '#cd6a96', height = 60 }: {
 }
 
 /* ─── TrendLine — thin clean line chart ────────────────────── */
-export function TrendLine({ data, dataKey, xKey, color = '#aece52', height = 120, format = (v: number) => String(v) }: {
+export function TrendLine({ data, dataKey, xKey, color = 'var(--color-lime-deep)', height = 120, format = (v: number) => String(v) }: {
   data: Record<string, number | string>[]; dataKey: string; xKey: string
   color?: string; height?: number | string; format?: (v: number) => string
 }) {
@@ -127,8 +127,8 @@ export function TrendLine({ data, dataKey, xKey, color = '#aece52', height = 120
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} stroke="#edf0ec" />
-        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: '#6a6f68' }} />
-        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={48} tick={{ fontSize: 10, fill: '#6a6f68' }} />
+        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
+        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={48} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
         <Tooltip {...chartTooltip} formatter={(v: number) => format(v)} />
         <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fill={`url(#${id})`}
           dot={false} activeDot={{ r: 5, fill: color, stroke: '#fff', strokeWidth: 2 }} />
@@ -147,11 +147,11 @@ export function GroupedBar({ data, keys, colors, xKey, height = 180, format = (v
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 4, left: -16, bottom: 0 }} barCategoryGap="28%">
         <CartesianGrid vertical={false} stroke="#edf0ec" />
-        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: '#6a6f68' }} />
-        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={52} tick={{ fontSize: 10, fill: '#6a6f68' }} />
+        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
+        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={52} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
         <Tooltip {...chartTooltip} formatter={(v: number) => format(v)} />
         {keys.map((k, i) => (
-          <Bar key={k} dataKey={k} fill={colors[i] ?? '#d8eca0'} radius={[6, 6, 2, 2]} name={k} />
+          <Bar key={k} dataKey={k} fill={colors[i] ?? 'var(--color-lime)'} radius={[6, 6, 2, 2]} name={k} />
         ))}
       </BarChart>
     </ResponsiveContainer>
@@ -167,12 +167,12 @@ export function WaterfallBar({ data, height = 200, format = (v: number) => Strin
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 4, left: -12, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="#edf0ec" />
-        <XAxis dataKey="name" axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: '#6a6f68' }} />
-        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={56} tick={{ fontSize: 10, fill: '#6a6f68' }} />
+        <XAxis dataKey="name" axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
+        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={56} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
         <Tooltip {...chartTooltip} formatter={(v: number) => format(Math.abs(v))} />
         <Bar dataKey="value" radius={[6, 6, 2, 2]}>
           {data.map((d, i) => (
-            <Cell key={i} fill={d.value >= 0 ? '#5fa059' : '#cd6a96'} opacity={0.88} />
+            <Cell key={i} fill={d.value >= 0 ? 'var(--color-sage-deep)' : 'var(--color-rose-deep)'} opacity={0.88} />
           ))}
         </Bar>
       </BarChart>
@@ -212,7 +212,7 @@ export function DonutChart({ data, colors, innerLabel, height = 200, format = (v
 }
 
 /* ─── RadialProgress — single radial bar ───────────────────── */
-export function RadialProgress({ value, color = '#aece52', size = 120, label }: {
+export function RadialProgress({ value, color = 'var(--color-lime-deep)', size = 120, label }: {
   value: number; color?: string; size?: number; label?: string
 }) {
   const data = [{ value, fill: color }]
@@ -243,8 +243,8 @@ export function MultiLineChart({ data, lines, xKey, height = 200, format = (v: n
     <ResponsiveContainer width="100%" height={height}>
       <ComposedChart data={data} margin={{ top: 8, right: 4, left: -16, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="#edf0ec" />
-        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: '#6a6f68' }} />
-        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={52} tick={{ fontSize: 10, fill: '#6a6f68' }} />
+        <XAxis dataKey={xKey} axisLine={false} tickLine={false} dy={6} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
+        <YAxis axisLine={false} tickLine={false} tickFormatter={format} width={52} tick={{ fontSize: 10, fill: 'var(--color-ash)' }} />
         <Tooltip {...chartTooltip} formatter={(v: number) => format(v)} />
         {lines.map((l) => (
           <Line key={l.key} type="monotone" dataKey={l.key} stroke={l.color} strokeWidth={2}
@@ -263,11 +263,11 @@ export function AttendanceHeatmap({ data }: { data: { week: number; day: number;
   const max = Math.max(...data.map((d) => d.value), 1)
   const getColor = (v: number) => {
     const pct = v / max
-    if (pct > 0.85) return '#5fa059'
-    if (pct > 0.65) return '#aece52'
+    if (pct > 0.85) return 'var(--color-sage-deep)'
+    if (pct > 0.65) return 'var(--color-lime-deep)'
     if (pct > 0.45) return '#c0db7a'
-    if (pct > 0.25) return '#f5ddb2'
-    return '#f0cad8'
+    if (pct > 0.25) return 'var(--color-amber)'
+    return 'var(--color-rose)'
   }
   return (
     <div className="flex items-start gap-2">
@@ -306,28 +306,28 @@ export function HeroArt({ className }: { className?: string }) {
     <svg viewBox="0 0 600 360" className={clsx('hero-art', className)} preserveAspectRatio="xMidYMid slice" aria-hidden>
       <defs>
         <radialGradient id="h-g1" cx="32%" cy="38%" r="58%">
-          <stop offset="0%" stopColor="#d8eca0" stopOpacity="1" />
-          <stop offset="100%" stopColor="#d8eca0" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--color-lime)" stopOpacity="1" />
+          <stop offset="100%" stopColor="var(--color-lime)" stopOpacity="0" />
         </radialGradient>
         <radialGradient id="h-g2" cx="72%" cy="62%" r="55%">
-          <stop offset="0%" stopColor="#c8d9f4" stopOpacity="1" />
-          <stop offset="100%" stopColor="#c8d9f4" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--color-sky)" stopOpacity="1" />
+          <stop offset="100%" stopColor="var(--color-sky)" stopOpacity="0" />
         </radialGradient>
         <radialGradient id="h-g3" cx="55%" cy="25%" r="40%">
-          <stop offset="0%" stopColor="#f0cad8" stopOpacity="0.7" />
-          <stop offset="100%" stopColor="#f0cad8" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--color-rose)" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="var(--color-rose)" stopOpacity="0" />
         </radialGradient>
         <radialGradient id="h-g4" cx="20%" cy="75%" r="35%">
-          <stop offset="0%" stopColor="#c6e0c0" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#c6e0c0" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--color-sage)" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="var(--color-sage)" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="h-glass" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.92" />
           <stop offset="100%" stopColor="#ffffff" stopOpacity="0.22" />
         </linearGradient>
         <linearGradient id="h-glass2" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#d8eca0" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#d8eca0" stopOpacity="0.08" />
+          <stop offset="0%" stopColor="var(--color-lime)" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="var(--color-lime)" stopOpacity="0.08" />
         </linearGradient>
         <filter id="h-blur"><feGaussianBlur stdDeviation="28" /></filter>
         <filter id="h-blur-sm"><feGaussianBlur stdDeviation="8" /></filter>
@@ -345,7 +345,7 @@ export function HeroArt({ className }: { className?: string }) {
       </g>
 
       {/* Orbit rings */}
-      <g fill="none" stroke="#1a1d1b" strokeOpacity="0.07" className="hero-rings">
+      <g fill="none" stroke="var(--color-ink)" strokeOpacity="0.07" className="hero-rings">
         {Array.from({ length: 10 }, (_, i) => (
           <circle key={i} cx="300" cy="190" r={36 + i * 28} strokeWidth={i === 0 ? 1.5 : 1} />
         ))}
@@ -353,10 +353,10 @@ export function HeroArt({ className }: { className?: string }) {
 
       {/* Orbit dots */}
       {[
-        { r: 92, angle: 40, size: 7, fill: '#aece52' },
-        { r: 148, angle: 165, size: 5, fill: '#6b92d8' },
-        { r: 204, angle: 285, size: 6, fill: '#cd6a96' },
-        { r: 120, angle: 310, size: 4, fill: '#5fa059' },
+        { r: 92, angle: 40, size: 7, fill: 'var(--color-lime-deep)' },
+        { r: 148, angle: 165, size: 5, fill: 'var(--color-sky-deep)' },
+        { r: 204, angle: 285, size: 6, fill: 'var(--color-rose-deep)' },
+        { r: 120, angle: 310, size: 4, fill: 'var(--color-sage-deep)' },
       ].map(({ r, angle, size, fill }, i) => {
         const rad = (angle * Math.PI) / 180
         const cx = 300 + r * Math.cos(rad)
@@ -375,23 +375,23 @@ export function HeroArt({ className }: { className?: string }) {
           ))}
         </g>
         {/* Center circle */}
-        <circle r="20" fill="#1a1d1b" />
-        <circle r="8" fill="#d8eca0" />
+        <circle r="20" fill="var(--color-ink)" />
+        <circle r="8" fill="var(--color-lime)" />
         <circle r="3" fill="#fff" opacity="0.6" />
       </g>
 
       {/* Decorative mini-cards in corners */}
       <g opacity="0.55">
         <rect x="30" y="25" width="90" height="36" rx="10" fill="white" opacity="0.7" />
-        <rect x="36" y="34" width="20" height="4" rx="2" fill="#aece52" />
-        <rect x="36" y="42" width="40" height="3" rx="1.5" fill="#c8d9f4" />
-        <rect x="36" y="49" width="28" height="3" rx="1.5" fill="#f0cad8" />
+        <rect x="36" y="34" width="20" height="4" rx="2" fill="var(--color-lime-deep)" />
+        <rect x="36" y="42" width="40" height="3" rx="1.5" fill="var(--color-sky)" />
+        <rect x="36" y="49" width="28" height="3" rx="1.5" fill="var(--color-rose)" />
       </g>
       <g opacity="0.45">
         <rect x="480" y="290" width="88" height="40" rx="10" fill="white" opacity="0.65" />
-        <rect x="486" y="299" width="18" height="4" rx="2" fill="#cd6a96" />
-        <rect x="486" y="307" width="38" height="3" rx="1.5" fill="#c6e0c0" />
-        <rect x="486" y="314" width="26" height="3" rx="1.5" fill="#f5ddb2" />
+        <rect x="486" y="299" width="18" height="4" rx="2" fill="var(--color-rose-deep)" />
+        <rect x="486" y="307" width="38" height="3" rx="1.5" fill="var(--color-sage)" />
+        <rect x="486" y="314" width="26" height="3" rx="1.5" fill="var(--color-amber)" />
       </g>
     </svg>
   )

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, CardHeader, Empty, Field, Input, Modal, Select, Table } from '../../../components/ui'
 import { employeeById, employees } from '../../../data/mock'
 import { dayLabel, todayDay, toDay } from '../../../lib/dates'
-import { fmtCompact, fmtINR } from '../../../lib/format'
+import { fmtCompact, fmtMoney } from '../../../lib/format'
 import { photoFor } from '../../../lib/photo'
 import type { Analysis } from '../../../lib/projectMetrics'
 import { useApp, useCanOpen } from '../../../store'
@@ -36,7 +36,7 @@ function AddMemberModal({ a, open, onClose }: { a: Analysis; open: boolean; onCl
           <Field label="Role on project"><Select className="w-full" value={role} onChange={(e) => setRole(e.target.value)}>{ROLES.map((r) => <option key={r}>{r}</option>)}</Select></Field>
           <Field label="Allocation"><Select className="w-full" value={alloc} onChange={(e) => setAlloc(Number(e.target.value))}>{ALLOCATIONS.map((x) => <option key={x} value={x}>{x}%</option>)}</Select></Field>
         </div>
-        {chosen && <p className="rounded-2xl bg-soft/70 p-3 text-xs text-ash">Adds about <b className="text-ink">{fmtINR((chosen.ctcAnnual / 12) * (alloc / 100))}</b> a month to the project's salary cost.</p>}
+        {chosen && <p className="rounded-2xl bg-soft/70 p-3 text-xs text-ash">Adds about <b className="text-ink">{fmtMoney((chosen.ctcAnnual / 12) * (alloc / 100))}</b> a month to the project's salary cost.</p>}
       </div>
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="light" onClick={onClose}>Cancel</Button>
@@ -60,7 +60,7 @@ function DeployAssetModal({ a, open, onClose }: { a: Analysis; open: boolean; on
           {options.slice(0, 120).map((x) => <option key={x.id} value={x.id}>{x.id} · {x.name} — {x.status}</option>)}
         </Select>
       </Field>
-      {chosen && <p className="mt-3 rounded-2xl bg-soft/70 p-3 text-xs text-ash">Charged to the project at <b className="text-ink">{fmtINR(chosen.cost / ASSET_LIFE_MONTHS)}</b> a month (3-year straight-line depreciation).</p>}
+      {chosen && <p className="mt-3 rounded-2xl bg-soft/70 p-3 text-xs text-ash">Charged to the project at <b className="text-ink">{fmtMoney(chosen.cost / ASSET_LIFE_MONTHS)}</b> a month (3-year straight-line depreciation).</p>}
       <div className="mt-5 flex justify-end gap-2">
         <Button variant="light" onClick={onClose}>Cancel</Button>
         <Button disabled={!chosen} onClick={() => { if (chosen) { link(a.project.id, chosen.id); onClose() } }}>Deploy</Button>
@@ -167,7 +167,7 @@ export default function ResourcesTab({ a }: { a: Analysis }) {
                   <td className="text-xs font-semibold">{x.id}</td>
                   <td className="text-xs">{e?.name}</td>
                   <td className="text-xs">{x.category}</td>
-                  <td className="text-xs tabular-nums">{fmtINR(x.amount)}</td>
+                  <td className="text-xs tabular-nums">{fmtMoney(x.amount)}</td>
                   <td><Badge>{x.status}</Badge></td>
                 </tr>
               )
@@ -186,7 +186,7 @@ export default function ResourcesTab({ a }: { a: Analysis }) {
                 <td className="text-xs font-semibold">{i.id}</td>
                 <td className="text-xs">{dayLabel(toDay(i.issueDate))}</td>
                 <td className="text-xs">{dayLabel(toDay(i.dueDate))}</td>
-                <td className="text-xs tabular-nums">{fmtINR(i.total)}</td>
+                <td className="text-xs tabular-nums">{fmtMoney(i.total)}</td>
                 <td><Badge>{i.status}</Badge></td>
               </tr>
             ))}

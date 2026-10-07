@@ -31,9 +31,18 @@ export const isCollection = (c: string): c is Collection => Object.hasOwn(COLLEC
 export type Doc = Record<string, unknown>
 
 export class HttpError extends Error {
-  constructor(readonly status: number, message: string) {
+  /** `details` are merged into the JSON error body (e.g. the current record on a 409). */
+  constructor(readonly status: number, message: string, readonly details?: Doc) {
     super(message)
   }
+}
+
+/** Field carrying a record's revision on the wire. Never stored inside `data`. */
+export const REV = '_rev'
+
+function withoutRev(doc: Doc): Doc {
+  const { [REV]: _, ...rest } = doc
+  return rest
 }
 
 /** `Pool` in production; a single reused `Pool` in dev too — connections stay pooled either way. */
@@ -60,6 +69,8 @@ async function migrate(pool: PoolType) {
       PRIMARY KEY (collection, id)
     );
     CREATE INDEX IF NOT EXISTS records_order ON records (collection, seq);
+    -- Bumped on every write; clients send the rev they last saw so a stale write is refused, not applied.
+    ALTER TABLE records ADD COLUMN IF NOT EXISTS rev INTEGER NOT NULL DEFAULT 0;
     -- Read-only reference datasets (charts, trends, company profile…) keyed by name.
     CREATE TABLE IF NOT EXISTS datasets (key TEXT PRIMARY KEY, data JSONB NOT NULL);
     -- Small mutable app-wide values (payroll status, custom expense categories…).
@@ -79,6 +90,12 @@ async function migrate(pool: PoolType) {
       hue           INTEGER NOT NULL DEFAULT 200,
       active        BOOLEAN NOT NULL DEFAULT true
     );
+    -- is_superadmin: the one account that manages users and configuration. read_only: modules the user may view but not change.
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_superadmin BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS read_only JSONB NOT NULL DEFAULT '[]';
+    -- Databases created before superadmin existed: the old "admin" account takes the role.
+    UPDATE users SET is_superadmin = true
+      WHERE role = 'admin' AND NOT EXISTS (SELECT 1 FROM users WHERE is_superadmin);
     -- Only a SHA-256 of each session token is stored, so a leaked database can't be used to sign in.
     CREATE TABLE IF NOT EXISTS sessions (
       token_hash TEXT PRIMARY KEY,
@@ -140,42 +157,71 @@ export class Store {
     return v === undefined || v === null || v === '' ? undefined : String(v)
   }
 
+  /** Records come back with their revision in `_rev`. */
   async list(collection: Collection): Promise<Doc[]> {
-    const { rows } = await this.q<{ data: Doc }>('SELECT data FROM records WHERE collection = $1 ORDER BY seq', [collection])
-    return rows.map((r) => r.data)
+    const { rows } = await this.q<{ data: Doc; rev: number }>('SELECT data, rev FROM records WHERE collection = $1 ORDER BY seq', [collection])
+    return rows.map((r) => ({ ...r.data, [REV]: r.rev }))
   }
 
   async get(collection: Collection, id: string): Promise<Doc | undefined> {
-    const { rows } = await this.q<{ data: Doc }>('SELECT data FROM records WHERE collection = $1 AND id = $2', [collection, id])
-    return rows[0]?.data
+    const { rows } = await this.q<{ data: Doc; rev: number }>('SELECT data, rev FROM records WHERE collection = $1 AND id = $2', [collection, id])
+    return rows[0] && { ...rows[0].data, [REV]: rows[0].rev }
+  }
+
+  /**
+   * Next code in a `<prefix><number>` series (e.g. PRJ-109). Atomic across concurrent requests: the counter
+   * lives in `meta` and is bumped by a single upsert, never below the highest code already stored.
+   */
+  async nextCode(collection: Collection, prefix: string): Promise<string> {
+    // `prefix` is a code constant made of letters and dashes, so it needs no regex escaping.
+    const pattern = `^${prefix}(\\d+)$`
+    const { rows: [{ m }] } = await this.q<{ m: number }>(
+      'SELECT COALESCE(MAX(substring(id from $2)::int), 100) AS m FROM records WHERE collection = $1',
+      [collection, pattern],
+    )
+    const { rows } = await this.q<{ value: string }>(
+      `INSERT INTO meta (key, value) VALUES ($1, ($2::int + 1)::text)
+       ON CONFLICT (key) DO UPDATE SET value = (GREATEST(meta.value::int, $2::int) + 1)::text
+       RETURNING value`,
+      [`seq:${collection}`, m],
+    )
+    return `${prefix}${rows[0].value}`
   }
 
   /** Insert a new record at the head (default, matching the UI's newest-first lists) or tail. */
-  async insert(collection: Collection, doc: Doc, at: 'start' | 'end' = 'start'): Promise<Doc> {
+  async insert(collection: Collection, input: Doc, at: 'start' | 'end' = 'start'): Promise<Doc> {
+    const doc = withoutRev(input)
     const id = this.idOf(collection, doc)
     if (!id) throw new HttpError(400, `Missing "${COLLECTIONS[collection]}" field`)
     if (await this.get(collection, id)) throw new HttpError(409, `${collection}/${id} already exists`)
     const agg = at === 'start' ? 'MIN(seq) - 1' : 'MAX(seq) + 1'
     const { rows } = await this.q<{ s: number }>(`SELECT COALESCE(${agg}, 0) AS s FROM records WHERE collection = $1`, [collection])
     await this.q('INSERT INTO records (collection, id, seq, data) VALUES ($1, $2, $3, $4)', [collection, id, rows[0].s, JSON.stringify(doc)])
-    return doc
+    return { ...doc, [REV]: 0 }
   }
 
-  /** Replace a record, creating it at the head if it doesn't exist yet. */
-  async put(collection: Collection, id: string, doc: Doc): Promise<Doc> {
+  /**
+   * Replace a record. With `expectedRev`, the write only lands if nobody else has changed (or deleted) the
+   * record since that revision — otherwise 409 with the current copy. Without it, a missing record is created.
+   */
+  async put(collection: Collection, id: string, doc: Doc, expectedRev?: number): Promise<Doc> {
     const idField = COLLECTIONS[collection]
-    const body = { ...doc, [idField]: doc[idField] ?? id }
+    const body = withoutRev({ ...doc, [idField]: doc[idField] ?? id })
     if (String(body[idField]) !== id) throw new HttpError(400, `Body "${idField}" does not match the URL`)
-    if (!(await this.get(collection, id))) return this.insert(collection, body)
-    await this.q(`UPDATE records SET data = $1, updated_at = now() WHERE collection = $2 AND id = $3`, [JSON.stringify(body), collection, id])
-    return body
+    const { rows } = expectedRev === undefined
+      ? await this.q<{ rev: number }>('UPDATE records SET data = $1, rev = rev + 1, updated_at = now() WHERE collection = $2 AND id = $3 RETURNING rev', [JSON.stringify(body), collection, id])
+      : await this.q<{ rev: number }>('UPDATE records SET data = $1, rev = rev + 1, updated_at = now() WHERE collection = $2 AND id = $3 AND rev = $4 RETURNING rev', [JSON.stringify(body), collection, id, expectedRev])
+    if (rows[0]) return { ...body, [REV]: rows[0].rev }
+    if (expectedRev === undefined) return this.insert(collection, body)
+    const current = (await this.get(collection, id)) ?? null
+    throw new HttpError(409, current ? `${collection}/${id} was changed by someone else` : `${collection}/${id} was deleted by someone else`, { collection, id, current })
   }
 
   /** Shallow-merge fields into a record. A `null` value removes the field. */
   async patch(collection: Collection, id: string, changes: Doc): Promise<Doc> {
     const current = await this.get(collection, id)
     if (!current) throw new HttpError(404, `${collection}/${id} not found`)
-    const next: Doc = { ...current }
+    const next: Doc = withoutRev(current)
     for (const [k, v] of Object.entries(changes)) {
       if (k === COLLECTIONS[collection]) continue
       if (v === null) delete next[k]
@@ -235,25 +281,75 @@ export class Store {
 
   /* ── Users & sessions ── */
 
-  async replaceUsers(users: (PublicUser & { passwordHash: string })[]) {
-    await this.q('DELETE FROM sessions')
-    await this.q('DELETE FROM users')
-    for (const u of users) {
-      await this.q(
-        'INSERT INTO users (id, email, password_hash, name, role, label, description, modules, photo, hue) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-        [u.id, u.email, u.passwordHash, u.name, u.role, u.label, u.description, JSON.stringify(u.modules), u.photo ?? null, u.hue],
-      )
-    }
-  }
-
   async userByEmail(email: string): Promise<(PublicUser & { passwordHash: string }) | undefined> {
     const { rows } = await this.q<UserRow>('SELECT * FROM users WHERE lower(email) = lower($1) AND active = true', [email])
     return rows[0] ? { ...toPublicUser(rows[0]), passwordHash: rows[0].password_hash } : undefined
   }
 
+  async userById(id: string): Promise<(PublicUser & { passwordHash: string }) | undefined> {
+    const { rows } = await this.q<UserRow>('SELECT * FROM users WHERE id = $1', [id])
+    return rows[0] ? { ...toPublicUser(rows[0]), passwordHash: rows[0].password_hash } : undefined
+  }
+
+  /** Every account, including deactivated ones (admin screen). */
   async listUsers(): Promise<PublicUser[]> {
-    const { rows } = await this.q<UserRow>('SELECT * FROM users WHERE active = true ORDER BY id')
+    const { rows } = await this.q<UserRow>('SELECT * FROM users ORDER BY is_superadmin DESC, name')
     return rows.map(toPublicUser)
+  }
+
+  async countUsers(): Promise<number> {
+    const { rows } = await this.q<{ n: string }>('SELECT COUNT(*) AS n FROM users')
+    return Number(rows[0].n)
+  }
+
+  /** Throws 409 if the email is already taken. */
+  async createUser(u: NewUser): Promise<PublicUser> {
+    try {
+      await this.q(
+        `INSERT INTO users (id, email, password_hash, name, role, label, description, modules, read_only, is_superadmin, photo, hue)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        [u.id, u.email, u.passwordHash, u.name, u.isSuperadmin ? 'superadmin' : 'user', u.label, u.description ?? '', JSON.stringify(u.modules), JSON.stringify(u.readOnly), u.isSuperadmin, u.photo ?? null, u.hue],
+      )
+    } catch (err) {
+      if ((err as { code?: string }).code === '23505') throw new HttpError(409, 'An account with that email already exists')
+      throw err
+    }
+    return (await this.userById(u.id))!
+  }
+
+  /** Update profile/access fields. Leaves the password and superadmin flag alone. */
+  async updateUser(id: string, c: UserChanges): Promise<PublicUser> {
+    const sets: string[] = []
+    const vals: unknown[] = []
+    const add = (col: string, v: unknown) => { vals.push(v); sets.push(`${col} = $${vals.length}`) }
+    if (c.name !== undefined) add('name', c.name)
+    if (c.email !== undefined) add('email', c.email)
+    if (c.label !== undefined) add('label', c.label)
+    if (c.modules !== undefined) add('modules', JSON.stringify(c.modules))
+    if (c.readOnly !== undefined) add('read_only', JSON.stringify(c.readOnly))
+    if (c.active !== undefined) add('active', c.active)
+    if (sets.length) {
+      vals.push(id)
+      try {
+        await this.q(`UPDATE users SET ${sets.join(', ')} WHERE id = $${vals.length}`, vals)
+      } catch (err) {
+        if ((err as { code?: string }).code === '23505') throw new HttpError(409, 'An account with that email already exists')
+        throw err
+      }
+    }
+    const user = await this.userById(id)
+    if (!user) throw new HttpError(404, 'User not found')
+    return user
+  }
+
+  /** Sets a new password and signs the account out everywhere. */
+  async setPassword(id: string, passwordHash: string) {
+    await this.q('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, id])
+    await this.deleteUserSessions(id)
+  }
+
+  async deleteUserSessions(userId: string) {
+    await this.q('DELETE FROM sessions WHERE user_id = $1', [userId])
   }
 
   async createSession(tokenHash: string, userId: string, ttlMs: number) {
@@ -285,18 +381,29 @@ export interface PublicUser {
   label: string
   description: string
   modules: ModuleKey[]
+  /** Modules (a subset of `modules`) where the account can view but not change data. */
+  readOnly: ModuleKey[]
+  isSuperadmin: boolean
+  active: boolean
   photo?: string
   hue: number
 }
 
+export interface NewUser {
+  id: string; email: string; passwordHash: string; name: string; label: string; description?: string
+  modules: ModuleKey[]; readOnly: ModuleKey[]; isSuperadmin: boolean; photo?: string; hue: number
+}
+export type UserChanges = Partial<Pick<PublicUser, 'name' | 'email' | 'label' | 'modules' | 'readOnly' | 'active'>>
+
 interface UserRow {
   id: string; email: string; password_hash: string; name: string; role: string; label: string
-  description: string; modules: ModuleKey[]; photo: string | null; hue: number
+  description: string; modules: ModuleKey[]; read_only: ModuleKey[]; is_superadmin: boolean; active: boolean
+  photo: string | null; hue: number
 }
 
 function toPublicUser(r: UserRow): PublicUser {
   return {
     id: r.id, email: r.email, name: r.name, role: r.role, label: r.label, description: r.description,
-    modules: r.modules, photo: r.photo ?? undefined, hue: r.hue,
+    modules: r.modules, readOnly: r.read_only, isSuperadmin: r.is_superadmin, active: r.active, photo: r.photo ?? undefined, hue: r.hue,
   }
 }

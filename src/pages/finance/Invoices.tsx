@@ -6,8 +6,12 @@ import { Badge, Button, Card, Field, Input, Modal, PageHeader, Segmented, Select
 import { CountUp } from '../../components/CountUp'
 import { exportCsv } from '../hr/Employees'
 import { COMPANY, TODAY, buildInvoice, clients, type Invoice, type InvoiceLine, type InvoiceStatus } from '../../data/mock'
-import { fmtCompact, fmtDate, fmtINR } from '../../lib/format'
+import { fmtCompact, fmtDate, fmtMoney, currencySymbol } from '../../lib/format'
 import { useApp } from '../../store'
+import { clientOne } from '../../lib/terms'
+import { CustomFieldInputs, cleanValues, fieldDefs, missingRequired } from '../../components/CustomFields'
+import type { CustomValues } from '../../data/industries'
+import { CustomFieldRows } from '../../components/CustomFields'
 
 const TABS = ['All', 'Paid', 'Pending', 'Overdue', 'Draft'] as const
 
@@ -29,7 +33,7 @@ export default function Invoices() {
         subtitle="Accounts receivable · GST-compliant invoicing"
         actions={
           <>
-            <Button variant="light" onClick={() => exportCsv('invoices.csv', [['Invoice', 'Client', 'GSTIN', 'Issued', 'Due', 'Subtotal', 'GST', 'Total', 'Status'], ...list.map((i) => [i.id, i.client.name, i.client.gstin, i.issueDate, i.dueDate, i.subtotal, i.gst, i.total, i.status])])}>
+            <Button variant="light" onClick={() => exportCsv('invoices.csv', [['Invoice', clientOne(), 'GSTIN', 'Issued', 'Due', 'Subtotal', 'GST', 'Total', 'Status'], ...list.map((i) => [i.id, i.client.name, i.client.gstin, i.issueDate, i.dueDate, i.subtotal, i.gst, i.total, i.status])])}>
               <Download size={16} /> Export
             </Button>
             <Button onClick={() => setParams({ new: '1' })}><Plus size={16} /> New invoice</Button>
@@ -55,7 +59,7 @@ export default function Invoices() {
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search invoice or client" className="h-10 w-56 rounded-full border border-line bg-white pl-9 pr-3 text-sm outline-none focus:border-ink" />
           </div>
         </div>
-        <Table className="mt-3" head={['Invoice', 'Client', 'Issued', 'Due', 'Amount (incl. GST)', 'Status', '']}>
+        <Table className="mt-3" head={['Invoice', clientOne(), 'Issued', 'Due', 'Amount (incl. GST)', 'Status', '']}>
           {list.map((i) => (
             <tr key={i.id} className="cursor-pointer hover:bg-soft/60" onClick={() => setParams({ open: i.id })}>
               <td className="font-bold">{i.id}</td>
@@ -65,7 +69,7 @@ export default function Invoices() {
               </td>
               <td className="whitespace-nowrap text-ash">{fmtDate(i.issueDate)}</td>
               <td className={clsx('whitespace-nowrap', i.status === 'Overdue' ? 'text-rose-deep' : 'text-ash')}>{fmtDate(i.dueDate)}</td>
-              <td className="font-display">{fmtINR(i.total)}</td>
+              <td className="font-display">{fmtMoney(i.total)}</td>
               <td><Badge>{i.status}</Badge></td>
               <td onClick={(e) => e.stopPropagation()}>
                 {(i.status === 'Pending' || i.status === 'Overdue') && <Button size="sm" variant="light" onClick={() => setInvoiceStatus(i.id, 'Paid')}>Mark paid</Button>}
@@ -89,6 +93,7 @@ export default function Invoices() {
 }
 
 function InvoicePreview({ invoice: i, onClose, onPaid }: { invoice: Invoice; onClose: () => void; onPaid: () => void }) {
+  const setCustom = useApp((s) => s.setCustom)
   const intra = i.client.gstin.slice(0, 2) === COMPANY.gstin.slice(0, 2)
   return (
     <Modal open onClose={onClose} title={i.id} width={720}>
@@ -113,22 +118,23 @@ function InvoicePreview({ invoice: i, onClose, onPaid }: { invoice: Invoice; onC
           <thead><tr className="border-b border-line text-xs text-ash"><th className="py-2">Description</th><th className="py-2 text-right">Qty</th><th className="py-2 text-right">Rate</th><th className="py-2 text-right">Amount</th></tr></thead>
           <tbody>
             {i.lines.map((l, k) => (
-              <tr key={k} className="border-b border-line/60"><td className="py-2.5">{l.description}<span className="block text-[11px] text-ash">SAC 998314</span></td><td className="text-right">{l.qty}</td><td className="text-right">{fmtINR(l.rate)}</td><td className="text-right">{fmtINR(l.qty * l.rate)}</td></tr>
+              <tr key={k} className="border-b border-line/60"><td className="py-2.5">{l.description}<span className="block text-[11px] text-ash">SAC 998314</span></td><td className="text-right">{l.qty}</td><td className="text-right">{fmtMoney(l.rate)}</td><td className="text-right">{fmtMoney(l.qty * l.rate)}</td></tr>
             ))}
           </tbody>
         </table>
         <div className="ml-auto mt-4 max-w-[280px] space-y-1.5">
-          <div className="flex justify-between"><span className="text-ash">Subtotal</span><span>{fmtINR(i.subtotal)}</span></div>
+          <div className="flex justify-between"><span className="text-ash">Subtotal</span><span>{fmtMoney(i.subtotal)}</span></div>
           {intra ? (
             <>
-              <div className="flex justify-between"><span className="text-ash">CGST 9%</span><span>{fmtINR(i.gst / 2)}</span></div>
-              <div className="flex justify-between"><span className="text-ash">SGST 9%</span><span>{fmtINR(i.gst / 2)}</span></div>
+              <div className="flex justify-between"><span className="text-ash">CGST 9%</span><span>{fmtMoney(i.gst / 2)}</span></div>
+              <div className="flex justify-between"><span className="text-ash">SGST 9%</span><span>{fmtMoney(i.gst / 2)}</span></div>
             </>
           ) : (
-            <div className="flex justify-between"><span className="text-ash">IGST 18%</span><span>{fmtINR(i.gst)}</span></div>
+            <div className="flex justify-between"><span className="text-ash">IGST 18%</span><span>{fmtMoney(i.gst)}</span></div>
           )}
-          <div className="flex justify-between rounded-xl bg-lime px-3 py-2 font-display"><span>Total</span><span>{fmtINR(i.total)}</span></div>
+          <div className="flex justify-between rounded-xl bg-lime px-3 py-2 font-display"><span>Total</span><span>{fmtMoney(i.total)}</span></div>
         </div>
+        <div className="mt-5"><CustomFieldRows entity="invoices" values={i.custom} onSave={(v) => setCustom('invoices', i.id, v)} /></div>
         <p className="mt-6 text-[11px] text-ash">Bank: HDFC Bank · A/c 50200012344821 · IFSC HDFC0001234 · UPI worksuite@hdfcbank</p>
       </div>
       <div className="mt-4 flex justify-end gap-2">
@@ -141,6 +147,7 @@ function InvoicePreview({ invoice: i, onClose, onPaid }: { invoice: Invoice; onC
 
 function NewInvoice({ open, onClose, onSave, nextId }: { open: boolean; onClose: () => void; onSave: (i: Invoice) => void; nextId: string }) {
   const [clientIdx, setClientIdx] = useState(0)
+  const [custom, setCustom] = useState<CustomValues>({})
   const [due, setDue] = useState(30)
   const [lines, setLines] = useState<InvoiceLine[]>([{ description: 'Platform subscription — Enterprise', qty: 1, rate: 150000 }])
   const subtotal = lines.reduce((s, l) => s + l.qty * l.rate, 0)
@@ -151,15 +158,18 @@ function NewInvoice({ open, onClose, onSave, nextId }: { open: boolean; onClose:
       <form
         onSubmit={(e) => {
           e.preventDefault()
+          const missing = missingRequired('invoices', custom)
+          if (missing) return useApp.getState().toast(`${missing} is required`, 'error')
           const issue = TODAY.toISOString().slice(0, 10)
           const dueDate = new Date(TODAY)
           dueDate.setDate(dueDate.getDate() + due)
-          onSave(buildInvoice({ id: nextId, client: clients[clientIdx], issueDate: issue, dueDate: dueDate.toISOString().slice(0, 10), lines, status: 'Pending' }))
+          onSave({ ...buildInvoice({ id: nextId, client: clients[clientIdx], issueDate: issue, dueDate: dueDate.toISOString().slice(0, 10), lines, status: 'Pending' }), custom: cleanValues('invoices', custom) })
+          setCustom({})
         }}
         className="space-y-4"
       >
         <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Client">
+          <Field label={clientOne()}>
             <Select className="w-full !rounded-xl" value={clientIdx} onChange={(e) => setClientIdx(Number(e.target.value))}>
               {clients.map((c, i) => <option key={c.name} value={i}>{c.name}</option>)}
             </Select>
@@ -171,8 +181,11 @@ function NewInvoice({ open, onClose, onSave, nextId }: { open: boolean; onClose:
             </Select>
           </Field>
         </div>
+        {fieldDefs('invoices').length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-3"><CustomFieldInputs entity="invoices" values={custom} onChange={setCustom} /></div>
+        )}
         <div className="space-y-2">
-          <div className="grid grid-cols-[1fr_70px_120px_36px] gap-2 text-xs font-bold text-ash"><span>Item</span><span>Qty</span><span>Rate (₹)</span><span /></div>
+          <div className="grid grid-cols-[1fr_70px_120px_36px] gap-2 text-xs font-bold text-ash"><span>Item</span><span>Qty</span><span>Rate ({currencySymbol()})</span><span /></div>
           {lines.map((l, k) => (
             <div key={k} className="grid grid-cols-[1fr_70px_120px_36px] gap-2">
               <Input required value={l.description} onChange={(e) => setLine(k, { description: e.target.value })} />
@@ -185,8 +198,8 @@ function NewInvoice({ open, onClose, onSave, nextId }: { open: boolean; onClose:
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-soft p-4">
           <div className="text-sm">
-            <p>Subtotal <b>{fmtINR(subtotal)}</b> · GST 18% <b>{fmtINR(subtotal * 0.18)}</b></p>
-            <p className="font-display text-xl">Total {fmtINR(subtotal * 1.18)}</p>
+            <p>Subtotal <b>{fmtMoney(subtotal)}</b> · GST 18% <b>{fmtMoney(subtotal * 0.18)}</b></p>
+            <p className="font-display text-xl">Total {fmtMoney(subtotal * 1.18)}</p>
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>

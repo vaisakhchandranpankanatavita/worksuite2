@@ -6,6 +6,10 @@
  * user's role can't access is left empty, so nothing outside their modules shows up anywhere.
  */
 import { api, connection, type SessionUser } from '../lib/api'
+import { normalizeProject, type StoredProject } from './projects'
+import { DEPARTMENTS } from './mock'
+import { setMoneyFormat } from '../lib/format'
+import { applyTheme } from '../lib/theme'
 import { appSettings, collectionSources, datasetSources } from './registry'
 
 function replaceInPlace(target: unknown, value: unknown) {
@@ -20,7 +24,9 @@ function replaceInPlace(target: unknown, value: unknown) {
 export async function loadWorkspace(): Promise<SessionUser> {
   const data = await api.bootstrap()
   for (const [name, target] of Object.entries(collectionSources)) {
-    replaceInPlace(target, data.collections[name as keyof typeof collectionSources])
+    const docs = data.collections[name as keyof typeof collectionSources]
+    // Projects saved before blocker tracking have no `blockers` list.
+    replaceInPlace(target, name === 'projects' ? docs?.map((p) => normalizeProject(p as StoredProject)) : docs)
   }
   for (const [name, target] of Object.entries(datasetSources)) {
     replaceInPlace(target, data.datasets[name as keyof typeof datasetSources])
@@ -29,6 +35,13 @@ export async function loadWorkspace(): Promise<SessionUser> {
     const value = data.settings[key]
     if (value !== undefined) (appSettings as Record<string, unknown>)[key] = value
   }
+  // Company configuration drives formatting, department lists and the company name shown on documents.
+  const { orgConfig } = appSettings
+  setMoneyFormat(orgConfig.currency, orgConfig.locale)
+  replaceInPlace(DEPARTMENTS, orgConfig.departments)
+  const company = datasetSources.company as { name: string }
+  if (company) company.name = orgConfig.companyName
+  applyTheme(appSettings.theme)
   connection.online = true
   return data.user
 }

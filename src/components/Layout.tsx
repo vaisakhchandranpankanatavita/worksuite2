@@ -13,38 +13,40 @@ import { Avatar, IconBtn, Toasts } from './ui'
 import AiAssistant from './AiAssistant'
 import AssetsEnterOverlay from './AssetsEnterOverlay'
 import VoiceControl from './VoiceControl'
+import { projectMany } from '../lib/terms'
+import { useIcons, type IconKey } from '../lib/theme'
+import { appSettings } from '../data/registry'
 
-const NAV: Record<ModuleKey, { to: string; label: string; icon: typeof Home; end?: boolean }[]> = {
+const NAV: Record<ModuleKey, { to: string; label: string; icon: IconKey; end?: boolean }[]> = {
   hr: [
-    { to: '/hr', label: 'Dashboard', icon: Home, end: true },
-    { to: '/hr/employees', label: 'Employees', icon: Users },
-    { to: '/hr/attendance', label: 'Attendance', icon: CalendarCheck },
-    { to: '/hr/leave', label: 'Leave', icon: PiggyBank },
-    { to: '/hr/recruitment', label: 'Recruitment', icon: UserPlus },
-    { to: '/hr/payroll', label: 'Payroll', icon: Wallet },
+    { to: '/hr', label: 'Dashboard', icon: 'home', end: true },
+    { to: '/hr/employees', label: 'Employees', icon: 'people' },
+    { to: '/hr/attendance', label: 'Attendance', icon: 'attendance' },
+    { to: '/hr/leave', label: 'Leave', icon: 'leave' },
+    { to: '/hr/recruitment', label: 'Recruitment', icon: 'recruit' },
+    { to: '/hr/payroll', label: 'Payroll', icon: 'payroll' },
   ],
   finance: [
-    { to: '/finance', label: 'Dashboard', icon: Home, end: true },
-    { to: '/finance/invoices', label: 'Invoices', icon: FileText },
-    { to: '/finance/expenses', label: 'Expense Claims', icon: Receipt },
-    { to: '/finance/track-expenses', label: 'Track Expenses', icon: ListChecks },
-    { to: '/finance/budgets', label: 'Budgets', icon: IndianRupee },
-    { to: '/finance/reports', label: 'Reports', icon: LineChart },
+    { to: '/finance', label: 'Dashboard', icon: 'home', end: true },
+    { to: '/finance/invoices', label: 'Invoices', icon: 'invoices' },
+    { to: '/finance/expenses', label: 'Expense Claims', icon: 'expenses' },
+    { to: '/finance/track-expenses', label: 'Track Expenses', icon: 'track' },
+    { to: '/finance/budgets', label: 'Budgets', icon: 'budgets' },
+    { to: '/finance/reports', label: 'Reports', icon: 'reports' },
   ],
   assets: [
-    { to: '/assets', label: 'Dashboard', icon: Home, end: true },
-    { to: '/assets/inventory', label: 'Inventory', icon: ListChecks },
-    { to: '/assets/stock', label: 'Stock', icon: Boxes },
+    { to: '/assets', label: 'Dashboard', icon: 'home', end: true },
+    { to: '/assets/inventory', label: 'Inventory', icon: 'inventory' },
+    { to: '/assets/stock', label: 'Stock', icon: 'stock' },
   ],
   projects: [
-    { to: '/projects', label: 'Mission Control', icon: Home, end: true },
-    { to: '/projects/portfolio', label: 'Portfolio', icon: LayoutGrid },
-    { to: '/projects/timeline', label: 'Timeline', icon: CalendarRange },
+    { to: '/projects', label: 'Mission Control', icon: 'home', end: true },
+    { to: '/projects/portfolio', label: 'Portfolio', icon: 'portfolio' },
+    { to: '/projects/timeline', label: 'Timeline', icon: 'timeline' },
   ],
 }
 
-const MODULE_LABEL: Record<ModuleKey, string> = { hr: 'People', finance: 'Finance', assets: 'Assets', projects: 'Projects' }
-const MODULE_ICON: Record<ModuleKey, typeof Home> = { hr: Users, finance: Wallet, assets: Laptop, projects: FolderKanban }
+const MODULE_LABEL: Record<ModuleKey, string> = { hr: 'People', finance: 'Finance', assets: 'Assets', get projects() { return projectMany() } }
 
 function Logo() {
   const nav = useNavigate()
@@ -58,13 +60,13 @@ function Logo() {
         <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden>
           <defs>
             <linearGradient id="logo-bg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#d8eca0" />
-              <stop offset="100%" stopColor="#aece52" />
+              <stop offset="0%" stopColor="var(--color-lime)" />
+              <stop offset="100%" stopColor="var(--color-lime-deep)" />
             </linearGradient>
           </defs>
           {/* Glow halo on hover */}
           <circle cx="16" cy="16" r="15" fill="url(#logo-bg)" className="opacity-0 transition-opacity duration-300 group-hover:opacity-30" />
-          <g className="logo-mark" fill="none" stroke="#1a1d1b" strokeWidth="1.8">
+          <g className="logo-mark" fill="none" stroke="var(--color-ink)" strokeWidth="1.8">
             {[0, 60, 120, 180, 240, 300].map((r) => (
               <ellipse key={r} cx="16" cy="9.5" rx="3.5" ry="5.8" transform={`rotate(${r} 16 16)`} />
             ))}
@@ -205,7 +207,8 @@ export default function Layout() {
   const { pathname } = useLocation()
   const nav = useNavigate()
   const role = useAuth((s) => s.user)
-  const isHelp = pathname.startsWith('/help')
+  // Help and Settings sit outside the four modules, so every signed-in user can open them.
+  const isHelp = pathname.startsWith('/help') || pathname.startsWith('/settings')
   const module: ModuleKey = pathname.startsWith('/finance') ? 'finance' : pathname.startsWith('/assets') ? 'assets' : pathname.startsWith('/projects') ? 'projects' : pathname.startsWith('/hr') ? 'hr' : (role?.modules[0] ?? 'hr')
   const [search, setSearch] = useState(false)
   const [bell, setBell] = useState(false)
@@ -213,6 +216,7 @@ export default function Layout() {
   const [mobile, setMobile] = useState(false)
   const [profile, setProfile] = useState(false)
   const [enteringAssets, setEnteringAssets] = useState(false)
+  const icons = useIcons()
 
   function goModule(m: ModuleKey) {
     if (m === 'assets' && module !== 'assets') setEnteringAssets(true)
@@ -246,6 +250,8 @@ export default function Layout() {
   function signOut() { setProfile(false); endSession() }
 
   if (!role) return <Navigate to="/login" replace />
+  // First run: the superadmin sets up the company (industry, departments, fields) before anything else.
+  if (role.isSuperadmin && !appSettings.orgConfig.configured && !pathname.startsWith('/settings')) return <Navigate to="/settings" replace />
   if (!isHelp && !role.modules.includes(module)) return <Navigate to={`/${role.modules[0]}`} replace />
 
   const links = NAV[module]
@@ -283,26 +289,33 @@ export default function Layout() {
               <Logo />
               <VoiceControl />
               {visibleModules.length > 1 && (
-                <div className="hidden rounded-full border border-white/60 bg-white/40 p-1 backdrop-blur-xl sm:inline-flex" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 8px -2px rgba(26,29,27,0.08)' }}>
-                  {visibleModules.map((m) => {
-                    const Icon = MODULE_ICON[m]
-                    return (
-                      <button key={m} onClick={() => goModule(m)} className={clsx('flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-[11px] font-semibold uppercase tracking-wider transition-all duration-200', module === m ? 'bg-ink text-white shadow-sm' : 'text-ash hover:scale-105 hover:text-ink')}>
-                        <Icon size={12} />{MODULE_LABEL[m]}
-                      </button>
-                    )
-                  })}
+                <div className="hidden items-center gap-2 sm:flex">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-ash/70">Module</span>
+                  <div role="tablist" aria-label="Module" className="inline-flex gap-0.5 rounded-xl border border-line bg-soft/80 p-0.5">
+                    {visibleModules.map((m) => {
+                      const Icon = icons[m]
+                      return (
+                        <button key={m} role="tab" aria-selected={module === m} onClick={() => goModule(m)} className={clsx('flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 font-display text-[11px] font-bold uppercase tracking-wider transition-all duration-200', module === m ? 'bg-lime-deep text-ink shadow-sm ring-1 ring-ink/10' : 'text-ash hover:bg-white/70 hover:text-ink')}>
+                          <Icon size={13} />{MODULE_LABEL[m]}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <span aria-hidden className="ml-1 hidden h-6 w-px bg-line xl:block" />
                 </div>
               )}
             </div>
 
             {/* Centre: Desktop nav pills */}
             <nav className="hidden items-center rounded-full border border-white/55 bg-white/35 p-1 backdrop-blur-xl xl:flex" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(26,29,27,0.03), 0 2px 12px -4px rgba(26,29,27,0.08)' }}>
-              {links.map(({ to, label, icon: Icon, end }) => (
+              {links.map(({ to, label, icon, end }) => {
+                const Icon = icons[icon]
+                return (
                 <NavLink key={to} to={to} end={end} title={label} aria-label={label} className={({ isActive }) => clsx('group flex items-center gap-2 rounded-full font-display text-[13px] font-medium transition-all duration-200', isActive ? 'size-9 justify-center bg-ink text-white shadow-sm' : 'px-4 py-2 text-ink/75 hover:bg-soft hover:text-ink')}>
                   {({ isActive }) => (isActive ? <Icon size={15} /> : label)}
                 </NavLink>
-              ))}
+                )
+              })}
             </nav>
 
             {/* Right: Actions */}
@@ -381,7 +394,7 @@ export default function Layout() {
                     <button className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/60">
                       <User size={14} className="text-ash" /> View profile
                     </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/60">
+                    <button onClick={() => { setProfile(false); nav('/settings') }} className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/60">
                       <Settings size={14} className="text-ash" /> Settings
                     </button>
                     <div className="my-1 h-px bg-line/60" />
@@ -417,11 +430,13 @@ export default function Layout() {
                     ))}
                   </div>
                 )}
-                {links.map(({ to, label, icon: Icon, end }) => (
+                {links.map(({ to, label, icon, end }) => {
+                const Icon = icons[icon]
+                return (
                   <NavLink key={to} to={to} end={end} className={({ isActive }) => clsx('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150', isActive ? 'bg-ink text-white' : 'hover:bg-soft')}>
                     <Icon size={15} /> {label}
                   </NavLink>
-                ))}
+                )})}
                 <div className="my-1 h-px bg-line/70" />
                 <button onClick={signOut} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-rose-deep transition-colors hover:bg-rose/30">
                   <LogOut size={15} /> Sign out

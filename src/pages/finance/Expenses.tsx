@@ -5,7 +5,7 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recha
 import { Avatar, Badge, Button, Card, CardHeader, Field, Input, Modal, PageHeader, Segmented, Select, Table, chartTooltip } from '../../components/ui'
 import { CountUp } from '../../components/CountUp'
 import { EXPENSE_CATEGORIES, TODAY, employeeById, employees, type ExpenseCategory } from '../../data/mock'
-import { fmtCompact, fmtDate, fmtINR } from '../../lib/format'
+import { fmtCompact, fmtDate, fmtMoney, currencySymbol } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
@@ -43,7 +43,7 @@ export default function Expenses() {
             <BarChart data={byCat} layout="vertical" margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
               <XAxis type="number" hide />
               <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} width={84} />
-              <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtINR(v)} />
+              <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtMoney(v)} />
               <Bar dataKey="value" name="Spend" fill="#ddefa8" radius={[4, 10, 10, 4]} barSize={14} background={{ fill: '#f1f4f1', radius: 10 }} />
             </BarChart>
           </ResponsiveContainer>
@@ -69,7 +69,7 @@ export default function Expenses() {
                   <td className="max-w-[240px] truncate">{x.description}</td>
                   <td className="whitespace-nowrap text-ash">{fmtDate(x.date)}</td>
                   <td>{x.hasReceipt ? <Paperclip size={15} className="text-ink" /> : <span className="text-xs text-rose-deep">Missing</span>}</td>
-                  <td className="font-display">{fmtINR(x.amount)}</td>
+                  <td className="font-display">{fmtMoney(x.amount)}</td>
                   <td><Badge>{x.status}</Badge></td>
                   <td>
                     {x.status === 'Pending' && (
@@ -109,7 +109,7 @@ function NewClaim({ open, onClose, onSave }: { open: boolean; onClose: () => voi
               {EXPENSE_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
             </Select>
           </Field>
-          <Field label="Amount (₹)"><Input required type="number" min={1} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></Field>
+          <Field label={`Amount (${currencySymbol()})`}><Input required type="number" min={1} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></Field>
         </div>
         <Field label="Description"><Input required value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="e.g. Cab to client office" /></Field>
         <label className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed border-line bg-soft py-6 text-sm text-ash hover:border-ink">

@@ -6,9 +6,11 @@ import { exportCsv } from '../hr/Employees'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
 import { ASSET_CATEGORIES, employeeById, employees, LOCATIONS, TODAY, type Asset, type AssetCategory, type AssetStatus } from '../../data/mock'
 import { csvToObjects } from '../../lib/csv'
-import { fmtDate, fmtINR } from '../../lib/format'
+import { fmtDate, fmtMoney, currencySymbol } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
+import { CustomFieldInputs, cleanValues, missingRequired } from '../../components/CustomFields'
+import type { CustomValues } from '../../data/industries'
 
 const STATUSES: (AssetStatus | 'All' | 'Due')[] = ['All', 'Available', 'Assigned', 'Maintenance', 'Retired', 'Due']
 const KANBAN_COLUMNS: AssetStatus[] = ['Available', 'Assigned', 'Maintenance', 'Retired']
@@ -184,7 +186,7 @@ export default function Assets() {
                   ) : (
                     <span className="text-ash">Unassigned</span>
                   )}
-                  <span className="text-ash">{fmtINR(a.cost)}</span>
+                  <span className="text-ash">{fmtMoney(a.cost)}</span>
                 </div>
               </button>
             )
@@ -224,7 +226,7 @@ export default function Assets() {
                     )}
                   </td>
                   <td className="whitespace-nowrap">{fmtDate(a.purchaseDate)}</td>
-                  <td>{fmtINR(a.cost)}</td>
+                  <td>{fmtMoney(a.cost)}</td>
                   <td className="whitespace-nowrap">
                     <div className="flex items-center gap-1">
                       {a.nextMaintenanceDate && new Date(a.nextMaintenanceDate) <= TODAY && <Badge tone="rose" className="shrink-0">Due</Badge>}
@@ -360,7 +362,7 @@ function ImportModal({ open, existingCount, onClose, onImport }: { open: boolean
             {rows.slice(0, 20).map((r, i) => (
               <div key={i} className="flex items-center justify-between rounded-lg bg-soft/60 px-3 py-1.5 text-xs">
                 <span className="truncate font-medium">{r.name}</span>
-                <span className="shrink-0 text-ash">{r.category} · {fmtINR(r.cost)}</span>
+                <span className="shrink-0 text-ash">{r.category} · {fmtMoney(r.cost)}</span>
               </div>
             ))}
             {rows.length > 20 && <p className="py-1 text-center text-[11px] text-ash">+{rows.length - 20} more</p>}
@@ -421,7 +423,7 @@ function KanbanBoard({ list, onDropAsset, onOpen }: { list: Asset[]; onDropAsset
                   <p className="truncate text-[11px] text-ash">{a.category} · {a.serial}</p>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-[11px] text-ash">{a.location}</span>
-                    <span className="text-[11px] font-bold">{fmtINR(a.cost)}</span>
+                    <span className="text-[11px] font-bold">{fmtMoney(a.cost)}</span>
                   </div>
                 </div>
               ))}
@@ -458,6 +460,7 @@ function BulkAssignModal({ open, count, onClose, onAssign }: { open: boolean; co
 
 function AddAssetModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (a: Asset) => void }) {
   const { assets } = useApp()
+  const [custom, setCustom] = useState<CustomValues>({})
   const [form, setForm] = useState({ name: '', category: 'Laptop' as AssetCategory, model: '', location: 'Bengaluru', cost: '50000', image: '', assignedTo: '' })
   const set = (k: keyof typeof form) => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [k]: ev.target.value })
 
@@ -474,6 +477,8 @@ function AddAssetModal({ open, onClose, onSave }: { open: boolean; onClose: () =
         className="grid gap-4 sm:grid-cols-2"
         onSubmit={(ev) => {
           ev.preventDefault()
+          const missing = missingRequired('assets', custom)
+          if (missing) return useApp.getState().toast(`${missing} is required`, 'error')
           const assigned = !!form.assignedTo
           onSave({
             id: `AS${1001 + assets.length + Math.floor(Math.random() * 1000)}`,
@@ -489,7 +494,9 @@ function AddAssetModal({ open, onClose, onSave }: { open: boolean; onClose: () =
             cost: Number(form.cost),
             location: form.location as Asset['location'],
             image: form.image || undefined,
+            custom: cleanValues('assets', custom),
           })
+          setCustom({})
           setForm({ ...form, name: '', model: '', image: '', assignedTo: '' })
         }}
       >
@@ -505,13 +512,14 @@ function AddAssetModal({ open, onClose, onSave }: { open: boolean; onClose: () =
             {LOCATIONS.map((l) => <option key={l}>{l}</option>)}
           </Select>
         </Field>
-        <Field label="Cost (₹)"><Input type="number" min={0} step={500} value={form.cost} onChange={set('cost')} /></Field>
+        <Field label={`Cost (${currencySymbol()})`}><Input type="number" min={0} step={500} value={form.cost} onChange={set('cost')} /></Field>
         <Field label="Assign to employee (optional)">
           <Select className="w-full !rounded-xl" value={form.assignedTo} onChange={set('assignedTo')}>
             <option value="">Unassigned</option>
             {employees.map((e) => <option key={e.id} value={e.id}>{e.name} — {e.role}</option>)}
           </Select>
         </Field>
+        <CustomFieldInputs entity="assets" values={custom} onChange={setCustom} />
         <div className="sm:col-span-2">
           <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-line bg-soft px-4 py-3 text-sm text-ash hover:border-ink">
             {form.image ? (

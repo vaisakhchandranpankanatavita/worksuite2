@@ -10,7 +10,9 @@ import {
   employees, EXPENSE_TRACK_CATEGORIES, expenseBills, expenseBreakdown, expenses, expenseSubCategories, headcountTrend, HOLIDAYS,
   invoices, jobs, LEAVE_POLICY, leaveRequests, monthlyFinance, payrollRuns, schedule, todayAttendance, transactions,
 } from './mock.js'
+import { DEFAULT_THEME, type ThemeId } from './themes.js'
 import { projects } from './projects.js'
+import { DEFAULT_CUSTOM_FIELDS, DEFAULT_ORG_CONFIG, type CustomFieldDefs, type OrgConfig } from './industries.js'
 
 /** CRUD collections. Names must match `COLLECTIONS` in server/db.ts. */
 export const collectionSources = {
@@ -54,5 +56,11 @@ export type DatasetName = keyof typeof datasetSources
 export const appSettings = {
   payrollStatus: payrollRuns[0].status as 'Draft' | 'Processing' | 'Paid',
   expenseTrackCategories: [...EXPENSE_TRACK_CATEGORIES] as string[],
+  /** Company configuration — industry, currency, departments, terminology. Written by the superadmin. */
+  orgConfig: structuredClone(DEFAULT_ORG_CONFIG) as OrgConfig,
+  /** Custom field definitions per record type. Written by the superadmin. */
+  customFields: structuredClone(DEFAULT_CUSTOM_FIELDS) as CustomFieldDefs,
+  /** Colour theme for the whole company. Written by the superadmin. */
+  theme: DEFAULT_THEME as ThemeId,
 }
 export type SettingName = keyof typeof appSettings

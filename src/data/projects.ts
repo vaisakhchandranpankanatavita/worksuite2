@@ -1,6 +1,7 @@
 import { assets, employees, type Department } from './mock.js'
 import { fromDay, isWeekday, todayDay, toDay } from '../lib/dates.js'
 import { mulberry32 } from '../lib/format.js'
+import type { CustomValues } from './industries.js'
 
 export type ProjectStatus = 'Initiated' | 'In Progress' | 'On Hold' | 'Completed'
 
@@ -16,15 +17,36 @@ export interface Phase {
   actualEnd?: string
 }
 
+/** Snapshot of a signed-in account, stamped by the server on what it authored. */
+export interface PersonRef { id: string; name: string; photo?: string; hue: number }
+
 export interface ProjectUpdate {
   id: string
   date: string
+  /** Employee id on seeded history; the signing-in account's id on updates posted in the app. */
   authorId: string
+  author?: PersonRef
   phaseId: string
   /** Overall project progress (0–100) at the time of the update. */
   progress: number
   note: string
   blocker?: string
+}
+
+/** Something stopping the team. Stays open until someone resolves it, whatever later updates say. */
+export interface Blocker {
+  id: string
+  text: string
+  phaseId?: string
+  /** The update that raised it, if any. */
+  updateId?: string
+  raisedOn: string
+  raisedBy?: PersonRef
+  /** Employee responsible for clearing it. */
+  ownerId?: string
+  resolvedOn?: string
+  resolvedBy?: PersonRef
+  resolution?: string
 }
 
 /** A release of funds from the approved budget ("allotment"). */
@@ -58,6 +80,35 @@ export interface Project {
   phases: Phase[]
   updates: ProjectUpdate[]
   replans: Replan[]
+  blockers: Blocker[]
+  /** Values of the company's custom project fields (see data/industries.ts). */
+  custom?: CustomValues
+  /** Hidden from dashboards and the timeline; still listed in the portfolio under "Archived". */
+  archived?: boolean
+}
+
+/** A project as it may be stored: records from before blocker tracking have no `blockers`. */
+export type StoredProject = Omit<Project, 'blockers'> & { blockers?: Blocker[] }
+
+export const openBlockers = (p: Project) => p.blockers.filter((b) => !b.resolvedOn)
+
+const BLOCKER_WINDOW_DAYS = 10
+
+/**
+ * Records saved before blockers were tracked only have them as text on updates. Treat recent ones as
+ * open (one per distinct text) so nothing already flagged disappears; the next save persists them.
+ */
+export function normalizeProject(p: StoredProject): Project {
+  if (Array.isArray(p.blockers)) return p as Project
+  const today = todayDay()
+  const seen = new Set<string>()
+  const blockers: Blocker[] = []
+  for (const u of p.updates) {
+    if (!u.blocker || seen.has(u.blocker) || today - toDay(u.date) > BLOCKER_WINDOW_DAYS) continue
+    seen.add(u.blocker)
+    blockers.push({ id: `${u.id}-B`, text: u.blocker, phaseId: u.phaseId, updateId: u.id, raisedOn: u.date, ownerId: p.phases.find((x) => x.id === u.phaseId)?.ownerId })
+  }
+  return { ...p, blockers }
 }
 
 /* ─── Waterfall template ───────────────────────────────────── */
@@ -150,7 +201,7 @@ const ALLOCATIONS = [100, 100, 80, 60, 50, 40, 25]
 
 export const DEPT_HEAD_COUNT = 8
 
-function seed(): Project[] {
+function seed(): StoredProject[] {
   const rand = mulberry32(90210)
   const pick = <T,>(a: readonly T[]) => a[Math.floor(rand() * a.length)]
   const between = (a: number, b: number) => Math.floor(a + rand() * (b - a + 1))
@@ -163,7 +214,7 @@ function seed(): Project[] {
   const sharedPool = assets.filter((a) => a.category !== 'Laptop' && a.status !== 'Retired')
   let sharedCursor = 0
 
-  return DEFS.map((def, idx): Project => {
+  return DEFS.map((def, idx): StoredProject => {
     const startDay = T + def.start
     const baselineEnd = startDay + def.dur
     const head = heads[deptIdx(def.dept)]
@@ -306,4 +357,4 @@ function seed(): Project[] {
   })
 }
 
-export const projects: Project[] = seed()
+export const projects: Project[] = seed().map(normalizeProject)

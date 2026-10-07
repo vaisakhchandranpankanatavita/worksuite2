@@ -8,11 +8,11 @@ import { DonutChart, GroupedBar, HalfGauge, HatchedArea, MultiLineChart, SoftBar
 import { CountUp } from '../../components/CountUp'
 import { Avatar, Badge, Button, Card, CardHeader, CornerLink, IconBtn, Progress, Segmented, chartTooltip } from '../../components/ui'
 import { TODAY, bankAccounts, budgets, complianceDeadlines, employeeById, expenseBreakdown, monthlyFinance, transactions } from '../../data/mock'
-import { fmtCompact, fmtINR, fmtShortDate } from '../../lib/format'
+import { fmtCompact, fmtMoney, fmtShortDate } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
-const PIE_COLORS = ['#1a1d1b', '#d8eca0', '#c8d9f4', '#f0cad8']
+const PIE_COLORS = ['var(--color-ink)', 'var(--color-lime)', 'var(--color-sky)', 'var(--color-rose)']
 
 // Cash flow waterfall data — derived from monthlyFinance (built on mount, after the API has hydrated it)
 const buildCashFlow = () => [
@@ -89,7 +89,7 @@ export default function FinanceDashboard() {
           <div className="relative flex items-start justify-between">
             <div>
               <p className="text-sm text-white/55">Total cash balance</p>
-              <p className="mt-2 font-display text-4xl font-light tracking-tight">{fmtINR(cash)}</p>
+              <p className="mt-2 font-display text-4xl font-light tracking-tight">{fmtMoney(cash)}</p>
               <p className="mt-1 flex items-center gap-1 text-xs text-lime">
                 <ArrowUp size={12} /> 8.4% vs last month
               </p>
@@ -129,17 +129,17 @@ export default function FinanceDashboard() {
           {[
             {
               title: 'Revenue', value: cm.revenue, delta: pct(cm.revenue, pm.revenue),
-              extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.revenue)} highlight={5} height={52} color="#e4f1c3" hi="#aece52" />,
+              extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.revenue)} highlight={5} height={52} color="#e4f1c3" hi="var(--color-lime-deep)" />,
             },
             {
               title: 'Expenses', value: cm.expenses, delta: pct(cm.expenses, pm.expenses),
-              extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.expenses)} highlight={5} height={52} color="#dae4f6" hi="#6b92d8" />,
+              extra: <SoftBars values={monthlyFinance.slice(-6).map((m) => m.expenses)} highlight={5} height={52} color="#dae4f6" hi="var(--color-sky-deep)" />,
             },
             {
               title: 'Net Profit', value: cm.profit, delta: pct(cm.profit, pm.profit),
               extra: (
                 <div className="relative">
-                  <HalfGauge value={Math.round((cm.profit / cm.revenue) * 100 * 2.5)} size={96} color="#c6e0c0" track="#edf0ed" />
+                  <HalfGauge value={Math.round((cm.profit / cm.revenue) * 100 * 2.5)} size={96} color="var(--color-sage)" track="#edf0ed" />
                   <span className="absolute inset-x-0 bottom-0 text-center text-[11px] font-bold">{((cm.profit / cm.revenue) * 100).toFixed(0)}% margin</span>
                 </div>
               ),
@@ -177,9 +177,9 @@ export default function FinanceDashboard() {
           <MultiLineChart
             data={series}
             lines={[
-              { key: 'revenue', color: '#aece52' },
-              { key: 'expenses', color: '#6b92d8', dashed: true },
-              { key: 'profit', color: '#5fa059' },
+              { key: 'revenue', color: 'var(--color-lime-deep)' },
+              { key: 'expenses', color: 'var(--color-sky-deep)', dashed: true },
+              { key: 'profit', color: 'var(--color-sage-deep)' },
             ]}
             xKey="month" height={200} format={fmtCompact}
           />
@@ -195,7 +195,7 @@ export default function FinanceDashboard() {
                 colors={PIE_COLORS}
                 innerLabel={fmtCompact(expenseBreakdown.reduce((s, x) => s + x.value, 0))}
                 height="100%"
-                format={fmtINR}
+                format={fmtMoney}
               />
             </div>
             <div className="grid flex-1 grid-cols-2 gap-2 text-[11px]">
@@ -252,7 +252,7 @@ export default function FinanceDashboard() {
             <GroupedBar
               data={revVsBudget}
               keys={['revenue', 'budget']}
-              colors={['#aece52', '#dfe4de']}
+              colors={['var(--color-lime-deep)', '#dfe4de']}
               xKey="month" height="100%"
               format={fmtCompact}
             />
@@ -308,7 +308,7 @@ export default function FinanceDashboard() {
                   <p className="text-[11px] text-ash">{fmtShortDate(t.date)} · {t.account}</p>
                 </div>
                 <span className={clsx('font-display text-sm font-semibold', t.amount > 0 ? 'text-sage-deep' : '')}>
-                  {t.amount > 0 ? '+' : '−'}{fmtINR(Math.abs(t.amount))}
+                  {t.amount > 0 ? '+' : '−'}{fmtMoney(Math.abs(t.amount))}
                 </span>
               </li>
             ))}
@@ -342,7 +342,7 @@ export default function FinanceDashboard() {
                 <li key={x.id} className="flex items-center gap-2.5 py-2.5">
                   <Avatar name={e.name} hue={e.avatarHue} src={photoFor(e)} size={32} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{fmtINR(x.amount)}</p>
+                    <p className="truncate text-sm font-semibold">{fmtMoney(x.amount)}</p>
                     <p className="truncate text-[11px] text-ash">{e.name} · {x.category}</p>
                   </div>
                   <button onClick={() => setExpenseStatus(x.id, 'Approved')} className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-sage-deep hover:shadow-[0_0_16px_-2px_rgba(95,160,89,0.6)] active:translate-y-0 active:scale-90" aria-label="Approve">

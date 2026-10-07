@@ -5,9 +5,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Avatar, Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Table } from '../../components/ui'
 import TiltedCard from '../../components/TiltedCard'
 import { DEPARTMENTS, LOCATIONS, TODAY, employees, type Department, type Employee } from '../../data/mock'
-import { fmtCompact, fmtDate } from '../../lib/format'
+import { fmtCompact, fmtDate, currencySymbol } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
+import { CustomFieldInputs, cleanValues, missingRequired } from '../../components/CustomFields'
+import type { CustomValues } from '../../data/industries'
+import { api } from '../../lib/api'
 
 const STATUSES = ['All', 'Active', 'Probation', 'On Leave', 'Notice Period'] as const
 
@@ -177,6 +180,7 @@ export default function Employees() {
         onClose={closeAdd}
         onSave={(e) => {
           employees.unshift(e)
+          api.create('employees', e).catch(() => {}) // failures surface through the store's write-error toast
           toast(`${e.name} added to ${e.department}`)
           closeAdd()
           force((n) => n + 1)
@@ -187,7 +191,8 @@ export default function Employees() {
 }
 
 function AddEmployeeModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (e: Employee) => void }) {
-  const [form, setForm] = useState({ name: '', email: '', department: 'Engineering' as Department, role: '', location: 'Bengaluru', ctc: '1200000', gender: 'F' })
+  const [custom, setCustom] = useState<CustomValues>({})
+  const [form, setForm] = useState({ name: '', email: '', department: DEPARTMENTS[0] as Department, role: '', location: 'Bengaluru', ctc: '1200000', gender: 'F' })
   const set = (k: keyof typeof form) => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [k]: ev.target.value })
   return (
     <Modal open={open} onClose={onClose} title="Add employee" width={600}>
@@ -195,6 +200,8 @@ function AddEmployeeModal({ open, onClose, onSave }: { open: boolean; onClose: (
         className="grid gap-4 sm:grid-cols-2"
         onSubmit={(ev) => {
           ev.preventDefault()
+          const missing = missingRequired('employees', custom)
+          if (missing) return useApp.getState().toast(`${missing} is required`, 'error')
           onSave({
             id: `WS${1001 + employees.length}`,
             name: form.name,
@@ -214,7 +221,9 @@ function AddEmployeeModal({ open, onClose, onSave }: { open: boolean; onClose: (
             bank: 'HDFC Bank ••2231',
             avatarHue: Math.floor(Math.random() * 360),
             performance: 4,
+            custom: cleanValues('employees', custom),
           })
+          setCustom({})
           setForm({ ...form, name: '', email: '', role: '' })
         }}
       >
@@ -231,13 +240,14 @@ function AddEmployeeModal({ open, onClose, onSave }: { open: boolean; onClose: (
             {LOCATIONS.map((d) => <option key={d}>{d}</option>)}
           </Select>
         </Field>
-        <Field label="Annual CTC (₹)"><Input type="number" min={100000} step={10000} value={form.ctc} onChange={set('ctc')} /></Field>
+        <Field label={`Annual CTC (${currencySymbol()})`}><Input type="number" min={100000} step={10000} value={form.ctc} onChange={set('ctc')} /></Field>
         <Field label="Gender">
           <Select className="w-full !rounded-xl" value={form.gender} onChange={set('gender')}>
             <option value="F">Female</option>
             <option value="M">Male</option>
           </Select>
         </Field>
+        <CustomFieldInputs entity="employees" values={custom} onChange={setCustom} />
         <div className="flex items-end justify-end gap-2 sm:col-span-2">
           <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
           <Button type="submit">Save employee</Button>

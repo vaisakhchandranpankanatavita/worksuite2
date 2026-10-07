@@ -6,8 +6,10 @@ import { AvatarStack, Badge, Button, CornerLink, IconBtn, Progress } from '../..
 import { CountUp } from '../../components/CountUp'
 import { PayslipModal } from './Payroll'
 import { TODAY, computePayslip, employeeById, getEmployeeDetail, type EmployeeDetail } from '../../data/mock'
-import { fmtCompact, fmtDate, fmtINR } from '../../lib/format'
+import { fmtCompact, fmtDate, fmtMoney } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
+import { CustomFieldRows } from '../../components/CustomFields'
+import { api } from '../../lib/api'
 
 const TASK_ICONS: Record<EmployeeDetail['onboarding'][number]['icon'], typeof Monitor> = { monitor: Monitor, zap: Zap, message: MessageSquare, target: Target, link: Link2, file: FileText, laptop: Laptop, user: User }
 const DEVICE_ICONS = { laptop: Laptop, phone: Smartphone, monitor: Monitor, headset: Headphones }
@@ -16,6 +18,7 @@ export default function EmployeeProfile() {
   const { id } = useParams()
   const nav = useNavigate()
   const [payslip, setPayslip] = useState(false)
+  const [, force] = useState(0)
   const e = employeeById(id!)
   if (!e) return <p className="py-20 text-center text-ash">Employee not found.</p>
   const d = getEmployeeDetail(e)
@@ -52,7 +55,7 @@ export default function EmployeeProfile() {
           </div>
           <div className="flex gap-6 md:gap-10">
             <BigStat label="Tenure" value={tenure.split(' ')[0]} unit={tenure.split(' ').slice(1).join(' ')} />
-            <BigStat label="Monthly net" value={fmtCompact(slip.net).replace('₹', '')} unit="₹" />
+            <BigStat label="Monthly net" value={fmtCompact(slip.net)} />
             <BigStat label="Projects" value={String(3 + (Number(e.id.slice(2)) % 6))} />
           </div>
         </div>
@@ -146,9 +149,9 @@ export default function EmployeeProfile() {
             <Accordion title="Provident Fund">
               <div className="space-y-2 text-xs">
                 <Row k="UAN" v={e.uan} />
-                <Row k="Employee (12%)" v={`${fmtINR(slip.pf)}/mo`} />
-                <Row k="Employer (12%)" v={`${fmtINR(slip.employerPf)}/mo`} />
-                <Row k="Est. PF balance" v={<b>{fmtINR(d.pfBalance)}</b>} />
+                <Row k="Employee (12%)" v={`${fmtMoney(slip.pf)}/mo`} />
+                <Row k="Employer (12%)" v={`${fmtMoney(slip.employerPf)}/mo`} />
+                <Row k="Est. PF balance" v={<b>{fmtMoney(d.pfBalance)}</b>} />
               </div>
             </Accordion>
             <Accordion title="Devices" defaultOpen>
@@ -170,12 +173,12 @@ export default function EmployeeProfile() {
             </Accordion>
             <Accordion title="Compensation Summary">
               <div className="space-y-2 text-xs">
-                <Row k="Annual CTC" v={<b>{fmtINR(e.ctcAnnual)}</b>} />
-                <Row k="Basic" v={fmtINR(slip.basic)} />
-                <Row k="HRA" v={fmtINR(slip.hra)} />
-                <Row k="Special allowance" v={fmtINR(slip.special)} />
-                <Row k="TDS / month" v={fmtINR(slip.tds)} />
-                <Row k="Net take-home" v={<b>{fmtINR(slip.net)}</b>} />
+                <Row k="Annual CTC" v={<b>{fmtMoney(e.ctcAnnual)}</b>} />
+                <Row k="Basic" v={fmtMoney(slip.basic)} />
+                <Row k="HRA" v={fmtMoney(slip.hra)} />
+                <Row k="Special allowance" v={fmtMoney(slip.special)} />
+                <Row k="TDS / month" v={fmtMoney(slip.tds)} />
+                <Row k="Net take-home" v={<b>{fmtMoney(slip.net)}</b>} />
                 <Button size="sm" variant="light" className="mt-2 w-full" onClick={() => setPayslip(true)}>View payslip</Button>
               </div>
             </Accordion>
@@ -216,6 +219,7 @@ export default function EmployeeProfile() {
               <Row k="Location" v={`${e.location} · ${e.workMode}`} />
               <Row k="Date of joining" v={fmtDate(e.joinDate)} />
               <Row k="Employment" v="Full-time, Permanent" />
+              <CustomFieldRows entity="employees" values={e.custom} onSave={(v) => { e.custom = v; api.replace('employees', e.id, e).catch(() => {}); force((n) => n + 1) }} />
               <div className="flex flex-wrap gap-1.5 pt-2">
                 {d.skills.map((s) => <span key={s} className="rounded-full bg-soft px-2.5 py-1 text-xs">{s}</span>)}
               </div>

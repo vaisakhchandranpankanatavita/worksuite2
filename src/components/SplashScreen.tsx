@@ -58,7 +58,7 @@ function DotCanvas() {
           dots.push({
             gx:    c * GAP,
             gy:    r * GAP,
-            color: Math.random() < 0.08 ? COLORS[Math.floor(Math.random() * COLORS.length)] : 'rgba(255,255,255,1)',
+            color: Math.random() < 0.08 ? COLORS[Math.floor(Math.random() * COLORS.length)] : '#8a948c',
             phase: Math.random() * Math.PI * 2,   // for slow pulse
           })
         }
@@ -155,7 +155,7 @@ export default function SplashScreen({ name, onDone }: Props) {
     <div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
       style={{
-        background: '#0d0f0e',
+        background: '#f1f3f1',
         opacity:    exiting ? 0 : 1,
         transition: exiting ? 'opacity 0.65s cubic-bezier(.22,1,.36,1)' : undefined,
         pointerEvents: exiting ? 'none' : 'all',
@@ -168,7 +168,7 @@ export default function SplashScreen({ name, onDone }: Props) {
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse 65% 65% at 50% 50%, transparent 20%, #0d0f0e 85%)',
+          background: 'radial-gradient(ellipse 65% 65% at 50% 50%, transparent 20%, #f1f3f1 85%)',
         }}
       />
 
@@ -176,11 +176,11 @@ export default function SplashScreen({ name, onDone }: Props) {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="ai-glow-a absolute -left-40 -top-40 size-[500px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(216,236,160,0.14), transparent 65%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(174,206,82,0.22), transparent 65%)' }}
         />
         <div
           className="ai-glow-b absolute -bottom-40 right-[-10%] size-[480px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(200,217,244,0.11), transparent 65%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(107,146,216,0.16), transparent 65%)' }}
         />
       </div>
 
@@ -191,11 +191,11 @@ export default function SplashScreen({ name, onDone }: Props) {
         <LoadingOrb3D size={88} className="mb-7" />
 
         {/* Greeting */}
-        <p className="animate-in font-display text-[26px] font-semibold tracking-tight text-white">
+        <p className="animate-in font-display text-[26px] font-semibold tracking-tight text-ink">
           Welcome, {firstName}
         </p>
         <p
-          className="animate-in mt-1.5 text-[13px] text-white/40"
+          className="animate-in mt-1.5 text-[13px] text-ash"
           style={{ animationDelay: '100ms' }}
         >
           Setting up your workspace
@@ -203,7 +203,7 @@ export default function SplashScreen({ name, onDone }: Props) {
 
         {/* Progress bar */}
         <div className="mt-9 w-full">
-          <div className="h-[3px] overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }}>
+          <div className="h-[3px] overflow-hidden rounded-full" style={{ background: 'rgba(0,0,0,0.08)' }}>
             <div
               className="h-full rounded-full"
               style={{
@@ -215,8 +215,8 @@ export default function SplashScreen({ name, onDone }: Props) {
             />
           </div>
           <div className="mt-2.5 flex items-center justify-between text-[11px]">
-            <span key={step} className="animate-in text-white/40">{STEPS[step]?.label}</span>
-            <span className="tabular-nums font-medium text-white/25">{pct}%</span>
+            <span key={step} className="animate-in text-ash">{STEPS[step]?.label}</span>
+            <span className="tabular-nums font-medium text-ash/70">{pct}%</span>
           </div>
         </div>
 
@@ -233,7 +233,7 @@ export default function SplashScreen({ name, onDone }: Props) {
       </div>
 
       {/* Brand footer */}
-      <p className="absolute bottom-5 z-10 text-[11px] tracking-widest text-white/12">
+      <p className="absolute bottom-5 z-10 text-[11px] tracking-widest text-ash/60">
         WORKSUITE
       </p>
     </div>

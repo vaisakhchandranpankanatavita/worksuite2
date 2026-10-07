@@ -56,7 +56,7 @@ export default function AssetsEnterOverlay({ onDone }: Props) {
 
         <div className="mt-6 flex items-center gap-1.5">
           {[0, 1, 2].map((i) => (
-            <span key={i} className="ai-dot" style={{ animationDelay: `${i * 0.2}s`, background: '#aece52', opacity: 0.5 }} />
+            <span key={i} className="ai-dot" style={{ animationDelay: `${i * 0.2}s`, background: 'var(--color-lime-deep)', opacity: 0.5 }} />
           ))}
         </div>
       </div>

@@ -11,6 +11,7 @@ import { photoFor } from '../../lib/photo'
 import type { Analysis } from '../../lib/projectMetrics'
 import NewProjectModal from './NewProjectModal'
 import { useAnalyzed } from './useAnalyzed'
+import { clientMany, lc, projectMany, projectOne } from '../../lib/terms'
 
 const FILTERS = ['All', 'On track', 'At risk', 'Delayed', 'Completed'] as const
 type Filter = (typeof FILTERS)[number]
@@ -110,14 +111,14 @@ export default function ProjectList() {
     <div>
       <PageHeader
         title="Portfolio"
-        subtitle={`${rows.length} projects · ${fmtCompact(rows.reduce((t, r) => t + r.fin.budget, 0))} approved budget`}
-        actions={<Button onClick={() => setCreating(true)}><Plus size={15} /> New project</Button>}
+        subtitle={`${rows.length} ${lc(projectMany())} · ${fmtCompact(rows.reduce((t, r) => t + r.fin.budget, 0))} approved budget`}
+        actions={<Button onClick={() => setCreating(true)}><Plus size={15} /> New {lc(projectOne())}</Button>}
       />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Segmented value={filter} options={FILTERS} onChange={setFilter} />
         <div className="relative w-full max-w-xs">
           <Search size={14} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ash" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects or clients…" className="!rounded-full !pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${lc(projectMany())} or ${lc(clientMany())}…`} className="!rounded-full !pl-9" />
         </div>
       </div>
       {shown.length === 0 ? (

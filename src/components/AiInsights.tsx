@@ -3,7 +3,7 @@ import { AlertTriangle, ArrowUpRight, Boxes, CalendarClock, FolderKanban, Lightb
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { attendanceTrend, complianceDeadlines, employees, headcountTrend, jobs, monthlyFinance, todayAttendance, type Asset, type Expense, type Invoice, type LeaveRequest } from '../data/mock'
-import type { Project } from '../data/projects'
+import { openBlockers, type Project } from '../data/projects'
 import type { ModuleKey } from '../data/roles'
 import { toDay, todayDay } from '../lib/dates'
 import { fmtCompact } from '../lib/format'
@@ -124,12 +124,13 @@ function assetInsights({ assets }: Inputs): Tagged<Insight>[] {
   ]
 }
 
-function projectInsights({ projects }: Inputs): Tagged<Insight>[] {
+function projectInsights({ projects: all }: Inputs): Tagged<Insight>[] {
+  const projects = all.filter((p) => !p.archived)
   const today = todayDay()
   const active = projects.filter((p) => p.status !== 'Completed')
   const late = active.filter((p) => toDay(p.plannedEnd) < today).length
   const hold = projects.filter((p) => p.status === 'On Hold').length
-  const blocked = active.filter((p) => p.updates[0]?.blocker).length
+  const blocked = active.filter((p) => openBlockers(p).length > 0).length
   return [
     {
       module: 'projects', tone: late > 0 ? 'warning' : 'positive', icon: CalendarClock, stat: `${late}`, statLabel: 'past planned end',
@@ -137,8 +138,8 @@ function projectInsights({ projects }: Inputs): Tagged<Insight>[] {
       to: '/projects/timeline', cta: 'Open timeline',
     },
     {
-      module: 'projects', tone: blocked > 0 ? 'warning' : 'positive', icon: AlertTriangle, stat: `${blocked}`, statLabel: 'reporting blockers',
-      title: blocked > 0 ? 'Their latest update flags a blocker — worth a check-in.' : 'No blockers in the latest project updates.',
+      module: 'projects', tone: blocked > 0 ? 'warning' : 'positive', icon: AlertTriangle, stat: `${blocked}`, statLabel: 'with open blockers',
+      title: blocked > 0 ? 'Blockers are still unresolved — worth a check-in with their owners.' : 'No open blockers across active projects.',
       to: '/projects/portfolio', cta: 'View portfolio',
     },
     {
@@ -174,8 +175,8 @@ function buildSignals({ modules, assets, projects }: Inputs) {
     out.push({ icon: Wrench, label: 'In maintenance', value: `${live.filter((a) => a.status === 'Maintenance').length}` })
   }
   if (can('projects')) {
-    out.push({ icon: FolderKanban, label: 'Projects in flight', value: `${projects.filter((p) => p.status === 'In Progress').length}` })
-    out.push({ icon: Wallet, label: 'Portfolio budget', value: fmtCompact(projects.reduce((s, p) => s + p.budget, 0)) })
+    out.push({ icon: FolderKanban, label: 'Projects in flight', value: `${projects.filter((p) => p.status === 'In Progress' && !p.archived).length}` })
+    out.push({ icon: Wallet, label: 'Portfolio budget', value: fmtCompact(projects.filter((p) => !p.archived).reduce((s, p) => s + p.budget, 0)) })
   }
   return out.slice(0, 5)
 }

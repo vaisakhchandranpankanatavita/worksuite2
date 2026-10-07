@@ -1,12 +1,13 @@
 import { create } from 'zustand'
 import { assets, candidates, employeeById, expenses, invoices, leaveRequests, payrollRuns, TODAY, type Asset, type AssetStatus, type Candidate, type Expense, type ExpenseStatus, type Invoice, type InvoiceStatus, type LeaveRequest, type LeaveStatus, type Stage } from './data/mock'
-import type { ModuleKey, RoleId } from './data/roles'
+import type { ModuleKey } from './data/roles'
 import { projects as seedProjects, type Project, type ProjectStatus } from './data/projects'
 import { fromDay, todayDay, toDay } from './lib/dates'
 import { overallProgress } from './lib/projectMetrics'
 import { api, onUnauthorized, onWriteError, type SessionUser } from './lib/api'
 import { loadWorkspace } from './data/hydrate'
 import { appSettings, collectionSources } from './data/registry'
+import type { CustomValues } from './data/industries'
 
 type AuthStatus = 'checking' | 'signedOut' | 'signedIn'
 
@@ -14,7 +15,7 @@ interface AuthState {
   /** Checking = restoring a session on page load. */
   status: AuthStatus
   user: SessionUser | null
-  role: RoleId | null
+  role: string | null
   showSplash: boolean
   clearSplash: () => void
 }
@@ -78,7 +79,10 @@ interface AppState {
   projects: Project[]
   payrollStatus: 'Draft' | 'Processing' | 'Paid'
   toasts: Toast[]
-  addProject: (p: Project) => void
+  /** Resolves with the project as the server saved it (it assigns the code), or undefined if the save failed. */
+  addProject: (p: Project) => Promise<Project | undefined>
+  /** Replace the custom-field values on a project, asset or invoice. */
+  setCustom: (entity: 'projects' | 'assets' | 'invoices', id: string, custom: CustomValues | undefined) => void
   postProjectUpdate: (projectId: string, u: UpdateInput) => UpdateResult
   allotFunds: (projectId: string, amount: number, note: string) => void
   setProjectStatus: (projectId: string, status: ProjectStatus) => void
@@ -129,9 +133,20 @@ export const useApp = create<AppState>((set, get) => ({
   projects: seedProjects,
   payrollStatus: payrollRuns[0].status as 'Draft',
   toasts: [],
-  addProject: (p) => {
-    set((s) => ({ projects: [p, ...s.projects] }))
-    get().toast(`Project ${p.code} created`)
+  addProject: async (p) => {
+    try {
+      const saved = await api.create('projects', p)
+      persisted.add(`projects/${saved.id}`)
+      set((s) => ({ projects: [saved, ...s.projects] }))
+      get().toast(`Project ${saved.code} created`)
+      return saved
+    } catch {
+      return undefined // the write-error listener has already toasted
+    }
+  },
+  setCustom: (entity, id, custom) => {
+    set((s) => ({ [entity]: (s[entity] as { id: string }[]).map((r) => (r.id === id ? { ...r, custom } : r)) }) as Partial<AppState>)
+    get().toast('Details saved')
   },
   postProjectUpdate: (projectId, u) => {
     const proj = get().projects.find((p) => p.id === projectId)
@@ -334,6 +349,8 @@ const SYNCED = ['leaves', 'expenses', 'invoices', 'candidates', 'assets', 'asset
 type SyncedKey = (typeof SYNCED)[number]
 type Row = { id: string | number }
 const ignore = () => {}
+/** Records already created on the server by an action that waited for it (so the diff mustn't create them again). */
+const persisted = new Set<string>()
 
 /**
  * Store actions update immutably, so a record whose reference changed is exactly a record that was
@@ -347,7 +364,7 @@ function pushDiff(name: SyncedKey, next: Row[], prev: Row[]) {
     const id = String(row.id)
     seen.add(id)
     const old = before.get(id)
-    if (!old) added.push({ row, index })
+    if (!old) { if (!persisted.delete(`${name}/${id}`)) added.push({ row, index }) }
     else if (old !== row) api.replace(name, id, row).catch(ignore)
   })
   // Rows ahead of the existing list were prepended (newest-first): insert bottom-up to keep their order.

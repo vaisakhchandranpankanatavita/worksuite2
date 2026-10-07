@@ -59,7 +59,7 @@ export default function Login() {
   const [roleOpen, setRoleOpen] = useState(false)
   const roleRef = useRef<HTMLDivElement>(null)
 
-  // Demo accounts come from the server; picking one fills in its email and the demo password.
+  // The superadmin account(s) come from the server; picking one fills in the email (the password is still typed).
   useEffect(() => {
     api.accounts().then(setAccounts, () => setError('Can’t reach the Worksuite server. Start it with "npm run dev" or "npm run server".'))
   }, [])
@@ -76,7 +76,8 @@ export default function Login() {
   function pickAccount(a: DemoAccount) {
     setAccountId(a.id)
     setEmail(a.email)
-    setPassword('demo1234')
+    // Dev builds only: VITE_DEV_SUPERADMIN_PASSWORD (from .env) pre-fills the password; production never has it.
+    setPassword(import.meta.env.DEV ? import.meta.env.VITE_DEV_SUPERADMIN_PASSWORD ?? '' : '')
     setError(null)
     setRoleOpen(false)
   }
@@ -114,13 +115,13 @@ export default function Login() {
             <AnimatedHeading as="h1" text="Welcome back" className="font-display text-3xl font-medium tracking-tight" />
             <AnimatedHeading
               as="p"
-              text="Sign in to your people & finance workspace."
+              text="Sign in to your company workspace."
               className="mt-2 text-sm text-ash"
               baseDelay={160}
             />
 
             {accounts.length > 0 && <div className="mt-7">
-              <span className="mb-1.5 block text-xs font-bold text-ash">Demo account</span>
+              <span className="mb-1.5 block text-xs font-bold text-ash">Superadmin account</span>
               <div ref={roleRef} className="relative">
                 <button
                   type="button"
@@ -131,7 +132,7 @@ export default function Login() {
                 >
                   {account
                     ? <><Avatar name={account.name} hue={account.hue} src={account.photo} size={26} /><span className="flex-1 truncate text-sm font-medium">{account.label}</span></>
-                    : <span className="flex-1 truncate pl-1 text-sm text-ash">Choose an account to fill in…</span>}
+                    : <span className="flex-1 truncate pl-1 text-sm text-ash">Choose the superadmin account…</span>}
                   <ChevronDown size={16} className={clsx('shrink-0 text-ash transition-transform', roleOpen && 'rotate-180')} />
                 </button>
 
@@ -164,7 +165,7 @@ export default function Login() {
                   </div>
                 )}
               </div>
-              <p className="mt-1.5 text-[11px] text-ash">{account ? account.description : 'Every demo account uses the password demo1234.'}</p>
+              <p className="mt-1.5 text-[11px] text-ash">{account ? account.description : 'Other users sign in with the email and password their administrator gave them.'}</p>
             </div>}
 
             <form onSubmit={submit} className="mt-5 space-y-4">
@@ -191,7 +192,7 @@ export default function Login() {
                 <label className="flex items-center gap-2 text-ash">
                   <input type="checkbox" defaultChecked className="size-3.5 accent-ink" /> Remember me
                 </label>
-                <a href="#" className="font-bold text-ink hover:underline">Forgot password?</a>
+                <span className="text-ash">Forgot your password? Ask your administrator.</span>
               </div>
 
               {error && <p role="alert" className="rounded-lg bg-rose/40 px-3 py-2 text-xs font-medium text-rose-deep">{error}</p>}
@@ -202,7 +203,7 @@ export default function Login() {
             </form>
 
             <p className="mt-6 text-center text-xs text-ash">
-              New to Worksuite? <a href="#" className="font-bold text-ink hover:underline">Request access</a>
+              Need an account? Ask your administrator to add you.
             </p>
           </div>
 
@@ -224,7 +225,7 @@ export default function Login() {
               />
               <AnimatedHeading
                 as="p"
-                text="Attendance, payroll and hiring — one calm workspace."
+                text="People, finance, assets and projects — one calm workspace."
                 className="mt-2 max-w-xs text-sm text-ash"
                 baseDelay={260}
               />

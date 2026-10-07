@@ -7,10 +7,10 @@ import type { Badge as BadgeT, HealthTone } from '../../lib/projectMetrics'
 
 /** Solid + soft colours for each health tone, matching the app's accent palette. */
 export const TONE_HEX: Record<HealthTone, { solid: string; soft: string; text: string }> = {
-  green: { solid: '#5fa059', soft: '#c6e0c0', text: '#235e20' },
-  amber: { solid: '#c08a24', soft: '#f5ddb2', text: '#6b4a10' },
-  rose: { solid: '#cd6a96', soft: '#f0cad8', text: '#862c58' },
-  blue: { solid: '#6b92d8', soft: '#c8d9f4', text: '#24498a' },
+  green: { solid: 'var(--color-sage-deep)', soft: 'var(--color-sage)', text: '#235e20' },
+  amber: { solid: 'var(--color-amber-deep)', soft: 'var(--color-amber)', text: '#6b4a10' },
+  rose: { solid: 'var(--color-rose-deep)', soft: 'var(--color-rose)', text: '#862c58' },
+  blue: { solid: 'var(--color-sky-deep)', soft: 'var(--color-sky)', text: '#24498a' },
   gray: { solid: '#8a9088', soft: '#e3e8e3', text: '#4a4f48' },
 }
 
@@ -55,7 +55,7 @@ export function HealthRing({ score, tone, size = 84, label }: { score: number; t
 
 /* ─── Confetti ──────────────────────────────────────────────── */
 
-const CONFETTI = ['#aece52', '#6b92d8', '#cd6a96', '#c08a24', '#5fa059', '#d8eca0']
+const CONFETTI = ['var(--color-lime-deep)', 'var(--color-sky-deep)', 'var(--color-rose-deep)', 'var(--color-amber-deep)', 'var(--color-sage-deep)', 'var(--color-lime)']
 
 /** Fires a short burst whenever `burst` changes to a non-zero value. */
 export function Confetti({ burst }: { burst: number }) {

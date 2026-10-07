@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CountUp } from '../../components/CountUp'
 import { Badge, Button, Field, Input, Modal, PageHeader, Select } from '../../components/ui'
 import { ASSET_CATEGORIES, LOCATIONS, TODAY, type Asset, type AssetCategory } from '../../data/mock'
-import { fmtINR } from '../../lib/format'
+import { fmtMoney, currencySymbol } from '../../lib/format'
 import { useApp } from '../../store'
 
 const CATEGORY_ICON: Record<AssetCategory, typeof Laptop> = { Laptop, Phone: Smartphone, Monitor, Headset: Headphones, Tablet, Accessory: Wrench }
@@ -43,7 +43,7 @@ export default function StockList() {
     { label: 'In stock', value: total, icon: Boxes, fmt: (n: number) => n },
     { label: 'Available', value: available, icon: PackageCheck, fmt: (n: number) => n },
     { label: 'Assigned', value: assigned, icon: UserCheck, fmt: (n: number) => n },
-    { label: 'Total value', value: totalValue, icon: IndianRupee, fmt: (n: number) => fmtINR(n) },
+    { label: 'Total value', value: totalValue, icon: IndianRupee, fmt: (n: number) => fmtMoney(n) },
   ]
 
   const addOpen = params.get('new') === '1'
@@ -131,7 +131,7 @@ export default function StockList() {
                       <p className="truncate text-[10px] text-ash">{a.model}</p>
                       <div className="mt-1.5 flex items-center justify-between gap-1">
                         <Badge className="!px-1.5 !py-0 !text-[9px]">{a.status}</Badge>
-                        <span className="shrink-0 text-[10px] text-ash">{fmtINR(a.cost)}</span>
+                        <span className="shrink-0 text-[10px] text-ash">{fmtMoney(a.cost)}</span>
                       </div>
                     </button>
                   ))}
@@ -240,7 +240,7 @@ function AddStockModal({ open, onClose, onSave, existingCount }: {
             {LOCATIONS.map((l) => <option key={l}>{l}</option>)}
           </Select>
         </Field>
-        <Field label="Cost (₹)"><Input type="number" min={0} step={500} value={form.cost} onChange={set('cost')} /></Field>
+        <Field label={`Cost (${currencySymbol()})`}><Input type="number" min={0} step={500} value={form.cost} onChange={set('cost')} /></Field>
 
         <div className="flex items-end justify-end gap-2 sm:col-span-2">
           <Button type="button" variant="ghost" onClick={() => { onClose(); reset() }}>Cancel</Button>

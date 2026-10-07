@@ -42,10 +42,10 @@ const CONFETTI_PIECES = [
 
 // Performance distribution
 const perfDist = [
-  { label: 'Exceptional (5)', value: employees.filter((e) => e.performance >= 4.5).length, fill: '#aece52' },
-  { label: 'Strong (4–4.4)', value: employees.filter((e) => e.performance >= 4 && e.performance < 4.5).length, fill: '#5fa059' },
-  { label: 'Meets (3–3.9)', value: employees.filter((e) => e.performance >= 3 && e.performance < 4).length, fill: '#c8d9f4' },
-  { label: 'Below (< 3)', value: employees.filter((e) => e.performance < 3).length, fill: '#f0cad8' },
+  { label: 'Exceptional (5)', value: employees.filter((e) => e.performance >= 4.5).length, fill: 'var(--color-lime-deep)' },
+  { label: 'Strong (4–4.4)', value: employees.filter((e) => e.performance >= 4 && e.performance < 4.5).length, fill: 'var(--color-sage-deep)' },
+  { label: 'Meets (3–3.9)', value: employees.filter((e) => e.performance >= 3 && e.performance < 4).length, fill: 'var(--color-sky)' },
+  { label: 'Below (< 3)', value: employees.filter((e) => e.performance < 3).length, fill: 'var(--color-rose)' },
 ]
 
 // Heatmap data — 10 weeks × 5 days
@@ -56,14 +56,15 @@ const heatmapData = Array.from({ length: 50 }, (_, i) => ({
 }))
 
 // Dept headcount + attendance donut
-const deptData = DEPARTMENTS.map((d) => ({
+const buildDeptData = () => DEPARTMENTS.map((d) => ({
   name: d.replace('Human Resources', 'HR').replace('Customer Success', 'CS'),
   value: employees.filter((e) => e.department === d).length,
 }))
-const DEPT_COLORS = ['#1a1d1b', '#d8eca0', '#c8d9f4', '#c6e0c0', '#f0cad8', '#f5ddb2', '#aece52', '#6b92d8']
+const DEPT_COLORS = ['var(--color-ink)', 'var(--color-lime)', 'var(--color-sky)', 'var(--color-sage)', 'var(--color-rose)', 'var(--color-amber)', 'var(--color-lime-deep)', 'var(--color-sky-deep)']
 
 export default function HrDashboard() {
   const nav = useNavigate()
+  const deptData = buildDeptData() // departments are configurable, so build this at render time
   const { leaves, candidates, setLeaveStatus } = useApp()
   const [range, setRange] = useState<'6M' | '12M'>('12M')
   const [attrRange, setAttrRange] = useState<'6M' | '12M'>('12M')
@@ -142,7 +143,7 @@ export default function HrDashboard() {
                   <TrendingUp size={11} /> +12% YTD growth
                 </p>
               </div>
-              <HalfGauge value={72} size={108} color="#d8eca0" track="rgba(255,255,255,0.12)" />
+              <HalfGauge value={72} size={108} color="var(--color-lime)" track="rgba(255,255,255,0.12)" />
             </div>
           </div>
 
@@ -297,8 +298,8 @@ export default function HrDashboard() {
           <MultiLineChart
             data={attrSeries}
             lines={[
-              { key: 'rate', color: '#cd6a96' },
-              { key: 'hires', color: '#aece52', dashed: true },
+              { key: 'rate', color: 'var(--color-rose-deep)' },
+              { key: 'hires', color: 'var(--color-lime-deep)', dashed: true },
             ]}
             xKey="month" height={160}
             format={(v) => `${v}`}
@@ -322,7 +323,7 @@ export default function HrDashboard() {
         {/* ── NEW: Department Donut ────────────────────────────────── */}
         <Card className="lg:col-span-4">
           <CardHeader title="Headcount by Dept." subtitle="Distribution across teams" action={<CornerLink onClick={() => nav('/hr/employees')} />} />
-          <DonutChart data={deptData} colors={DEPT_COLORS} innerLabel={`${employees.length}`} height={180} />
+          <DonutChart data={deptData} colors={deptData.map((_, i) => DEPT_COLORS[i % DEPT_COLORS.length])} innerLabel={`${employees.length}`} height={180} />
           <div className="mt-2 grid grid-cols-2 gap-1.5 text-[11px]">
             {deptData.slice(0, 6).map((d, i) => (
               <div key={d.name} className="flex items-center gap-2">
@@ -338,7 +339,7 @@ export default function HrDashboard() {
         <Card className="lg:col-span-4">
           <CardHeader title="Performance Distribution" subtitle="Across all employees" />
           <div className="mt-3 flex items-center gap-4">
-            <RadialProgress value={avgPerfPct} color="#aece52" size={100} label="Avg score" />
+            <RadialProgress value={avgPerfPct} color="var(--color-lime-deep)" size={100} label="Avg score" />
             <div className="flex-1 space-y-2">
               {perfDist.map((p) => (
                 <div key={p.label}>
@@ -408,7 +409,7 @@ export default function HrDashboard() {
           <GroupedBar
             data={headcountTrend.slice(-6)}
             keys={['hires', 'exits']}
-            colors={['#d8eca0', '#f0cad8']}
+            colors={['var(--color-lime)', 'var(--color-rose)']}
             xKey="month"
             height={180}
           />

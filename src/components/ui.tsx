@@ -278,7 +278,7 @@ export function Table({ head, children, className }: { head: ReactNode[]; childr
 /* ─── Chart tooltip style ───────────────────────────────────── */
 export const chartTooltip = {
   contentStyle: {
-    background: '#1a1d1b',
+    background: 'var(--color-ink)',
     border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 14,
     color: '#fff',
@@ -287,7 +287,7 @@ export const chartTooltip = {
     boxShadow: '0 8px 32px -8px rgba(0,0,0,0.5)',
   },
   itemStyle: { color: '#e8ece8' },
-  labelStyle: { color: '#d8eca0', marginBottom: 5, fontWeight: 700 },
+  labelStyle: { color: 'var(--color-lime)', marginBottom: 5, fontWeight: 700 },
   cursor: { stroke: 'rgba(26,29,27,0.12)', strokeWidth: 1, strokeDasharray: '4 3' },
 }
 

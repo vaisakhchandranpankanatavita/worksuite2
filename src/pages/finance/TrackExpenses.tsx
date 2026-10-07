@@ -2,7 +2,7 @@ import { ChevronDown, ChevronRight, FolderPlus, Plus, Tag } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 import { Badge, Button, Card, CardHeader, Field, Input, Modal, PageHeader, Segmented, Select, Table } from '../../components/ui'
 import { TODAY, expenseBills as initialBills, expenseSubCategories as initialSubCategories, type ExpenseBill } from '../../data/mock'
-import { fmtDate, fmtINR } from '../../lib/format'
+import { fmtDate, fmtMoney, currencySymbol } from '../../lib/format'
 import { api, connection } from '../../lib/api'
 import { appSettings } from '../../data/registry'
 
@@ -89,22 +89,22 @@ function Consolidated({ categories, subCategories, bills }: { categories: string
                   {r.cat}
                 </span>
               </td>
-              {r.monthly.map((v, i) => <td key={i} className="tabular-nums text-ash">{v ? fmtINR(v) : '0'}</td>)}
-              <td className="font-display font-bold tabular-nums">{fmtINR(r.total)}</td>
+              {r.monthly.map((v, i) => <td key={i} className="tabular-nums text-ash">{v ? fmtMoney(v) : '0'}</td>)}
+              <td className="font-display font-bold tabular-nums">{fmtMoney(r.total)}</td>
             </tr>
             {expanded.has(r.cat) && r.subRows.map((sr) => (
               <tr key={r.cat + sr.name} className="bg-soft/40">
                 <td className="pl-6 text-ash">{sr.name}</td>
-                {sr.monthly.map((v, i) => <td key={i} className="tabular-nums text-ash/80">{v ? fmtINR(v) : '0'}</td>)}
-                <td className="tabular-nums font-semibold">{fmtINR(sr.monthly.reduce((a, b) => a + b, 0))}</td>
+                {sr.monthly.map((v, i) => <td key={i} className="tabular-nums text-ash/80">{v ? fmtMoney(v) : '0'}</td>)}
+                <td className="tabular-nums font-semibold">{fmtMoney(sr.monthly.reduce((a, b) => a + b, 0))}</td>
               </tr>
             ))}
           </Fragment>
         ))}
         <tr className="!border-t-2 !border-line">
           <td className="font-display font-bold">Total Overheads</td>
-          {grandMonthly.map((v, i) => <td key={i} className="font-display font-bold tabular-nums">{fmtINR(v)}</td>)}
-          <td className="font-display font-bold tabular-nums">{fmtINR(grandTotal)}</td>
+          {grandMonthly.map((v, i) => <td key={i} className="font-display font-bold tabular-nums">{fmtMoney(v)}</td>)}
+          <td className="font-display font-bold tabular-nums">{fmtMoney(grandTotal)}</td>
         </tr>
       </Table>
     </Card>
@@ -162,13 +162,13 @@ function ExpenseDetails({ categories, subCategories, bills, setBills }: {
             <td className="whitespace-nowrap">{b.subCategory}</td>
             <td className="whitespace-nowrap">{b.vendor}</td>
             <td className="max-w-[280px] truncate text-ash">{b.narration}</td>
-            <td className="font-display tabular-nums">{fmtINR(b.amount)}</td>
+            <td className="font-display tabular-nums">{fmtMoney(b.amount)}</td>
           </tr>
         ))}
         {filtered.length > 0 && (
           <tr className="!border-t-2 !border-line">
             <td colSpan={5} className="text-right font-display font-bold">Total</td>
-            <td className="font-display font-bold tabular-nums">{fmtINR(total)}</td>
+            <td className="font-display font-bold tabular-nums">{fmtMoney(total)}</td>
           </tr>
         )}
       </Table>
@@ -202,7 +202,7 @@ function NewBill({ open, onClose, categories, subCategories, onSave }: {
       >
         <div className="grid grid-cols-2 gap-3">
           <Field label="Bill Date"><Input required type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} /></Field>
-          <Field label="Amount (₹)"><Input required type="number" min={1} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></Field>
+          <Field label={`Amount (${currencySymbol()})`}><Input required type="number" min={1} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Category">

@@ -15,6 +15,7 @@ import { deptDraw } from '../../lib/projectMetrics'
 import NewProjectModal from './NewProjectModal'
 import { PORTFOLIO_TITLES, useAnalyzed } from './useAnalyzed'
 import { useCanOpen } from '../../store'
+import { lc, projectMany, projectOne } from '../../lib/terms'
 
 const XP_PER_LEVEL = 250
 const RANK_ICON = ['text-amber-deep', 'text-ash', 'text-[#a8703a]']
@@ -86,8 +87,8 @@ export default function ProjectsDashboard() {
     <div>
       <PageHeader
         title="Mission Control"
-        subtitle={`${rows.length} projects · ${s.live.length} in flight · ${dayLabel(today)}`}
-        actions={<Button onClick={() => setCreating(true)}><Plus size={15} /> New project</Button>}
+        subtitle={`${rows.length} ${lc(projectMany())} · ${s.live.length} in flight · ${dayLabel(today)}`}
+        actions={<Button onClick={() => setCreating(true)}><Plus size={15} /> New {lc(projectOne())}</Button>}
       />
 
       <div className="stagger grid gap-3 lg:grid-cols-12">
@@ -197,7 +198,7 @@ export default function ProjectsDashboard() {
                 <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} labelFormatter={(l, p) => p?.[0]?.payload?.full ?? l} formatter={(v: number) => fmtCompact(v)} />
                 <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="Budget" fill="#e3e8e3" radius={[5, 5, 2, 2]} barSize={9} />
-                <Bar dataKey="Allotted" fill="#aece52" radius={[5, 5, 2, 2]} barSize={9} />
+                <Bar dataKey="Allotted" fill="var(--color-lime-deep)" radius={[5, 5, 2, 2]} barSize={9} />
                 <Bar dataKey="Used" fill="#262825" radius={[5, 5, 2, 2]} barSize={9} />
               </BarChart>
             </ResponsiveContainer>

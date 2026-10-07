@@ -5,7 +5,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { exportCsv } from './Employees'
 import { Avatar, Badge, Button, Card, CardHeader, Modal, PageHeader, Select, Table, chartTooltip } from '../../components/ui'
 import { COMPANY, DEPARTMENTS, complianceDeadlines, computePayslip, employees, payrollRuns, type Employee } from '../../data/mock'
-import { fmtCompact, fmtINR } from '../../lib/format'
+import { fmtCompact, fmtMoney } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
@@ -76,7 +76,7 @@ export default function Payroll() {
               {payrollStatus}
             </Badge>
           </div>
-          <p className="relative z-10 mt-3 font-display text-4xl font-light">{fmtINR(totals.net)}</p>
+          <p className="relative z-10 mt-3 font-display text-4xl font-light">{fmtMoney(totals.net)}</p>
           <div className="relative z-10 mt-6 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl bg-white/5 p-3"><p className="text-xs text-white/50">Gross</p><p className="font-display">{fmtCompact(totals.gross)}</p></div>
             <div className="rounded-2xl bg-white/5 p-3"><p className="text-xs text-white/50">TDS</p><p className="font-display">{fmtCompact(totals.tds)}</p></div>
@@ -109,7 +109,7 @@ export default function Payroll() {
               <CartesianGrid vertical={false} stroke="#edf0ed" />
               <XAxis dataKey="month" axisLine={false} tickLine={false} />
               <YAxis axisLine={false} tickLine={false} tickFormatter={fmtCompact} width={60} />
-              <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtINR(v)} />
+              <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtMoney(v)} />
               <Bar dataKey="gross" name="Gross" fill="#262825" radius={[8, 8, 3, 3]} barSize={18} />
               <Bar dataKey="net" name="Net" fill="#ddefa8" radius={[8, 8, 3, 3]} barSize={18} />
             </BarChart>
@@ -162,15 +162,15 @@ export default function Payroll() {
                     </div>
                   </div>
                 </td>
-                <td>{fmtINR(p.basic)}</td>
-                <td>{fmtINR(p.hra)}</td>
-                <td>{fmtINR(p.special)}</td>
-                <td className="font-bold">{fmtINR(p.gross)}</td>
-                <td className="text-ash">{fmtINR(p.pf)}</td>
-                <td className="text-ash">{p.esi ? fmtINR(p.esi) : '—'}</td>
-                <td className="text-ash">{fmtINR(p.pt)}</td>
-                <td className="text-ash">{fmtINR(p.tds)}</td>
-                <td><span className="rounded-full bg-lime px-2.5 py-1 font-bold">{fmtINR(p.net)}</span></td>
+                <td>{fmtMoney(p.basic)}</td>
+                <td>{fmtMoney(p.hra)}</td>
+                <td>{fmtMoney(p.special)}</td>
+                <td className="font-bold">{fmtMoney(p.gross)}</td>
+                <td className="text-ash">{fmtMoney(p.pf)}</td>
+                <td className="text-ash">{p.esi ? fmtMoney(p.esi) : '—'}</td>
+                <td className="text-ash">{fmtMoney(p.pt)}</td>
+                <td className="text-ash">{fmtMoney(p.tds)}</td>
+                <td><span className="rounded-full bg-lime px-2.5 py-1 font-bold">{fmtMoney(p.net)}</span></td>
                 <td><Button size="sm" variant="light" onClick={() => setSlipFor(e)}>Payslip</Button></td>
               </tr>
             ))}
@@ -212,20 +212,20 @@ export function PayslipModal({ employee, onClose }: { employee: Employee | null;
         <div className="grid gap-6 py-4 sm:grid-cols-2">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-wider text-ash">Earnings</p>
-            {earnings.map(([k, v]) => <div key={k} className="flex justify-between py-1"><span>{k}</span><span>{fmtINR(v)}</span></div>)}
-            <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>Gross earnings</span><span>{fmtINR(p.gross)}</span></div>
+            {earnings.map(([k, v]) => <div key={k} className="flex justify-between py-1"><span>{k}</span><span>{fmtMoney(v)}</span></div>)}
+            <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>Gross earnings</span><span>{fmtMoney(p.gross)}</span></div>
           </div>
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-wider text-ash">Deductions</p>
-            {deductions.map(([k, v]) => <div key={k} className="flex justify-between py-1"><span>{k}</span><span>{fmtINR(v)}</span></div>)}
-            <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>Total deductions</span><span>{fmtINR(p.deductions)}</span></div>
+            {deductions.map(([k, v]) => <div key={k} className="flex justify-between py-1"><span>{k}</span><span>{fmtMoney(v)}</span></div>)}
+            <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>Total deductions</span><span>{fmtMoney(p.deductions)}</span></div>
           </div>
         </div>
         <div className="flex items-center justify-between rounded-xl bg-lime px-4 py-3">
           <span className="font-display">Net pay</span>
-          <span className="font-display text-xl">{fmtINR(p.net)}</span>
+          <span className="font-display text-xl">{fmtMoney(p.net)}</span>
         </div>
-        <p className="mt-3 text-[11px] text-ash">Employer PF contribution {fmtINR(p.employerPf)} is part of CTC. This is a system-generated payslip.</p>
+        <p className="mt-3 text-[11px] text-ash">Employer PF contribution {fmtMoney(p.employerPf)} is part of CTC. This is a system-generated payslip.</p>
       </div>
       <div className="mt-4 flex justify-end gap-2">
         <Button variant="light" onClick={() => window.print()}><Printer size={16} /> Print / Save PDF</Button>

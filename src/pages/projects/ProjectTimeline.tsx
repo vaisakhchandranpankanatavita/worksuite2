@@ -4,6 +4,7 @@ import Gantt from '../../components/projects/Gantt'
 import { Button, Card, CardHeader, PageHeader, Segmented } from '../../components/ui'
 import { todayDay } from '../../lib/dates'
 import { phaseRows, projectRow, useAnalyzed } from './useAnalyzed'
+import { lc, projectOne } from '../../lib/terms'
 
 const SCOPES = ['In flight', 'All projects'] as const
 const MODES = ['With projections', 'Plan only'] as const
@@ -40,7 +41,7 @@ export default function ProjectTimeline() {
     <div>
       <PageHeader
         title="Timeline"
-        subtitle="Waterfall view of every project — the plan, the progress, and where the finish date is really heading"
+        subtitle={`Waterfall view of every ${lc(projectOne())} — the plan, the progress, and where the finish date is really heading`}
         actions={
           <>
             <Segmented value={scope} options={SCOPES} onChange={setScope} />

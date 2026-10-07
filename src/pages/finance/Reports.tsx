@@ -5,7 +5,7 @@ import { Button, Card, CardHeader, PageHeader, Segmented, Table, chartTooltip } 
 import { CountUp } from '../../components/CountUp'
 import { exportCsv } from '../hr/Employees'
 import { budgets, computePayslip, employees, monthlyFinance, payrollRuns } from '../../data/mock'
-import { fmtCompact, fmtINR } from '../../lib/format'
+import { fmtCompact, fmtMoney } from '../../lib/format'
 import { useApp } from '../../store'
 
 export default function Reports() {
@@ -35,7 +35,7 @@ export default function Reports() {
               <CartesianGrid vertical={false} stroke="#edf0ed" />
               <XAxis dataKey="month" axisLine={false} tickLine={false} />
               <YAxis axisLine={false} tickLine={false} tickFormatter={fmtCompact} width={64} />
-              <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtINR(v)} />
+              <Tooltip {...chartTooltip} cursor={{ fill: 'rgba(38,40,37,0.04)' }} formatter={(v: number) => fmtMoney(v)} />
               <Bar dataKey="revenue" name="Revenue" fill="#ddefa8" radius={[8, 8, 3, 3]} barSize={14} />
               <Bar dataKey="expenses" name="Expenses" fill="#e3e8e3" radius={[8, 8, 3, 3]} barSize={14} />
               <Line dataKey="profit" name="Net profit" stroke="#262825" strokeWidth={2} dot={{ r: 3, fill: '#262825' }} />
@@ -84,12 +84,12 @@ export default function Reports() {
             {rows.map((m) => (
               <tr key={m.month}>
                 <td className="font-bold">{m.month}</td>
-                <td>{fmtINR(m.revenue)}</td>
-                <td className="text-ash">{fmtINR(m.payroll)}</td>
-                <td className="text-ash">{fmtINR(m.operating)}</td>
-                <td className="text-ash">{fmtINR(m.marketing)}</td>
-                <td>{fmtINR(m.expenses)}</td>
-                <td className={m.profit < 0 ? 'text-rose-deep' : 'font-bold'}>{fmtINR(m.profit)}</td>
+                <td>{fmtMoney(m.revenue)}</td>
+                <td className="text-ash">{fmtMoney(m.payroll)}</td>
+                <td className="text-ash">{fmtMoney(m.operating)}</td>
+                <td className="text-ash">{fmtMoney(m.marketing)}</td>
+                <td>{fmtMoney(m.expenses)}</td>
+                <td className={m.profit < 0 ? 'text-rose-deep' : 'font-bold'}>{fmtMoney(m.profit)}</td>
                 <td>{((m.profit / m.revenue) * 100).toFixed(1)}%</td>
               </tr>
             ))}

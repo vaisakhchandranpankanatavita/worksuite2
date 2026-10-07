@@ -12,6 +12,7 @@ import ResourcesTab from './detail/ResourcesTab'
 import TimelineTab from './detail/TimelineTab'
 import UpdatesTab from './detail/UpdatesTab'
 import { useAnalyzed } from './useAnalyzed'
+import { CustomFieldRows } from '../../components/CustomFields'
 
 const TABS = ['Overview', 'Timeline', 'Resources', 'Finance', 'Updates'] as const
 type Tab = (typeof TABS)[number]
@@ -24,6 +25,7 @@ export default function ProjectDetail() {
   const [params, setParams] = useSearchParams()
   const rows = useAnalyzed()
   const setStatus = useApp((s) => s.setProjectStatus)
+  const setCustom = useApp((s) => s.setCustom)
   const [burst, setBurst] = useState(0)
 
   const a = rows.find((r) => r.project.id === id)
@@ -51,6 +53,7 @@ export default function ProjectDetail() {
             <p className="text-[11px] font-bold uppercase tracking-wider text-ash">{p.code} · {p.client}</p>
             <h1 className="text-gradient-heading mt-1 font-display text-2xl font-semibold leading-tight tracking-tight md:text-[28px]">{p.name}</h1>
             <p className="mt-1 max-w-2xl text-sm text-ash">{p.summary}</p>
+            <div className="mt-3 max-w-2xl"><CustomFieldRows entity="projects" values={p.custom} onSave={(v) => setCustom('projects', p.id, v)} /></div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge tone={STATUS_TONE[p.status]}>{p.status}</Badge>
               {(p.status === 'In Progress' || p.status === 'On Hold') && <Badge tone={health.tone}>{health.label}</Badge>}

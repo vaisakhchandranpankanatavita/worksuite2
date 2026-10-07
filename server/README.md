@@ -24,15 +24,19 @@ Tables are created automatically on first connection — no separate migration s
 | `npm run dev` | Vite dev server **with the API mounted at `/api`** (one process) |
 | `npm run server` | Standalone API on `PORT` (default 4000); also serves `dist/` if built |
 | `npm start` | Build the front-end, then serve app + API from one process |
-| `npm run seed` | Wipe the database and re-seed it from the demo data and demo accounts |
+| `npm run seed` | Reset business data to the demo data (accounts and company configuration are kept) |
 
 An empty database is seeded automatically on start. Seeded dates are relative to the day of seeding,
 so re-seed (`npm run seed` or `POST /api/admin/reseed`) to refresh them.
 
 ## Sign-in and roles
 
-Accounts live in the `users` table: one per role, all with the password `demo1234`
-(set `WORKSUITE_DEMO_PASSWORD` before seeding to change it).
+A new database has exactly one account, the **superadmin**. Set `SUPERADMIN_EMAIL` and
+`SUPERADMIN_PASSWORD` before the first start (the email defaults to `superadmin@worksuite.local`; without a
+password a random one is generated and printed once in the server log). The superadmin creates every other
+user in Settings → Users, picks which modules each can open, and can make a module view-only for them.
+Only the superadmin can manage users, company configuration (`orgConfig`: industry, currency, departments,
+wording, code prefix) and custom fields (`customFields`), or reset the demo data.
 
 | Role | Email | Modules |
 | --- | --- | --- |
@@ -49,8 +53,6 @@ Accounts live in the `users` table: one per role, all with the password `demo123
   projects but only Finance can change them. Requests outside the role get `403`.
 - `/api/bootstrap` returns only the data the role may read. The UI hides everything else, including
   search results, notifications, AI insights and assistant commands.
-- `/api/auth/accounts` lists the demo accounts for the sign-in screen's quick-fill. Set
-  `WORKSUITE_DEMO_ACCOUNTS=off` to hide it.
 
 ## Endpoints
 
@@ -60,7 +62,11 @@ Accounts live in the `users` table: one per role, all with the password `demo123
 | POST | `/api/auth/login` | `{ email, password }` → sets the session cookie, returns the user |
 | POST | `/api/auth/logout` | Ends the session |
 | GET | `/api/auth/me` | The signed-in user (401 if none) |
-| GET | `/api/auth/accounts` | Demo accounts (no secrets) |
+| GET | `/api/auth/accounts` | Superadmin account(s) only, for the sign-in picker (never other users) |
+| POST | `/api/auth/password` | `{ current, next }` — change your own password |
+| GET/POST | `/api/admin/users` | Superadmin: list / create users (`modules`, `readOnly`) |
+| PATCH | `/api/admin/users/:id` | Superadmin: edit name, title, access, `active` |
+| POST | `/api/admin/users/:id/password` | Superadmin: reset a user's password |
 | GET | `/api/bootstrap` | Everything the signed-in role may see, in one response (used after sign-in) |
 | GET | `/api/:collection` | List; exact-match filters on top-level fields, e.g. `?status=Available` |
 | GET | `/api/:collection/:id` | One record |
@@ -69,8 +75,8 @@ Accounts live in the `users` table: one per role, all with the password `demo123
 | PATCH | `/api/:collection/:id` | Merge fields; `null` removes a field |
 | DELETE | `/api/:collection/:id` | Delete |
 | GET | `/api/datasets[/:key]` | Read-only reference data (charts, trends, company profile…) |
-| GET/PUT | `/api/settings/:key` | `payrollStatus`, `expenseTrackCategories` — body `{ "value": … }` |
-| POST | `/api/admin/reseed` | Reset all business data to the demo data (Super Admin only; accounts are kept) |
+| GET/PUT | `/api/settings/:key` | `payrollStatus`, `expenseTrackCategories`, `orgConfig`, `customFields` (the last two: anyone reads, superadmin writes, validated) — body `{ "value": … }` |
+| POST | `/api/admin/reseed` | Reset all business data to the demo data (superadmin only; accounts and company configuration are kept) |
 
 Collections: `employees`, `jobs`, `leaves`, `expenses`, `invoices`, `candidates`, `assets`, `assetLog`,
 `projects`, `expenseBills`, `expenseSubCategories` (keyed by `name`).

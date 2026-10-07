@@ -7,11 +7,11 @@ import { CountUp } from '../../components/CountUp'
 import { Avatar, Badge, Button, Card, CardHeader, CornerLink, PageHeader } from '../../components/ui'
 import { ASSET_CATEGORIES, LOCATIONS, TODAY, employeeById } from '../../data/mock'
 import { bookValue } from '../../lib/depreciation'
-import { fmtCompact, fmtDate, fmtINR } from '../../lib/format'
+import { fmtCompact, fmtDate, fmtMoney } from '../../lib/format'
 import { photoFor } from '../../lib/photo'
 import { useApp } from '../../store'
 
-const CATEGORY_COLORS = ['#1a1d1b', '#d8eca0', '#c8d9f4', '#c6e0c0', '#f0cad8', '#f5ddb2']
+const CATEGORY_COLORS = ['var(--color-ink)', 'var(--color-lime)', 'var(--color-sky)', 'var(--color-sage)', 'var(--color-rose)', 'var(--color-amber)']
 const MS_DAY = 86_400_000
 
 /** Same icon chip on every stat tile; `alert` tints it amber, but only while the count is non-zero. */
@@ -142,7 +142,7 @@ export default function AssetsDashboard() {
     <div>
       <PageHeader
         title="Asset Management"
-        subtitle={`${total} assets · ${fmtINR(totalValue)} total value`}
+        subtitle={`${total} assets · ${fmtMoney(totalValue)} total value`}
         actions={<Button onClick={() => nav('/assets/inventory?new=1')}><Plus size={15} /> Add asset</Button>}
       />
 
@@ -158,7 +158,7 @@ export default function AssetsDashboard() {
               <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/10"><Laptop size={14} /></span>
             </div>
             <p className="relative mt-2 font-display text-2xl font-semibold tabular-nums"><CountUp value={total} /></p>
-            <p className="mt-0.5 text-xs text-white/55">{fmtINR(totalValue)} in inventory</p>
+            <p className="mt-0.5 text-xs text-white/55">{fmtMoney(totalValue)} in inventory</p>
           </div>
 
           <StatTile title="Needs Attention" value={maintenance + retired} hint={`${maintenance} in maintenance, ${retired} retired`} icon={<Wrench size={14} />} alert />
@@ -192,7 +192,7 @@ export default function AssetsDashboard() {
         <Card className="lg:col-span-4">
           <CardHeader title="By Location" subtitle="Active assets per office" action={<MapPin size={14} className="text-sky-deep" />} />
           <div className="mt-4 min-h-[96px] flex-1">
-            <GroupedBar data={locationData} keys={['count']} colors={['#c8d9f4']} xKey="name" height="100%" />
+            <GroupedBar data={locationData} keys={['count']} colors={['var(--color-sky)']} xKey="name" height="100%" />
           </div>
         </Card>
 
@@ -200,7 +200,7 @@ export default function AssetsDashboard() {
         <Card className="lg:col-span-3">
           <CardHeader title="Utilization" subtitle="Assigned vs. total" />
           <div className="mt-3 flex flex-1 flex-col items-center justify-between gap-3">
-            <RadialProgress value={utilizationPct} color="#aece52" size={100} label="Assigned" />
+            <RadialProgress value={utilizationPct} color="var(--color-lime-deep)" size={100} label="Assigned" />
             <dl className="w-full space-y-1.5 border-t border-line/60 pt-3 text-xs">
               {[
                 ['Assigned', assigned],
@@ -306,7 +306,7 @@ export default function AssetsDashboard() {
         <Card className="lg:col-span-5">
           <CardHeader title="Age Distribution" subtitle="Active inventory by age" action={<CalendarClock size={14} className="text-ash" />} />
           <div className="mt-4 min-h-[96px] flex-1">
-            <GroupedBar data={ageBuckets} keys={['count']} colors={['#f5ddb2']} xKey="name" height="100%" />
+            <GroupedBar data={ageBuckets} keys={['count']} colors={['var(--color-amber)']} xKey="name" height="100%" />
           </div>
         </Card>
 
@@ -314,7 +314,7 @@ export default function AssetsDashboard() {
         <Card className="lg:col-span-4">
           <CardHeader title="Spend by Department" subtitle="Assigned asset value" action={<Building2 size={14} className="text-sky-deep" />} />
           <div className="mt-4 min-h-[96px] flex-1">
-            <GroupedBar data={deptSpend} keys={['spend']} colors={['#c6e0c0']} xKey="name" height="100%" format={fmtCompact} />
+            <GroupedBar data={deptSpend} keys={['spend']} colors={['var(--color-sage)']} xKey="name" height="100%" format={fmtCompact} />
           </div>
         </Card>
 

@@ -6,11 +6,11 @@ import { DonutChart } from '../../../components/charts'
 import { Badge, Button, Card, CardHeader, Field, Input, Modal, Table, chartTooltip } from '../../../components/ui'
 import { budgets } from '../../../data/mock'
 import { dayLabel, toDay } from '../../../lib/dates'
-import { fmtCompact, fmtINR } from '../../../lib/format'
+import { fmtCompact, fmtMoney, currencySymbol } from '../../../lib/format'
 import { burnSeries, type Analysis } from '../../../lib/projectMetrics'
 import { useApp } from '../../../store'
 
-const SLICES = ['#1a1d1b', '#aece52', '#6b92d8', '#f0cad8']
+const SLICES = ['var(--color-ink)', 'var(--color-lime-deep)', 'var(--color-sky-deep)', 'var(--color-rose)']
 
 function AllotModal({ a, open, onClose }: { a: Analysis; open: boolean; onClose: () => void }) {
   const allot = useApp((s) => s.allotFunds)
@@ -23,7 +23,7 @@ function AllotModal({ a, open, onClose }: { a: Analysis; open: boolean; onClose:
 
   function submit() {
     if (!(amount > 0)) return toast('Enter an amount to release', 'error')
-    if (amount > remaining) return toast(`Only ${fmtINR(remaining)} of the approved budget is left to release`, 'error')
+    if (amount > remaining) return toast(`Only ${fmtMoney(remaining)} of the approved budget is left to release`, 'error')
     allot(a.project.id, amount, note.trim() || 'Additional release')
     onClose()
     setNote('')
@@ -32,10 +32,10 @@ function AllotModal({ a, open, onClose }: { a: Analysis; open: boolean; onClose:
   return (
     <Modal open={open} onClose={onClose} title="Release funds" width={460}>
       <p className="text-sm text-ash">
-        <b className="text-ink">{fmtINR(remaining)}</b> of the approved budget is still unreleased. Used so far: <b className="text-ink">{fmtINR(fin.used)}</b> against <b className="text-ink">{fmtINR(fin.allotted)}</b> allotted.
+        <b className="text-ink">{fmtMoney(remaining)}</b> of the approved budget is still unreleased. Used so far: <b className="text-ink">{fmtMoney(fin.used)}</b> against <b className="text-ink">{fmtMoney(fin.allotted)}</b> allotted.
       </p>
       <div className="mt-4 grid gap-4">
-        <Field label="Amount (₹)"><Input type="number" min={0} step={50000} value={amount} onChange={(e) => setAmount(Number(e.target.value))} /></Field>
+        <Field label={`Amount (${currencySymbol()})`}><Input type="number" min={0} step={50000} value={amount} onChange={(e) => setAmount(Number(e.target.value))} /></Field>
         <Field label="Note"><Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Release for the Testing phase" /></Field>
       </div>
       <div className="mt-5 flex justify-end gap-2">
@@ -74,7 +74,7 @@ export default function FinanceTab({ a }: { a: Analysis }) {
       {overAllot && !closed && (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-rose-deep/25 bg-rose/50 px-4 py-3 text-sm text-[#862c58] lg:col-span-12">
           <AlertTriangle size={17} className="shrink-0" />
-          <p className="min-w-0 flex-1"><b>Spending is ahead of released funds</b> by {fmtINR(fin.used - fin.allotted)}. Release the next allotment to keep the team unblocked.</p>
+          <p className="min-w-0 flex-1"><b>Spending is ahead of released funds</b> by {fmtMoney(fin.used - fin.allotted)}. Release the next allotment to keep the team unblocked.</p>
           <Button size="sm" variant="danger" onClick={() => setReleasing(true)}>Release funds</Button>
         </div>
       )}
@@ -84,7 +84,7 @@ export default function FinanceTab({ a }: { a: Analysis }) {
         <div className="mt-5 space-y-4">
           {bars.map((b) => (
             <div key={b.label}>
-              <div className="mb-1.5 flex justify-between text-xs"><span className="text-ash">{b.label}</span><span className="font-display font-semibold tabular-nums">{fmtINR(b.value)}</span></div>
+              <div className="mb-1.5 flex justify-between text-xs"><span className="text-ash">{b.label}</span><span className="font-display font-semibold tabular-nums">{fmtMoney(b.value)}</span></div>
               <div className="h-3.5 overflow-hidden rounded-full bg-soft shadow-[inset_0_1px_2px_rgba(26,29,27,0.08)]">
                 <div className={clsx('h-full rounded-full transition-all duration-1000', b.cls)} style={{ width: `${(b.value / max) * 100}%` }} />
               </div>
@@ -107,7 +107,7 @@ export default function FinanceTab({ a }: { a: Analysis }) {
       </Card>
 
       <Card className="lg:col-span-5">
-        <CardHeader title="Where the money went" subtitle={`${fmtINR(fin.used)} used so far`} />
+        <CardHeader title="Where the money went" subtitle={`${fmtMoney(fin.used)} used so far`} />
         <div className="mt-3 flex items-center gap-4">
           <div className="w-40 shrink-0"><DonutChart data={breakdown} colors={SLICES} height={160} format={fmtCompact} innerLabel={fmtCompact(fin.used)} /></div>
           <ul className="min-w-0 flex-1 space-y-2.5">
@@ -132,11 +132,11 @@ export default function FinanceTab({ a }: { a: Analysis }) {
               <XAxis dataKey="day" type="number" domain={['dataMin', 'dataMax']} axisLine={false} tickLine={false} tick={{ fontSize: 10 }} tickFormatter={(d: number) => dayLabel(d)} scale="linear" />
               <YAxis axisLine={false} tickLine={false} tickFormatter={fmtCompact} width={58} tick={{ fontSize: 10 }} />
               <Tooltip {...chartTooltip} labelFormatter={(d: number) => dayLabel(d)} formatter={(v: number) => fmtCompact(v)} />
-              <ReferenceLine y={fin.budget} stroke="#6a6f68" strokeDasharray="2 4" label={{ value: 'Budget', position: 'insideTopRight', fontSize: 10, fill: '#6a6f68' }} />
-              <ReferenceLine x={fc.today} stroke="#1a1d1b" label={{ value: 'Today', position: 'top', fontSize: 10, fill: '#1a1d1b' }} />
+              <ReferenceLine y={fin.budget} stroke="var(--color-ash)" strokeDasharray="2 4" label={{ value: 'Budget', position: 'insideTopRight', fontSize: 10, fill: 'var(--color-ash)' }} />
+              <ReferenceLine x={fc.today} stroke="var(--color-ink)" label={{ value: 'Today', position: 'top', fontSize: 10, fill: 'var(--color-ink)' }} />
               <Line type="monotone" dataKey="plan" name="Planned" stroke="#a0a69f" strokeWidth={2} strokeDasharray="5 4" dot={false} />
-              <Line type="monotone" dataKey="actual" name="Actual" stroke="#1a1d1b" strokeWidth={2.5} dot={false} connectNulls />
-              <Line type="monotone" dataKey="forecast" name="Forecast" stroke="#cd6a96" strokeWidth={2.5} strokeDasharray="2 5" dot={false} connectNulls />
+              <Line type="monotone" dataKey="actual" name="Actual" stroke="var(--color-ink)" strokeWidth={2.5} dot={false} connectNulls />
+              <Line type="monotone" dataKey="forecast" name="Forecast" stroke="var(--color-rose-deep)" strokeWidth={2.5} strokeDasharray="2 5" dot={false} connectNulls />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -156,8 +156,8 @@ export default function FinanceTab({ a }: { a: Analysis }) {
               return (
                 <tr key={t.id}>
                   <td className="text-xs tabular-nums">{dayLabel(toDay(t.date))}</td>
-                  <td className="text-xs font-semibold tabular-nums">{fmtINR(t.amount)}</td>
-                  <td className="text-xs tabular-nums text-ash">{fmtINR(cum)} <span className="text-[10px]">({Math.round((cum / fin.budget) * 100)}%)</span></td>
+                  <td className="text-xs font-semibold tabular-nums">{fmtMoney(t.amount)}</td>
+                  <td className="text-xs tabular-nums text-ash">{fmtMoney(cum)} <span className="text-[10px]">({Math.round((cum / fin.budget) * 100)}%)</span></td>
                   <td className="text-xs text-ash">{t.note}</td>
                 </tr>
               )
@@ -169,7 +169,7 @@ export default function FinanceTab({ a }: { a: Analysis }) {
 
       <div className="grid gap-4 lg:col-span-5">
         <Card>
-          <CardHeader title="Vendor payments" subtitle={`${fmtINR(fin.vendors)} paid`} />
+          <CardHeader title="Vendor payments" subtitle={`${fmtMoney(fin.vendors)} paid`} />
           {p.vendors.length === 0 ? <p className="mt-3 text-xs text-ash">No vendor payments yet.</p> : (
             <ul className="mt-3 space-y-2.5">
               {p.vendors.map((v) => (
